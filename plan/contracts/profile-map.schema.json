@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/profile-map.schema.json",
+  "title": "Profile map (AI output of the profile stage)",
+  "description": "Structure of the CV expressed as line ranges into the line-numbered cv.txt printed by `cvt brief profile`. The AI never retypes CV text: `cvt profile-build` copies verbatim text from the ranges, assigns canonical IDs in array order (work[i] -> exp-(i+1), engagements[j] -> .e(j+1), highlights[k] -> .b(k+1)), and writes profile.json. Short typed values (names, dates, labels) must appear verbatim in the cited lines, except for normalized dates. Every non-blank line must be covered by exactly one range or listed in ignored_lines.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "basics", "summary_lines", "work", "education", "certificates", "skills", "other_sections", "ignored_lines", "source_issues"],
+  "properties": {
+    "schema_version": {"const": "1"},
+    "basics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "label", "email", "phone", "url", "city", "region", "country", "profiles", "lines"],
+      "properties": {
+        "name": {"type": "string"},
+        "label": {"type": "string", "description": "Headline as written, or ''."},
+        "email": {"type": "string"},
+        "phone": {"type": "string"},
+        "url": {"type": "string"},
+        "city": {"type": "string"},
+        "region": {"type": "string"},
+        "country": {"type": "string"},
+        "profiles": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["network", "url"], "properties": {"network": {"type": "string"}, "url": {"type": "string"}}}},
+        "lines": {"type": "array", "items": {"$ref": "#/$defs/range"}, "description": "Lines holding the name and contact details (header lines)."}
+      }
+    },
+    "summary_lines": {"type": "array", "items": {"$ref": "#/$defs/range"}, "description": "One range per summary paragraph -> sum-N."},
+    "work": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "location", "position", "employment_type", "start_date", "end_date", "date_text", "header_lines", "summary_lines", "highlights", "engagements"],
+        "properties": {
+          "name": {"type": "string", "description": "Employer as written."},
+          "location": {"type": "string"},
+          "position": {"type": "string", "description": "Title as written, or ''."},
+          "employment_type": {"type": "string", "enum": ["employee", "consultant", "contractor", "research", "unknown"]},
+          "start_date": {"$ref": "#/$defs/date"},
+          "end_date": {"$ref": "#/$defs/date"},
+          "date_text": {"type": "string", "description": "Date span exactly as written, e.g. 'Jul 2021 - Jan 2024'."},
+          "header_lines": {"$ref": "#/$defs/range"},
+          "summary_lines": {"type": "array", "items": {"$ref": "#/$defs/range"}},
+          "highlights": {"type": "array", "items": {"$ref": "#/$defs/highlight"}},
+          "engagements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "name", "role_label", "header_lines", "summary_lines", "highlights"],
+              "properties": {
+                "kind": {"type": "string", "enum": ["client", "partner", "internal"]},
+                "name": {"type": "string", "description": "Client name as written, e.g. 'Royal Bank of Canada (RBC)'."},
+                "role_label": {"type": "string", "description": "Role label as written without the 'Role:' prefix, e.g. 'SRE', or ''."},
+                "header_lines": {"$ref": "#/$defs/range"},
+                "summary_lines": {"type": "array", "items": {"$ref": "#/$defs/range"}},
+                "highlights": {"type": "array", "items": {"$ref": "#/$defs/highlight"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "education": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["institution", "area", "study_type", "location", "end_date", "lines"],
+        "properties": {
+          "institution": {"type": "string"},
+          "area": {"type": "string"},
+          "study_type": {"type": "string", "description": "e.g. 'BSc', 'MASc'."},
+          "location": {"type": "string"},
+          "end_date": {"$ref": "#/$defs/date"},
+          "lines": {"$ref": "#/$defs/range"}
+        }
+      }
+    },
+    "certificates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "issuer", "date", "lines"],
+        "properties": {
+          "name": {"type": "string"},
+          "issuer": {"type": "string"},
+          "date": {"$ref": "#/$defs/date"},
+          "lines": {"$ref": "#/$defs/range"}
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "lines"],
+        "properties": {
+          "name": {"type": "string", "description": "Group label as written; '' if the CV has an unlabeled list."},
+          "lines": {"type": "array", "items": {"$ref": "#/$defs/range"}, "description": "profile-build strips the leading 'name:' label and splits the rest on , ; | and bullet separators into keywords."}
+        }
+      }
+    },
+    "other_sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "lines"],
+        "properties": {
+          "title": {"type": "string"},
+          "lines": {"type": "array", "items": {"$ref": "#/$defs/range"}}
+        }
+      }
+    },
+    "ignored_lines": {"type": "array", "items": {"$ref": "#/$defs/range"}, "description": "Section headings, page markers, repeated headers, decorative lines."},
+    "source_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "severity", "message", "item_ids"],
+        "properties": {
+          "kind": {"type": "string", "enum": ["date_overlap", "date_conflict", "missing_contact", "stale_metadata", "ambiguous", "inconsistency", "extraction"]},
+          "severity": {"type": "string", "enum": ["info", "warn"]},
+          "message": {"type": "string"},
+          "item_ids": {"type": "array", "items": {"type": "string"}, "description": "Canonical IDs as profile-build will assign them (array order)."}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "range": {"type": "string", "pattern": "^[0-9]+(-[0-9]+)?$", "description": "1-based inclusive line range into cv.txt, e.g. '41' or '41-43'."},
+    "date": {"type": "string", "pattern": "^(|present|[0-9]{4}|[0-9]{4}-[0-9]{2})$"},
+    "highlight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "lines"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["bullet", "tools", "focus", "context"]},
+        "lines": {"$ref": "#/$defs/range", "description": "One bullet, including its wrapped continuation lines."}
+      }
+    }
+  }
+}

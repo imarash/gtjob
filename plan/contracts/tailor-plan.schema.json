@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/tailor-plan.schema.json",
+  "title": "Tailor plan (AI output of the tailor stage)",
+  "description": "Selections and rewrites only. `cvt assemble` expands it into tailored.json: header contacts, employer names, titles, locations, dates, education and certification facts come from the merged profile; kept bullets are copied verbatim; IDs (t-*) are assigned in order; review is set to pending (auto in auto mode). Then the provenance checks run. Facts are never retyped by the AI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "seed_run", "emphasis", "headline", "summary", "skills", "experience", "earlier_experience", "certifications", "education", "talking_points", "omitted", "open_items"],
+  "properties": {
+    "schema_version": {"const": "1"},
+    "seed_run": {"type": "string", "description": "Run slug of the prior approved plan this one started from (offered by `cvt brief tailor`), or ''."},
+    "emphasis": {"type": "string", "description": "One line: what this version leads with."},
+    "headline": {"$ref": "#/$defs/text_with_refs"},
+    "summary": {"$ref": "#/$defs/text_with_refs"},
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "priority", "items"],
+        "properties": {
+          "label": {"type": "string"},
+          "priority": {"$ref": "#/$defs/priority"},
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "source_refs"],
+              "properties": {
+                "name": {"type": "string"},
+                "source_refs": {"type": "array", "items": {"$ref": "#/$defs/ref"}, "description": "May be []: assemble resolves the term against profile skills, highlights and usable attestations, and fails with skill_unsupported if nothing supports it."}
+              }
+            }
+          }
+        }
+      }
+    },
+    "experience": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profile_id", "priority", "intro", "bullets", "engagements"],
+        "properties": {
+          "profile_id": {"type": "string", "pattern": "^exp-[0-9]+$"},
+          "priority": {"$ref": "#/$defs/priority"},
+          "intro": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mode", "text", "source_refs"],
+            "properties": {
+              "mode": {"type": "string", "enum": ["none", "keep", "rewrite"], "description": "keep = profile summary verbatim; rewrite = text below."},
+              "text": {"type": "string"},
+              "source_refs": {"type": "array", "items": {"$ref": "#/$defs/ref"}}
+            }
+          },
+          "bullets": {"type": "array", "items": {"$ref": "#/$defs/bullet"}},
+          "engagements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["profile_id", "priority", "bullets"],
+              "properties": {
+                "profile_id": {"type": "string", "pattern": "^exp-[0-9]+\\.e[0-9]+$"},
+                "priority": {"$ref": "#/$defs/priority"},
+                "bullets": {"type": "array", "items": {"$ref": "#/$defs/bullet"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "earlier_experience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["include", "profile_ids"],
+      "properties": {
+        "include": {"type": "boolean"},
+        "profile_ids": {"type": "array", "items": {"type": "string", "pattern": "^exp-[0-9]+$"}}
+      }
+    },
+    "certifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profile_id", "short_name", "priority"],
+        "properties": {
+          "profile_id": {"type": "string", "pattern": "^cert-[0-9]+$"},
+          "short_name": {"type": "string", "description": "'' = profile name; otherwise a shortening that is a substring-preserving abbreviation (checked)."},
+          "priority": {"$ref": "#/$defs/priority"}
+        }
+      }
+    },
+    "education": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profile_id", "include_details"],
+        "properties": {
+          "profile_id": {"type": "string", "pattern": "^edu-[0-9]+$"},
+          "include_details": {"type": "boolean", "description": "true = keep the verbatim detail text (e.g. thesis title)."}
+        }
+      }
+    },
+    "talking_points": {"type": "array", "items": {"$ref": "#/$defs/text_with_refs"}},
+    "omitted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profile_id", "reason"],
+        "properties": {"profile_id": {"type": "string"}, "reason": {"type": "string", "description": "Short, e.g. 'not relevant to JD'."}}
+      }
+    },
+    "open_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "text", "item_ids"],
+        "properties": {
+          "kind": {"type": "string", "enum": ["confirm_placeholder", "gap", "source_issue", "unconfirmed_suggestion"]},
+          "text": {"type": "string"},
+          "item_ids": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ref": {"type": "string", "pattern": "^(basics|exp-[0-9]+(\\.e[0-9]+)?(\\.b[0-9]+)?|sum-[0-9]+|skl-[0-9]+|cert-[0-9]+|edu-[0-9]+|oth-[0-9]+|att-[0-9]{3,})$"},
+    "priority": {"type": "integer", "enum": [1, 2, 3, 4, 5]},
+    "text_with_refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "source_refs"],
+      "properties": {
+        "text": {"type": "string"},
+        "source_refs": {"type": "array", "items": {"$ref": "#/$defs/ref"}}
+      }
+    },
+    "bullet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op", "from", "text", "extra_refs", "priority"],
+      "properties": {
+        "op": {"type": "string", "enum": ["keep", "rewrite", "merge", "attested"], "description": "keep: copy the single `from` highlight verbatim (text must be ''). rewrite: one `from` item, new text. merge: two or more `from` items, new text. attested: placed claim backed by att-* in extra_refs; `from` = the item(s) it is placed under."},
+        "from": {"type": "array", "items": {"$ref": "#/$defs/ref"}, "minItems": 1},
+        "text": {"type": "string"},
+        "extra_refs": {"type": "array", "items": {"$ref": "#/$defs/ref"}, "description": "Additional refs (attestations, other items). source_refs = from + extra_refs."},
+        "priority": {"$ref": "#/$defs/priority"}
+      }
+    }
+  }
+}

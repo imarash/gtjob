@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/edits.schema.json",
+  "title": "Change request against tailored.json",
+  "description": "out/<run-slug>/edits/NNN.json. Produced by the AI from a checkpoint-2 reply, a free-text instruction ('drop Mindgeek'), or a critic suggestion the user accepted. Applied deterministically, in order, by `cvt apply-edits`, which re-runs check-tailored and refuses the whole batch on any violation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "source", "raw_text", "ops"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "run_id": { "type": "string" },
+    "source": { "type": "string", "enum": ["checkpoint2", "instruction", "critic", "cli"] },
+    "raw_text": { "type": "string", "description": "User words verbatim (or critic issue text)." },
+    "ops": { "type": "array", "items": { "$ref": "#/$defs/op" } }
+  },
+  "$defs": {
+    "op": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op", "target_id", "field", "value", "source_refs", "items"],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": ["approve_all", "approve", "reject", "replace_text", "drop", "restore", "move_before", "set_field", "add_skill", "remove_skill", "set_priority"],
+          "description": "approve_all: mark every pending item approved (target_id ''). approve: one item. reject: remove a proposed/rewritten item and restore its original profile text if one exists, else drop. replace_text: new text for a bullet/summary/headline (source_refs required). drop: remove item (recorded in omitted). restore: bring back an omitted profile item by profile ID. move_before: reorder target before value (an ID). set_field: see field. add_skill/remove_skill: target_id = skills group t-skl-N, value = skill name. set_priority: value '1'..'5'."
+        },
+        "target_id": { "type": "string", "description": "Tailored ID (t-...), profile ID for restore, or '' for approve_all/set_field on run options." },
+        "field": {
+          "type": "string",
+          "enum": ["", "headline", "summary", "template", "include_earlier_experience", "emphasis", "page_target", "paper"],
+          "description": "Only for op=set_field; '' otherwise."
+        },
+        "value": { "type": "string", "description": "New text/value as a string ('true'/'false' for booleans). '' when not applicable." },
+        "source_refs": { "type": "array", "items": { "type": "string" }, "description": "Evidence for replace_text/add_skill; [] otherwise." },
+        "items": { "type": "array", "items": { "type": "string" }, "description": "Extra target IDs when one op applies to several items (e.g. drop several bullets); [] otherwise." }
+      }
+    }
+  }
+}

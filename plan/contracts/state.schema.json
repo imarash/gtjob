@@ -1,0 +1,438 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/state.schema.json",
+  "title": "Run state",
+  "description": "out/<run-slug>/state.json. The single source of truth for resuming a run from any host (Cursor, Claude Code, CLI). Written only through cvtlib.state. Lifecycle and transitions: see plan/contracts/interfaces.md section 6.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "run_slug",
+    "person_slug",
+    "created_at",
+    "updated_at",
+    "inputs",
+    "options",
+    "stage",
+    "status",
+    "next_action",
+    "pending",
+    "checkpoints",
+    "artifacts",
+    "ingest",
+    "attestations_used",
+    "history",
+    "errors"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "uuid4."
+    },
+    "run_slug": {
+      "type": "string",
+      "pattern": "^[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "YYYYMMDD-<jd-stem or --slug>, collision suffix -2, -3."
+    },
+    "person_slug": {
+      "type": "string",
+      "description": "'' until profiled."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cv",
+        "jd"
+      ],
+      "properties": {
+        "cv": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "original_path",
+            "stored_path",
+            "sha256",
+            "format"
+          ],
+          "properties": {
+            "original_path": {
+              "type": "string"
+            },
+            "stored_path": {
+              "type": "string",
+              "description": "Relative to run dir, e.g. 'inputs/cv.pdf'."
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "pdf",
+                "txt",
+                "md",
+                "docx"
+              ]
+            }
+          }
+        },
+        "jd": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "original_ref",
+            "stored_path",
+            "sha256"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "file",
+                "text",
+                "url"
+              ]
+            },
+            "original_ref": {
+              "type": "string"
+            },
+            "stored_path": {
+              "type": "string",
+              "description": "e.g. 'inputs/jd.md'."
+            },
+            "sha256": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "template",
+        "auto",
+        "draft",
+        "page_target",
+        "paper",
+        "host"
+      ],
+      "properties": {
+        "template": {
+          "type": "string",
+          "enum": [
+            "modern",
+            "classic"
+          ]
+        },
+        "auto": {
+          "type": "boolean"
+        },
+        "draft": {
+          "type": "boolean"
+        },
+        "page_target": {
+          "type": "integer",
+          "enum": [
+            1,
+            2
+          ]
+        },
+        "paper": {
+          "type": "string",
+          "enum": [
+            "us-letter",
+            "a4"
+          ]
+        },
+        "host": {
+          "type": "string",
+          "enum": [
+            "cursor",
+            "claude_code",
+            "cli",
+            "api",
+            "unknown"
+          ],
+          "description": "Host that last wrote state."
+        }
+      }
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "initialized",
+        "ingested",
+        "profiled",
+        "jd_analyzed",
+        "matched",
+        "awaiting_answers",
+        "answers_applied",
+        "tailored",
+        "awaiting_approval",
+        "approved",
+        "rendered",
+        "validated",
+        "reported"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "awaiting_user",
+        "failed"
+      ]
+    },
+    "next_action": {
+      "type": "string",
+      "description": "Human- and agent-readable instruction for the next step; recomputed on every save from the stage table in interfaces.md."
+    },
+    "pending": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "question_ids",
+        "message"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "none",
+            "questions",
+            "followups",
+            "approval"
+          ]
+        },
+        "question_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "checkpoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cp1",
+        "cp2"
+      ],
+      "properties": {
+        "cp1": {
+          "type": "string",
+          "enum": [
+            "not_started",
+            "pending",
+            "done",
+            "skipped"
+          ]
+        },
+        "cp2": {
+          "type": "string",
+          "enum": [
+            "not_started",
+            "pending",
+            "done",
+            "skipped"
+          ]
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "path",
+          "sha256",
+          "stage",
+          "updated_at",
+          "stale"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "cv_txt",
+              "jd_txt",
+              "profile",
+              "jd",
+              "match",
+              "questions",
+              "answers",
+              "tailored",
+              "edits",
+              "render_model",
+              "typst_source",
+              "pdf",
+              "pages_png",
+              "fit",
+              "validation",
+              "critique",
+              "report",
+              "final_pdf",
+              "markdown_fallback",
+              "profile_map",
+              "digest",
+              "tailor_plan",
+              "usage"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "description": "Relative to the run dir."
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string",
+            "description": "Stage that produced it."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "stale": {
+            "type": "boolean",
+            "description": "true when an upstream artifact changed after this one was written."
+          }
+        }
+      }
+    },
+    "ingest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "pages",
+        "chars",
+        "scanned_suspect",
+        "warnings"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": [
+            "none",
+            "pdftotext",
+            "pypdf",
+            "text",
+            "markdown",
+            "docx"
+          ]
+        },
+        "pages": {
+          "type": "integer"
+        },
+        "chars": {
+          "type": "integer"
+        },
+        "scanned_suspect": {
+          "type": "boolean"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "attestations_used": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "at",
+          "event",
+          "stage",
+          "host",
+          "detail"
+        ],
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "type": "string",
+            "description": "Command name, e.g. 'answers-apply'."
+          },
+          "stage": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string",
+            "enum": [
+              "cursor",
+              "claude_code",
+              "cli",
+              "api",
+              "unknown"
+            ],
+            "description": "Host that performed this event: $GTJOB_HOST if set, else cvtlib.hostdetect.detect() when available, else unknown."
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "at",
+          "code",
+          "message"
+        ],
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

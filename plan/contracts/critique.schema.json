@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/critique.schema.json",
+  "title": "Hiring-manager critique",
+  "description": "out/<run-slug>/critique.json. Produced by the read-only cv-critic subagent (Opus) or `gtjob tailor --critic`, from tailored.json, jd.json, match.json and pages/page-N.png. Saved by `cvt critique-save`. Suggestions are proposals only: they become edits only after user approval, and may never add claims.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "model", "tailored_version", "scores", "issues", "verdict"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "run_id": { "type": "string" },
+    "model": { "type": "string" },
+    "tailored_version": { "type": "integer" },
+    "scores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["criterion", "score", "justification"],
+        "properties": {
+          "criterion": { "type": "string", "enum": ["relevance", "impact", "concision", "readability", "visual", "truthfulness", "questions"] },
+          "score": { "type": "integer", "enum": [1, 2, 3, 4, 5] },
+          "justification": { "type": "string" }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "item_id", "message", "suggestion"],
+        "properties": {
+          "severity": { "type": "string", "enum": ["high", "medium", "low"] },
+          "item_id": { "type": "string", "description": "Tailored ID or 'layout'." },
+          "message": { "type": "string" },
+          "suggestion": { "type": "string", "description": "Concrete proposed wording or layout change. Must not introduce unsupported facts." }
+        }
+      }
+    },
+    "verdict": { "type": "string", "enum": ["ship", "revise"] }
+  }
+}

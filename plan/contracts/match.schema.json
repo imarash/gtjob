@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/match.schema.json",
+  "title": "Requirement-to-evidence match",
+  "description": "out/<run-slug>/match.json. Produced by the AI match stage; `cvt match-check` verifies every ref exists, every requirement in jd.json appears exactly once, every quote is a substring of its ref's text, and recomputes `coverage`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "requirements", "coverage", "seniority_fit", "metric_opportunities", "strategy"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "run_id": { "type": "string" },
+    "requirements": { "type": "array", "items": { "$ref": "#/$defs/req_match" } },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["must_total", "must_strong", "must_partial", "must_none", "nice_total", "nice_strong", "nice_partial", "nice_none"],
+      "properties": {
+        "must_total": { "type": "integer" },
+        "must_strong": { "type": "integer" },
+        "must_partial": { "type": "integer" },
+        "must_none": { "type": "integer" },
+        "nice_total": { "type": "integer" },
+        "nice_strong": { "type": "integer" },
+        "nice_partial": { "type": "integer" },
+        "nice_none": { "type": "integer" }
+      },
+      "description": "Recomputed by `cvt match-check`; AI values are overwritten."
+    },
+    "seniority_fit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assessment", "framing"],
+      "properties": {
+        "assessment": { "type": "string", "enum": ["under", "match", "over", "unknown"] },
+        "framing": { "type": "string", "description": "How the tailoring frames seniority, e.g. 'Staff-level hands-on IC depth; do not emphasize total years; keep real dates.'" }
+      }
+    },
+    "metric_opportunities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item_id", "question", "why"],
+        "properties": {
+          "item_id": { "type": "string", "description": "Profile bullet ID that would benefit from a number." },
+          "question": { "type": "string", "description": "Specific question, e.g. 'Roughly how many OpenShift clusters or apps did the RBC platform team run?'" },
+          "why": { "type": "string" }
+        }
+      },
+      "description": "3-5 highest-impact items, ordered by impact."
+    },
+    "strategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["template", "emphasis", "include_earlier_experience", "rationale"],
+      "properties": {
+        "template": { "type": "string", "enum": ["modern", "classic"] },
+        "emphasis": { "type": "string", "description": "Recommended lead theme, e.g. 'banking/fintech reliability and platform security'." },
+        "include_earlier_experience": { "type": "boolean" },
+        "rationale": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "quote", "note"],
+      "properties": {
+        "ref": { "type": "string", "pattern": "^(exp-[0-9]+(\\.e[0-9]+)?(\\.b[0-9]+)?|sum-[0-9]+|skl-[0-9]+|cert-[0-9]+|edu-[0-9]+|oth-[0-9]+|att-[0-9]{3,})$" },
+        "quote": { "type": "string", "description": "Short verbatim excerpt from the ref's text (or attestation claim)." },
+        "note": { "type": "string" }
+      }
+    },
+    "req_match": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["req_id", "strength", "evidence", "rationale", "gap_question", "advice"],
+      "properties": {
+        "req_id": { "type": "string", "pattern": "^req-[0-9]+$" },
+        "strength": { "type": "string", "enum": ["strong", "partial", "none"] },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "rationale": { "type": "string" },
+        "gap_question": { "type": "string", "description": "For partial/none: the short label used in the checkpoint-1 gap question, e.g. 'SOC 2 (you have PCI DSS)'. '' for strong." },
+        "advice": { "type": "string", "description": "Honest way to address the gap in an interview or cover note; used in report.md. '' for strong." }
+      }
+    }
+  }
+}

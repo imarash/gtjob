@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/render-model.schema.json",
+  "title": "Template data contract",
+  "description": "out/<run-slug>/build/render.json. Built deterministically by `cvtlib.render.build_render_model(tailored, fit)` and read by every Typst template via `json(sys.inputs.data)`. Templates receive plain strings only and must never eval them. Section order in `sections` is the render order. Dates are pre-formatted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "meta", "theme", "header", "sections"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "author", "subject", "keywords", "draft"],
+      "properties": {
+        "title": { "type": "string", "description": "PDF title, e.g. 'Arash Morattab — CV — Staff Platform & Reliability Engineer'." },
+        "author": { "type": "string" },
+        "subject": { "type": "string" },
+        "keywords": { "type": "array", "items": { "type": "string" } },
+        "draft": { "type": "boolean", "description": "true highlights [[CONFIRM: ...]] in red and adds a DRAFT footer." }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["template", "paper", "density", "accent"],
+      "properties": {
+        "template": { "type": "string", "enum": ["modern", "classic"] },
+        "paper": { "type": "string", "enum": ["us-letter", "a4"] },
+        "density": {
+          "type": "string",
+          "enum": ["comfortable", "standard", "compact"],
+          "description": "Keys into assets/templates/presets.json (body size, margins, leading). compact is the typography floor: body 9.5pt, margins 0.5in."
+        },
+        "accent": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+      }
+    },
+    "header": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "headline", "contacts"],
+      "properties": {
+        "name": { "type": "string" },
+        "headline": { "type": "string" },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "text", "url"],
+            "properties": {
+              "kind": { "type": "string", "enum": ["email", "phone", "location", "website", "linkedin", "github", "other"] },
+              "text": { "type": "string", "description": "Display text, e.g. 'me@arashmor.com'." },
+              "url": { "type": "string", "description": "mailto:/tel:/https: link or '' for location." }
+            }
+          }
+        }
+      }
+    },
+    "sections": { "type": "array", "items": { "$ref": "#/$defs/section" } }
+  },
+  "$defs": {
+    "subentry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["heading", "subheading", "bullets"],
+      "properties": {
+        "heading": { "type": "string", "description": "Client/partner name, e.g. 'Royal Bank of Canada (RBC)'." },
+        "subheading": { "type": "string", "description": "Role label, e.g. 'SRE'." },
+        "bullets": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["heading", "subheading", "location", "dates", "intro", "bullets", "subentries", "collapsed_line"],
+      "properties": {
+        "heading": { "type": "string", "description": "Employer (experience) or institution (education)." },
+        "subheading": { "type": "string", "description": "Title (experience) or degree (education)." },
+        "location": { "type": "string" },
+        "dates": { "type": "string", "description": "Pre-formatted, e.g. 'Feb 2024 – Present'." },
+        "intro": { "type": "string" },
+        "bullets": { "type": "array", "items": { "type": "string" } },
+        "subentries": { "type": "array", "items": { "$ref": "#/$defs/subentry" } },
+        "collapsed_line": { "type": "string", "description": "Engagements with no bullets, e.g. 'Also: Trilliant (Solutions Architect) · IDS (Solutions Architect)'. '' if none." }
+      }
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "title", "paragraphs", "skill_rows", "entries", "lines"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["summary", "skills", "experience", "earlier", "certifications", "education"] },
+        "title": { "type": "string", "description": "Rendered section heading, e.g. 'Experience'." },
+        "paragraphs": { "type": "array", "items": { "type": "string" }, "description": "summary only." },
+        "skill_rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "items_text"],
+            "properties": {
+              "label": { "type": "string" },
+              "items_text": { "type": "string", "description": "Comma-separated items." }
+            }
+          },
+          "description": "skills only."
+        },
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" }, "description": "experience and education." },
+        "lines": { "type": "array", "items": { "type": "string" }, "description": "earlier and certifications: one string per rendered line/item." }
+      }
+    }
+  }
+}
