@@ -4,7 +4,7 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 
 | Wave | State | Gate verdict | Fix-up rounds | Commit | Build tokens (approx.) |
 | --- | --- | --- | --- | --- | --- |
-| 1 | APPROVED | APPROVE (re-gate 2) | 2 | see log | |
+| 1 | APPROVED | APPROVE (re-gate 2) | 2 | bdbdb19 | |
 | 2 | TODO | | | | |
 | 3 | TODO | | | | |
 | 4 | TODO | | | | |
