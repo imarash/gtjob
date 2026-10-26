@@ -1,0 +1,1 @@
+Your CV doesn't currently show: service mesh; SOC 2 (you have PCI DSS); TypeScript (only React and Next.js are listed); explicit SLOs and error budgets; working at a startup as an employee. Which of these do you actually have experience with?

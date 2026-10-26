@@ -1,0 +1,49 @@
+{
+  "round": 1,
+  "checkpoint": 1,
+  "received_at": "2026-10-25T00:05:00Z",
+  "channel": "chat",
+  "raw_text": "I used Helm at Brightfield to package two internal services",
+  "items": [
+    {
+      "question_id": "q-1",
+      "action": "attest",
+      "choice_ids": [
+        "helm"
+      ],
+      "attestations": [
+        {
+          "type": "skill",
+          "claim": "Helm",
+          "terms": [
+            "Helm"
+          ],
+          "detail": "packaged two internal services",
+          "scope": {
+            "kind": "items",
+            "role_label": "",
+            "item_ids": [
+              "exp-1"
+            ],
+            "description": "at Brightfield"
+          },
+          "placement": "skills_and_bullets",
+          "correction": {
+            "item_id": "",
+            "field": "",
+            "old_value": "",
+            "new_value": ""
+          },
+          "verbatim": "I used Helm at Brightfield to package two internal services",
+          "caveat": ""
+        }
+      ],
+      "instruction": "",
+      "note": ""
+    }
+  ],
+  "unmentioned_question_ids": [
+    "q-2",
+    "q-3"
+  ]
+}

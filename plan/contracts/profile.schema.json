@@ -8,7 +8,7 @@
   "required": ["schema_version", "person_slug", "cv_sha256", "created_at", "basics", "summary", "work", "education", "certificates", "skills", "other_sections", "source_issues"],
   "properties": {
     "schema_version": { "const": "1" },
-    "person_slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Lowercase hyphenated full name, e.g. arash-morattab." },
+    "person_slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Lowercase hyphenated full name, e.g. alex-chen." },
     "cv_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the original CV file bytes." },
     "created_at": { "type": "string", "format": "date-time" },
     "basics": { "$ref": "#/$defs/basics" },

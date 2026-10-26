@@ -1,0 +1,41 @@
+Jamie Rivera
+Junior DevOps Engineer
+Columbus, OH | jamie.rivera@example.com | https://github.com/jamierivera-dev
+
+SUMMARY
+Junior DevOps engineer who automates cloud deployments, CI/CD pipelines and
+monitoring for a logistics platform. BSc in Computer Science, AWS certified.
+
+EXPERIENCE
+Brightfield Logistics | Junior DevOps Engineer | Columbus, OH | Feb 2024 - Present
+- Built GitHub Actions pipelines for 12 services, cutting average deploy time
+  from 25 minutes to 8 minutes.
+- Wrote Terraform modules for AWS networking and ECS services, replacing
+  manual console changes across 3 environments.
+- Containerized 6 legacy services with Docker and moved them to Amazon ECS.
+- Set up Prometheus and Grafana dashboards and alerts, reducing mean time to
+  detect incidents by about 40%.
+- Joined a weekly on-call rotation and wrote 5 runbooks for common incidents.
+- Tools in use: AWS, Terraform, Docker, GitHub Actions, Prometheus, Grafana
+
+Cedar Valley College | IT Support Intern | Dayton, OH | Jul 2023 - Dec 2023
+- Resolved about 30 support tickets per week for students and staff, keeping
+  first-response time under 4 hours.
+- Automated account provisioning with PowerShell scripts, saving roughly 5
+  hours per week.
+- Documented 15 knowledge base articles for common Windows and Wi-Fi issues.
+
+SKILLS
+Cloud & Infrastructure: AWS, ECS, S3, IAM, Terraform, Docker, Linux
+CI/CD & Automation: GitHub Actions, Git, Bash, Python, PowerShell
+Monitoring & Operations: Prometheus, Grafana, CloudWatch, PagerDuty, runbooks
+
+EDUCATION
+BSc Computer Science | Lakeshore State University | Columbus, OH | Aug 2023
+
+CERTIFICATIONS
+AWS Certified Cloud Practitioner
+
+PROJECTS
+terraform-lint-action: an open-source GitHub Action that runs terraform fmt and
+validate on pull requests, used in 4 personal repositories.

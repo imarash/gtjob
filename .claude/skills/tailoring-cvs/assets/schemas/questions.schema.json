@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/questions.schema.json",
+  "title": "Checkpoint questions",
+  "description": "out/<run-slug>/questions.json. The AI writes the initial checkpoint-1 batch; `cvt questions` validates it (at most 8 open checkpoint-1 questions, every question has a default, suppresses questions already answered by active attestations) and renders it for the host. `cvt answers-apply` appends follow-up questions (topic followup/scope) and updates statuses.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "questions"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "run_id": { "type": "string" },
+    "questions": { "type": "array", "items": { "$ref": "#/$defs/question" } }
+  },
+  "$defs": {
+    "choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "value"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_]+$", "description": "Stable choice key, e.g. 'service_mesh', 'modern', 'yes'." },
+        "label": { "type": "string", "description": "Shown to the user." },
+        "value": { "type": "string", "description": "Machine value, e.g. a requirement ID, template name, or profile item ID." }
+      }
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "checkpoint", "round", "type", "topic", "prompt", "choices", "allow_free_text", "default", "links", "parent_id", "status", "suppressed_reason"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^q-[0-9]+$" },
+        "checkpoint": { "type": "integer", "enum": [1, 2] },
+        "round": { "type": "integer", "description": "1 for the initial batch; follow-ups get round+1." },
+        "type": { "type": "string", "enum": ["multi_select", "single_select", "yes_no", "free_text", "scope_confirm"] },
+        "topic": { "type": "string", "enum": ["gap", "source_issue", "metric", "strategy", "scope", "followup"] },
+        "prompt": { "type": "string" },
+        "choices": { "type": "array", "items": { "$ref": "#/$defs/choice" } },
+        "allow_free_text": { "type": "boolean", "description": "Must be true for every question (free text is always accepted)." },
+        "default": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["choice_ids", "text", "description"],
+          "properties": {
+            "choice_ids": { "type": "array", "items": { "type": "string" } },
+            "text": { "type": "string" },
+            "description": { "type": "string", "description": "What happens if skipped, e.g. 'Keep as gaps; nothing is added.'" }
+          }
+        },
+        "links": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["req_ids", "item_ids", "issue_ids", "attestation_ids"],
+          "properties": {
+            "req_ids": { "type": "array", "items": { "type": "string" } },
+            "item_ids": { "type": "array", "items": { "type": "string" } },
+            "issue_ids": { "type": "array", "items": { "type": "string" } },
+            "attestation_ids": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "parent_id": { "type": "string", "description": "q-N this follows up on, or ''." },
+        "status": { "type": "string", "enum": ["pending", "answered", "skipped", "defaulted", "suppressed"] },
+        "suppressed_reason": { "type": "string", "description": "Set by `cvt questions` when an active attestation already answers it, e.g. 'answered by att-002 (Istio)'. '' otherwise." }
+      }
+    }
+  }
+}

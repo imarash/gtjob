@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/validation.schema.json",
+  "title": "Validation gates result",
+  "description": "out/<run-slug>/validation.json. Written by `cvt validate` (all gates) and partially by `cvt check-tailored` (pre-render gates). `passed` is true only when every gate is pass/warn/skipped-allowed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "created_at",
+    "draft",
+    "tailored_version",
+    "passed",
+    "gates",
+    "coverage"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "draft": {
+      "type": "boolean"
+    },
+    "tailored_version": {
+      "type": "integer"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/gate"
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "must_keywords_total",
+        "must_keywords_found",
+        "missing",
+        "by_requirement"
+      ],
+      "properties": {
+        "must_keywords_total": {
+          "type": "integer"
+        },
+        "must_keywords_found": {
+          "type": "integer"
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "by_requirement": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "req_id",
+              "kind",
+              "found_terms",
+              "missing_terms"
+            ],
+            "properties": {
+              "req_id": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "must",
+                  "nice",
+                  "responsibility"
+                ]
+              },
+              "found_terms": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "missing_terms": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "violation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "item_id",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "schema",
+            "missing_refs",
+            "unknown_ref",
+            "ref_out_of_scope",
+            "placement",
+            "unsupported_term",
+            "unsupported_number",
+            "fact_mismatch",
+            "attestation_not_active",
+            "placeholder",
+            "logistics_leak",
+            "page_count",
+            "ats_missing",
+            "ats_order",
+            "ats_garbage",
+            "typography",
+            "skill_unsupported",
+            "cert_unsupported",
+            "layout",
+            "unmapped_line",
+            "range_error",
+            "not_verbatim",
+            "plan_ref",
+            "budget"
+          ]
+        },
+        "item_id": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string",
+          "description": "Precise, e.g. \"bullet t-exp-2.e4.b1 mentions 'Linkerd'; not found in refs [exp-2.e4, att-002]\"."
+        }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "status",
+        "details",
+        "violations"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": [
+            "schema",
+            "provenance",
+            "placeholders",
+            "logistics_leak",
+            "attestation_status",
+            "page_count",
+            "typography_floor",
+            "ats_roundtrip",
+            "keyword_coverage",
+            "layout"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail",
+            "warn",
+            "skipped"
+          ]
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "violations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/violation"
+          }
+        }
+      }
+    }
+  }
+}

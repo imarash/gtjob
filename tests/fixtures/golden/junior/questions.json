@@ -1,0 +1,108 @@
+{
+  "schema_version": "1",
+  "run_id": "golden-junior",
+  "questions": [
+    {
+      "id": "q-1",
+      "checkpoint": 1,
+      "round": 1,
+      "type": "multi_select",
+      "topic": "gap",
+      "prompt": "Which of these requirements do you have real experience with that the CV does not show?",
+      "choices": [
+        {
+          "id": "helm",
+          "label": "Helm",
+          "value": "Helm|Helm charts"
+        },
+        {
+          "id": "python_bash",
+          "label": "Python or Bash scripting at work",
+          "value": "Python|Bash"
+        }
+      ],
+      "allow_free_text": true,
+      "default": {
+        "choice_ids": [],
+        "text": "Keep as gaps",
+        "description": "Keep as gaps; nothing is added."
+      },
+      "links": {
+        "req_ids": [
+          "req-6",
+          "req-5"
+        ],
+        "item_ids": [],
+        "issue_ids": [],
+        "attestation_ids": []
+      },
+      "parent_id": "",
+      "status": "pending",
+      "suppressed_reason": ""
+    },
+    {
+      "id": "q-2",
+      "checkpoint": 1,
+      "round": 1,
+      "type": "free_text",
+      "topic": "metric",
+      "prompt": "Roughly how many incidents did you handle in a typical month of on-call, and how many engineers use your GitHub Actions pipelines?",
+      "choices": [],
+      "allow_free_text": true,
+      "default": {
+        "choice_ids": [],
+        "text": "no number",
+        "description": "No number is added to those bullets."
+      },
+      "links": {
+        "req_ids": [],
+        "item_ids": [
+          "exp-1.b5",
+          "exp-1.b1"
+        ],
+        "issue_ids": [],
+        "attestation_ids": []
+      },
+      "parent_id": "",
+      "status": "pending",
+      "suppressed_reason": ""
+    },
+    {
+      "id": "q-3",
+      "checkpoint": 1,
+      "round": 1,
+      "type": "single_select",
+      "topic": "strategy",
+      "prompt": "Which template should the CV use?",
+      "choices": [
+        {
+          "id": "modern",
+          "label": "Modern (one-column with a skills sidebar)",
+          "value": "modern"
+        },
+        {
+          "id": "classic",
+          "label": "Classic (single column, plain)",
+          "value": "classic"
+        }
+      ],
+      "allow_free_text": true,
+      "default": {
+        "choice_ids": [
+          "modern"
+        ],
+        "text": "Modern",
+        "description": "Use the modern template."
+      },
+      "links": {
+        "req_ids": [],
+        "item_ids": [],
+        "issue_ids": [],
+        "attestation_ids": []
+      },
+      "parent_id": "",
+      "status": "pending",
+      "suppressed_reason": ""
+    }
+  ]
+}

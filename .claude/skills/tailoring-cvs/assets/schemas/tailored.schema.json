@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/tailored.schema.json",
+  "title": "Tailored CV content",
+  "description": "out/<run-slug>/tailored.json. Render-ready content selected and rewritten for one JD. Produced by the AI tailor stage; edited only through edits ops; gated by `cvt check-tailored` (schema + provenance + placeholders + logistics leak). Every claim-bearing element carries source_refs (profile IDs or att-NNN). `version` is incremented by scripts on every save; previous versions are kept in tailored.history/.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "person_slug", "profile_sha256", "jd_sha256", "version", "target", "header", "summary", "skills", "experience", "earlier_experience", "certifications", "education", "talking_points", "omitted", "open_items"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "run_id": { "type": "string" },
+    "person_slug": { "type": "string" },
+    "profile_sha256": { "type": "string", "description": "SHA-256 of the profile.json bytes used." },
+    "jd_sha256": { "type": "string" },
+    "version": { "type": "integer", "description": "AI writes 1; scripts increment." },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "company", "page_target", "template", "emphasis"],
+      "properties": {
+        "title": { "type": "string", "description": "jd.title." },
+        "company": { "type": "string", "description": "jd.company or ''." },
+        "page_target": { "type": "integer", "enum": [1, 2] },
+        "template": { "type": "string", "enum": ["modern", "classic"] },
+        "emphasis": { "type": "string" }
+      }
+    },
+    "header": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "headline", "location", "email", "phone", "links", "source_refs"],
+      "properties": {
+        "name": { "type": "string", "description": "Must equal profile basics.name." },
+        "headline": { "type": "string", "description": "Discipline-style target headline, e.g. 'Platform & Site Reliability Engineering · AWS · Kubernetes · Terraform'. Must not present a job title the candidate never held as a past title. Tech terms must trace to source_refs." },
+        "location": { "type": "string", "description": "From profile or a correction attestation; '' if unknown (never guessed)." },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "url"],
+            "properties": {
+              "label": { "type": "string" },
+              "url": { "type": "string" }
+            }
+          }
+        },
+        "source_refs": { "type": "array", "items": { "$ref": "#/$defs/ref" } }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text", "source_refs", "review"],
+      "properties": {
+        "id": { "const": "t-sum" },
+        "text": { "type": "string", "description": "2-4 rendered lines." },
+        "source_refs": { "type": "array", "items": { "$ref": "#/$defs/ref" } },
+        "review": { "$ref": "#/$defs/review" }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "items", "priority", "review"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^t-skl-[0-9]+$" },
+          "label": { "type": "string", "description": "Group label, e.g. 'Cloud & Platform'." },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "source_refs"],
+              "properties": {
+                "name": { "type": "string" },
+                "source_refs": { "type": "array", "items": { "$ref": "#/$defs/ref" } }
+              }
+            }
+          },
+          "priority": { "$ref": "#/$defs/priority" },
+          "review": { "$ref": "#/$defs/review" }
+        }
+      },
+      "description": "4-6 groups ordered by JD relevance."
+    },
+    "experience": { "type": "array", "items": { "$ref": "#/$defs/entry" } },
+    "earlier_experience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["include", "items", "review"],
+      "properties": {
+        "include": { "type": "boolean" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["profile_id", "employer", "title", "start_date", "end_date"],
+            "properties": {
+              "profile_id": { "type": "string", "pattern": "^exp-[0-9]+$" },
+              "employer": { "type": "string" },
+              "title": { "type": "string" },
+              "start_date": { "$ref": "#/$defs/date" },
+              "end_date": { "$ref": "#/$defs/date" }
+            }
+          }
+        },
+        "review": { "$ref": "#/$defs/review" }
+      }
+    },
+    "certifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "profile_id", "name", "priority"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^t-cert-[0-9]+$" },
+          "profile_id": { "type": "string", "pattern": "^cert-[0-9]+$" },
+          "name": { "type": "string", "description": "May shorten the profile name (e.g. drop 'Google Cloud Certified'), never change it." },
+          "priority": { "$ref": "#/$defs/priority" }
+        }
+      }
+    },
+    "education": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "profile_id", "degree", "institution", "location", "end_date", "details"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^t-edu-[0-9]+$" },
+          "profile_id": { "type": "string", "pattern": "^edu-[0-9]+$" },
+          "degree": { "type": "string", "description": "e.g. 'MASc, Software Engineering'." },
+          "institution": { "type": "string" },
+          "location": { "type": "string" },
+          "end_date": { "$ref": "#/$defs/date" },
+          "details": { "type": "string", "description": "Optional short verbatim detail (thesis title) or ''." }
+        }
+      }
+    },
+    "talking_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text", "source_refs"],
+        "properties": {
+          "text": { "type": "string" },
+          "source_refs": { "type": "array", "items": { "$ref": "#/$defs/ref" } }
+        }
+      },
+      "description": "Interview talking points for report.md, not rendered in the CV."
+    },
+    "omitted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profile_id", "reason"],
+        "properties": {
+          "profile_id": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      },
+      "description": "Profile items deliberately left out (shown in checkpoint-2 outline and report)."
+    },
+    "open_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "text", "item_ids"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["confirm_placeholder", "gap", "source_issue", "unconfirmed_suggestion"] },
+          "text": { "type": "string" },
+          "item_ids": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "date": { "type": "string", "pattern": "^(|present|[0-9]{4}|[0-9]{4}-[0-9]{2})$" },
+    "ref": {
+      "type": "string",
+      "pattern": "^(basics|exp-[0-9]+(\\.e[0-9]+)?(\\.b[0-9]+)?|sum-[0-9]+|skl-[0-9]+|cert-[0-9]+|edu-[0-9]+|oth-[0-9]+|att-[0-9]{3,})$"
+    },
+    "priority": {
+      "type": "integer",
+      "enum": [1, 2, 3, 4, 5],
+      "description": "1 = pinned (never dropped by fit); 5 = dropped first."
+    },
+    "review": {
+      "type": "string",
+      "enum": ["pending", "approved", "auto"],
+      "description": "Checkpoint-2 status. auto = applied in --auto mode."
+    },
+    "bullet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text", "source_refs", "priority", "origin", "review"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^t-exp-[0-9]+(\\.e[0-9]+)?\\.b[0-9]+$" },
+        "text": { "type": "string", "description": "Action verb + what + how/with what + impact. At most 2 rendered lines. May contain [[CONFIRM: ...]] in drafts." },
+        "source_refs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ref" } },
+        "priority": { "$ref": "#/$defs/priority" },
+        "origin": { "type": "string", "enum": ["kept", "rewritten", "merged", "attested"] },
+        "review": { "$ref": "#/$defs/review" }
+      }
+    },
+    "engagement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "profile_id", "kind", "name", "role_label", "bullets", "priority", "review"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^t-exp-[0-9]+\\.e[0-9]+$" },
+        "profile_id": { "type": "string", "pattern": "^exp-[0-9]+\\.e[0-9]+$" },
+        "kind": { "type": "string", "enum": ["client", "partner", "internal"] },
+        "name": { "type": "string" },
+        "role_label": { "type": "string", "description": "Profile role_label (verbatim or corrected by attestation)." },
+        "bullets": { "type": "array", "items": { "$ref": "#/$defs/bullet" }, "description": "[] renders the engagement as a collapsed one-liner." },
+        "priority": { "$ref": "#/$defs/priority" },
+        "review": { "$ref": "#/$defs/review" }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "profile_id", "employer", "location", "title", "start_date", "end_date", "intro", "bullets", "engagements", "priority", "review"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^t-exp-[0-9]+$" },
+        "profile_id": { "type": "string", "pattern": "^exp-[0-9]+$" },
+        "employer": { "type": "string", "description": "Must equal profile work.name." },
+        "location": { "type": "string" },
+        "title": { "type": "string", "description": "Must equal profile work.position (or a correction attestation)." },
+        "start_date": { "$ref": "#/$defs/date" },
+        "end_date": { "$ref": "#/$defs/date" },
+        "intro": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text", "source_refs"],
+          "properties": {
+            "text": { "type": "string", "description": "Optional one-line context, or ''." },
+            "source_refs": { "type": "array", "items": { "$ref": "#/$defs/ref" } }
+          }
+        },
+        "bullets": { "type": "array", "items": { "$ref": "#/$defs/bullet" } },
+        "engagements": { "type": "array", "items": { "$ref": "#/$defs/engagement" } },
+        "priority": { "$ref": "#/$defs/priority" },
+        "review": { "$ref": "#/$defs/review" }
+      }
+    }
+  }
+}

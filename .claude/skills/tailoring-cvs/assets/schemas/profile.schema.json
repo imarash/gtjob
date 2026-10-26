@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/profile.schema.json",
+  "title": "Master profile",
+  "description": "Canonical, verbatim-sourced parse of one CV. Produced by the AI profile stage, normalized and verified by `cvt profile-verify`, cached in profiles/<person-slug>/profile.<cv-sha12>.json. Field names are snake_case; `cvt export-jsonresume` maps to JSON Resume. Every `text` field must appear verbatim (after whitespace normalization) in cv.txt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "person_slug", "cv_sha256", "created_at", "basics", "summary", "work", "education", "certificates", "skills", "other_sections", "source_issues"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "person_slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Lowercase hyphenated full name, e.g. alex-chen." },
+    "cv_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the original CV file bytes." },
+    "created_at": { "type": "string", "format": "date-time" },
+    "basics": { "$ref": "#/$defs/basics" },
+    "summary": { "type": "array", "items": { "$ref": "#/$defs/summary_item" } },
+    "work": { "type": "array", "items": { "$ref": "#/$defs/work" } },
+    "education": { "type": "array", "items": { "$ref": "#/$defs/education" } },
+    "certificates": { "type": "array", "items": { "$ref": "#/$defs/certificate" } },
+    "skills": { "type": "array", "items": { "$ref": "#/$defs/skill_group" } },
+    "other_sections": { "type": "array", "items": { "$ref": "#/$defs/other_section" } },
+    "source_issues": { "type": "array", "items": { "$ref": "#/$defs/source_issue" } }
+  },
+  "$defs": {
+    "date": {
+      "type": "string",
+      "pattern": "^(|present|[0-9]{4}|[0-9]{4}-[0-9]{2})$",
+      "description": "YYYY-MM, YYYY, 'present', or '' when the CV gives no date."
+    },
+    "basics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "label", "email", "phone", "url", "location", "profiles"],
+      "properties": {
+        "id": { "const": "basics" },
+        "name": { "type": "string" },
+        "label": { "type": "string", "description": "Headline/title line as written on the CV, or ''." },
+        "email": { "type": "string", "description": "'' when absent. Found anywhere in cv.txt, including page headers." },
+        "phone": { "type": "string" },
+        "url": { "type": "string" },
+        "location": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["city", "region", "country"],
+          "properties": {
+            "city": { "type": "string" },
+            "region": { "type": "string" },
+            "country": { "type": "string" }
+          }
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["network", "url"],
+            "properties": {
+              "network": { "type": "string", "description": "linkedin, github, website, other." },
+              "url": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "summary_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^sum-[0-9]+$" },
+        "text": { "type": "string", "description": "Verbatim summary bullet or paragraph." }
+      }
+    },
+    "highlight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "text"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^exp-[0-9]+(\\.e[0-9]+)?\\.b[0-9]+$" },
+        "kind": {
+          "type": "string",
+          "enum": ["bullet", "tools", "focus", "context"],
+          "description": "bullet = achievement/responsibility; tools = 'Tools in use:'/'Leveraged tools:' line; focus = 'Focus Areas'/'Domains' item; context = descriptive paragraph."
+        },
+        "text": { "type": "string", "description": "Verbatim text, glyphs stripped, whitespace collapsed." }
+      }
+    },
+    "engagement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "name", "role_label", "summary", "highlights"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^exp-[0-9]+\\.e[0-9]+$" },
+        "kind": { "type": "string", "enum": ["client", "partner", "internal"] },
+        "name": { "type": "string", "description": "Client/partner name as written, e.g. 'Royal Bank of Canada (RBC)'." },
+        "role_label": { "type": "string", "description": "Verbatim value after 'Role:', e.g. 'SRE'. '' when absent." },
+        "summary": { "type": "string", "description": "Verbatim intro paragraph or ''." },
+        "highlights": { "type": "array", "items": { "$ref": "#/$defs/highlight" } }
+      }
+    },
+    "work": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "location", "position", "employment_type", "start_date", "end_date", "date_text", "summary", "highlights", "engagements"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^exp-[0-9]+$" },
+        "name": { "type": "string", "description": "Employer name as written." },
+        "location": { "type": "string" },
+        "position": { "type": "string", "description": "Verbatim role/title at the employer level." },
+        "employment_type": { "type": "string", "enum": ["employee", "consultant", "contractor", "research", "unknown"] },
+        "start_date": { "$ref": "#/$defs/date" },
+        "end_date": { "$ref": "#/$defs/date" },
+        "date_text": { "type": "string", "description": "Verbatim date range, e.g. 'Feb 2024 - Present'." },
+        "summary": { "type": "string", "description": "Verbatim intro paragraph under the employer, or ''." },
+        "highlights": { "type": "array", "items": { "$ref": "#/$defs/highlight" } },
+        "engagements": { "type": "array", "items": { "$ref": "#/$defs/engagement" } }
+      }
+    },
+    "education": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "institution", "area", "study_type", "location", "end_date", "text"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^edu-[0-9]+$" },
+        "institution": { "type": "string" },
+        "area": { "type": "string", "description": "Field, e.g. 'Software Engineering'." },
+        "study_type": { "type": "string", "description": "Degree, e.g. 'MASc', 'BSc'." },
+        "location": { "type": "string" },
+        "end_date": { "$ref": "#/$defs/date" },
+        "text": { "type": "string", "description": "Verbatim full entry including GPA/thesis/courses." }
+      }
+    },
+    "certificate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "issuer", "date"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^cert-[0-9]+$" },
+        "name": { "type": "string", "description": "Verbatim certification line." },
+        "issuer": { "type": "string", "description": "Inferred issuer (Google, HashiCorp, AWS, Red Hat, Anthropic, OpenStack Foundation) or ''." },
+        "date": { "$ref": "#/$defs/date" }
+      }
+    },
+    "skill_group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "keywords"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^skl-[0-9]+$" },
+        "name": { "type": "string", "description": "Group label as written, e.g. 'Programming Languages'." },
+        "keywords": { "type": "array", "items": { "type": "string" }, "description": "Verbatim items, split on commas." }
+      }
+    },
+    "other_section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "text"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^oth-[0-9]+$" },
+        "title": { "type": "string" },
+        "text": { "type": "string" }
+      }
+    },
+    "source_issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "severity", "message", "item_ids", "origin"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^iss-[0-9]+$" },
+        "kind": {
+          "type": "string",
+          "enum": ["date_overlap", "date_conflict", "missing_contact", "stale_metadata", "ambiguous", "inconsistency", "extraction"]
+        },
+        "severity": { "type": "string", "enum": ["info", "warn"] },
+        "message": { "type": "string", "description": "One sentence a user can confirm or correct." },
+        "item_ids": { "type": "array", "items": { "type": "string" } },
+        "origin": { "type": "string", "enum": ["ai", "script"], "description": "script = added by profile-verify's deterministic checks." }
+      }
+    }
+  }
+}

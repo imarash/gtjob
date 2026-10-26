@@ -1,0 +1,34 @@
+{
+  "schema_version": "1",
+  "run_id": "golden-junior",
+  "source": "checkpoint2",
+  "raw_text": "Say 'cutting' in the monitoring bullet, put the Terraform bullet back to my original wording, and approve the rest.",
+  "ops": [
+    {
+      "op": "replace_text",
+      "target_id": "t-exp-1.b5",
+      "field": "",
+      "value": "Built Prometheus and Grafana dashboards and alerts, cutting mean time to detect incidents by about 40%.",
+      "source_refs": [
+        "exp-1.b4"
+      ],
+      "items": []
+    },
+    {
+      "op": "reject",
+      "target_id": "t-exp-1.b2",
+      "field": "",
+      "value": "",
+      "source_refs": [],
+      "items": []
+    },
+    {
+      "op": "approve_all",
+      "target_id": "",
+      "field": "",
+      "value": "",
+      "source_refs": [],
+      "items": []
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+# Skill-triggering query set for the tailoring-cvs skill.
+# Cover letters, summaries, LinkedIn reviews and translations are out of scope by plan decision.
+
+should_trigger:
+  - "tailor my resume to this job"
+  - "rewrite my CV for this posting"
+  - "make my CV fit this JD"
+  - "ATS-optimize my resume"
+  - "add Istio to my CV skills"
+  - "yes, add SLOs to the SRE roles"
+  - "re-render my CV with the classic template"
+  - "here is a job description, can you adapt my resume to match it?"
+  - "which keywords from this posting are missing from my CV?"
+  - "shorten my tailored CV to one page"
+  - "drop the Earlier experience line from the CV you made"
+  - "update my resume for this Staff Platform Engineer role"
+
+should_not_trigger:
+  - "write a cover letter"
+  - "summarize this PDF"
+  - "review my LinkedIn"
+  - "write a job description for a platform engineer"
+  - "translate my CV to French"
+  - "proofread this email"

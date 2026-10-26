@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/fit.schema.json",
+  "title": "Page-fit result",
+  "description": "out/<run-slug>/fit.json. Written by `cvt fit`. Records the density preset and the dropped tailored IDs chosen by the monotone search, so `cvt render` reproduces the exact fitted output without re-searching.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "tailored_version", "page_target", "pages", "density", "dropped_ids", "renders", "underfilled", "log"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "run_id": { "type": "string" },
+    "tailored_version": { "type": "integer", "description": "tailored.json version this fit applies to; render refuses a stale fit." },
+    "page_target": { "type": "integer", "enum": [1, 2] },
+    "pages": { "type": "integer", "description": "Page count of the fitted render." },
+    "density": { "type": "string", "enum": ["comfortable", "standard", "compact"] },
+    "dropped_ids": { "type": "array", "items": { "type": "string" }, "description": "Tailored bullet/cert/skill-group IDs removed to fit, in drop order." },
+    "renders": { "type": "integer", "description": "Number of compiles performed." },
+    "underfilled": { "type": "boolean", "description": "true when all content fits in fewer pages than page_target (reported, not auto-padded)." },
+    "log": { "type": "array", "items": { "type": "string" } }
+  }
+}

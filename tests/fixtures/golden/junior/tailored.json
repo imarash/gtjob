@@ -1,0 +1,367 @@
+{
+  "schema_version": "1",
+  "run_id": "golden-junior",
+  "person_slug": "jamie-rivera",
+  "profile_sha256": "1727d216f05ce912a2756076e10a8568bd8a1a79f5264801e5aad0ed1acf6be0",
+  "jd_sha256": "da983c3231988c8acf77da224b0023cdbf5ffc24f169a0093bc23765b906e4e7",
+  "version": 1,
+  "target": {
+    "title": "Junior DevOps Engineer",
+    "company": "Harbor Point Software",
+    "page_target": 1,
+    "template": "modern",
+    "emphasis": "AWS delivery automation: GitHub Actions, Terraform and Docker"
+  },
+  "header": {
+    "name": "Jamie Rivera",
+    "headline": "Junior DevOps Engineer · AWS · Terraform · GitHub Actions",
+    "location": "Columbus, OH",
+    "email": "jamie.rivera@example.com",
+    "phone": "",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/jamierivera-dev"
+      }
+    ],
+    "source_refs": [
+      "basics",
+      "exp-1"
+    ]
+  },
+  "summary": {
+    "id": "t-sum",
+    "text": "Junior DevOps engineer who automates AWS deployments with Terraform, Docker and GitHub Actions, and keeps services observable with Prometheus and Grafana. AWS Certified Cloud Practitioner.",
+    "source_refs": [
+      "sum-1",
+      "exp-1",
+      "cert-1"
+    ],
+    "review": "pending"
+  },
+  "skills": [
+    {
+      "id": "t-skl-1",
+      "label": "Cloud & Containers",
+      "items": [
+        {
+          "name": "AWS",
+          "source_refs": [
+            "skl-1"
+          ]
+        },
+        {
+          "name": "ECS",
+          "source_refs": [
+            "skl-1"
+          ]
+        },
+        {
+          "name": "S3",
+          "source_refs": [
+            "skl-1"
+          ]
+        },
+        {
+          "name": "IAM",
+          "source_refs": [
+            "skl-1"
+          ]
+        },
+        {
+          "name": "Docker",
+          "source_refs": [
+            "skl-1"
+          ]
+        },
+        {
+          "name": "Helm",
+          "source_refs": [
+            "att-001"
+          ]
+        }
+      ],
+      "priority": 1,
+      "review": "pending"
+    },
+    {
+      "id": "t-skl-2",
+      "label": "Infrastructure & CI/CD",
+      "items": [
+        {
+          "name": "Terraform",
+          "source_refs": [
+            "skl-1"
+          ]
+        },
+        {
+          "name": "GitHub Actions",
+          "source_refs": [
+            "skl-2"
+          ]
+        },
+        {
+          "name": "Git",
+          "source_refs": [
+            "skl-2"
+          ]
+        },
+        {
+          "name": "Linux",
+          "source_refs": [
+            "skl-1"
+          ]
+        }
+      ],
+      "priority": 2,
+      "review": "pending"
+    },
+    {
+      "id": "t-skl-3",
+      "label": "Scripting",
+      "items": [
+        {
+          "name": "Python",
+          "source_refs": [
+            "skl-2"
+          ]
+        },
+        {
+          "name": "Bash",
+          "source_refs": [
+            "skl-2"
+          ]
+        },
+        {
+          "name": "PowerShell",
+          "source_refs": [
+            "skl-2"
+          ]
+        }
+      ],
+      "priority": 3,
+      "review": "pending"
+    },
+    {
+      "id": "t-skl-4",
+      "label": "Monitoring & Operations",
+      "items": [
+        {
+          "name": "Prometheus",
+          "source_refs": [
+            "skl-3"
+          ]
+        },
+        {
+          "name": "Grafana",
+          "source_refs": [
+            "skl-3"
+          ]
+        },
+        {
+          "name": "CloudWatch",
+          "source_refs": [
+            "skl-3"
+          ]
+        },
+        {
+          "name": "PagerDuty",
+          "source_refs": [
+            "skl-3"
+          ]
+        },
+        {
+          "name": "runbooks",
+          "source_refs": [
+            "skl-3"
+          ]
+        }
+      ],
+      "priority": 3,
+      "review": "pending"
+    }
+  ],
+  "experience": [
+    {
+      "id": "t-exp-1",
+      "profile_id": "exp-1",
+      "employer": "Brightfield Logistics",
+      "location": "Columbus, OH",
+      "title": "Junior DevOps Engineer",
+      "start_date": "2024-02",
+      "end_date": "present",
+      "intro": {
+        "text": "",
+        "source_refs": []
+      },
+      "bullets": [
+        {
+          "id": "t-exp-1.b1",
+          "text": "Built GitHub Actions pipelines for 12 services, cutting average deploy time from 25 minutes to 8 minutes.",
+          "source_refs": [
+            "exp-1.b1"
+          ],
+          "priority": 1,
+          "origin": "kept",
+          "review": "pending"
+        },
+        {
+          "id": "t-exp-1.b2",
+          "text": "Replaced manual console changes across 3 environments with Terraform modules for AWS networking and ECS services.",
+          "source_refs": [
+            "exp-1.b2"
+          ],
+          "priority": 1,
+          "origin": "rewritten",
+          "review": "pending"
+        },
+        {
+          "id": "t-exp-1.b3",
+          "text": "Containerized 6 legacy services with Docker and moved them to Amazon ECS.",
+          "source_refs": [
+            "exp-1.b3"
+          ],
+          "priority": 2,
+          "origin": "kept",
+          "review": "pending"
+        },
+        {
+          "id": "t-exp-1.b4",
+          "text": "Packaged two internal services with Helm.",
+          "source_refs": [
+            "exp-1.b3",
+            "att-001"
+          ],
+          "priority": 2,
+          "origin": "attested",
+          "review": "pending"
+        },
+        {
+          "id": "t-exp-1.b5",
+          "text": "Built Prometheus and Grafana dashboards and alerts, reducing mean time to detect incidents by about 40%.",
+          "source_refs": [
+            "exp-1.b4"
+          ],
+          "priority": 2,
+          "origin": "rewritten",
+          "review": "pending"
+        },
+        {
+          "id": "t-exp-1.b6",
+          "text": "Joined a weekly on-call rotation and wrote 5 runbooks for common incidents.",
+          "source_refs": [
+            "exp-1.b5"
+          ],
+          "priority": 3,
+          "origin": "kept",
+          "review": "pending"
+        }
+      ],
+      "engagements": [],
+      "priority": 1,
+      "review": "pending"
+    },
+    {
+      "id": "t-exp-2",
+      "profile_id": "exp-2",
+      "employer": "Cedar Valley College",
+      "location": "Dayton, OH",
+      "title": "IT Support Intern",
+      "start_date": "2023-07",
+      "end_date": "2023-12",
+      "intro": {
+        "text": "",
+        "source_refs": []
+      },
+      "bullets": [
+        {
+          "id": "t-exp-2.b1",
+          "text": "Resolved about 30 support tickets per week for students and staff, keeping first-response time under 4 hours.",
+          "source_refs": [
+            "exp-2.b1"
+          ],
+          "priority": 5,
+          "origin": "kept",
+          "review": "pending"
+        },
+        {
+          "id": "t-exp-2.b2",
+          "text": "Automated account provisioning with PowerShell scripts, saving roughly 5 hours per week.",
+          "source_refs": [
+            "exp-2.b2"
+          ],
+          "priority": 3,
+          "origin": "kept",
+          "review": "pending"
+        }
+      ],
+      "engagements": [],
+      "priority": 3,
+      "review": "pending"
+    }
+  ],
+  "earlier_experience": {
+    "include": false,
+    "items": [],
+    "review": "pending"
+  },
+  "certifications": [
+    {
+      "id": "t-cert-1",
+      "profile_id": "cert-1",
+      "name": "AWS Certified Cloud Practitioner",
+      "priority": 2
+    }
+  ],
+  "education": [
+    {
+      "id": "t-edu-1",
+      "profile_id": "edu-1",
+      "degree": "BSc, Computer Science",
+      "institution": "Lakeshore State University",
+      "location": "Columbus, OH",
+      "end_date": "2023-08",
+      "details": ""
+    }
+  ],
+  "talking_points": [
+    {
+      "text": "Walk through the GitHub Actions pipelines: 12 services, deploy time from 25 minutes to 8 minutes.",
+      "source_refs": [
+        "exp-1.b1"
+      ]
+    },
+    {
+      "text": "Be ready to explain the Helm packaging of two internal services in depth, since it is new to the CV.",
+      "source_refs": [
+        "att-001"
+      ]
+    }
+  ],
+  "omitted": [
+    {
+      "profile_id": "exp-1.b6",
+      "reason": "Tools line is covered by the skills section."
+    },
+    {
+      "profile_id": "exp-2.b3",
+      "reason": "Least relevant to the JD."
+    }
+  ],
+  "open_items": [
+    {
+      "kind": "gap",
+      "text": "Python and Bash are listed in Skills only; no bullet cites them.",
+      "item_ids": [
+        "skl-2"
+      ]
+    },
+    {
+      "kind": "source_issue",
+      "text": "The IT Support Intern role overlaps the BSc end date by 2 months.",
+      "item_ids": [
+        "iss-1"
+      ]
+    }
+  ]
+}

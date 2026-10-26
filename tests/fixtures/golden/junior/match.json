@@ -1,0 +1,173 @@
+{
+  "schema_version": "1",
+  "run_id": "golden-junior",
+  "requirements": [
+    {
+      "req_id": "req-1",
+      "strength": "strong",
+      "evidence": [
+        {
+          "ref": "exp-1.b3",
+          "quote": "moved them to Amazon ECS",
+          "note": "ECS in production"
+        },
+        {
+          "ref": "skl-1",
+          "quote": "AWS, ECS, S3, IAM",
+          "note": "all three services listed"
+        }
+      ],
+      "rationale": "ECS work at Brightfield plus AWS, S3 and IAM in skills.",
+      "gap_question": "",
+      "advice": ""
+    },
+    {
+      "req_id": "req-2",
+      "strength": "strong",
+      "evidence": [
+        {
+          "ref": "exp-1.b1",
+          "quote": "Built GitHub Actions pipelines for 12 services",
+          "note": "GitHub Actions with a measured result"
+        }
+      ],
+      "rationale": "Direct GitHub Actions experience with a clear speed-up.",
+      "gap_question": "",
+      "advice": ""
+    },
+    {
+      "req_id": "req-3",
+      "strength": "strong",
+      "evidence": [
+        {
+          "ref": "exp-1.b2",
+          "quote": "Wrote Terraform modules",
+          "note": "Terraform modules for AWS"
+        }
+      ],
+      "rationale": "Terraform modules replaced manual changes.",
+      "gap_question": "",
+      "advice": ""
+    },
+    {
+      "req_id": "req-4",
+      "strength": "strong",
+      "evidence": [
+        {
+          "ref": "exp-1.b3",
+          "quote": "Containerized 6 legacy services with Docker",
+          "note": "Docker in production"
+        }
+      ],
+      "rationale": "Docker used to containerize services.",
+      "gap_question": "",
+      "advice": ""
+    },
+    {
+      "req_id": "req-5",
+      "strength": "partial",
+      "evidence": [
+        {
+          "ref": "skl-2",
+          "quote": "Bash, Python, PowerShell",
+          "note": "listed in skills only"
+        },
+        {
+          "ref": "exp-2.b2",
+          "quote": "PowerShell scripts",
+          "note": "scripting at the internship"
+        }
+      ],
+      "rationale": "Scripting is shown with PowerShell; Python and Bash appear only in the skills list.",
+      "gap_question": "Python or Bash scripting at work (you list them in Skills)",
+      "advice": "Say which Python or Bash scripts you wrote and what they did."
+    },
+    {
+      "req_id": "req-6",
+      "strength": "none",
+      "evidence": [],
+      "rationale": "No Helm or Kubernetes packaging appears in the CV.",
+      "gap_question": "Helm",
+      "advice": "Be honest that Helm is new to you; mention the Docker and ECS deployment work you did and your willingness to learn."
+    },
+    {
+      "req_id": "req-7",
+      "strength": "strong",
+      "evidence": [
+        {
+          "ref": "exp-1.b4",
+          "quote": "Set up Prometheus and Grafana dashboards",
+          "note": "both tools named"
+        }
+      ],
+      "rationale": "Prometheus and Grafana dashboards and alerts with a 40% detection gain.",
+      "gap_question": "",
+      "advice": ""
+    },
+    {
+      "req_id": "req-8",
+      "strength": "strong",
+      "evidence": [
+        {
+          "ref": "cert-1",
+          "quote": "AWS Certified Cloud Practitioner",
+          "note": "exact certification"
+        }
+      ],
+      "rationale": "Holds the named certification.",
+      "gap_question": "",
+      "advice": ""
+    },
+    {
+      "req_id": "req-9",
+      "strength": "strong",
+      "evidence": [
+        {
+          "ref": "exp-1.b5",
+          "quote": "weekly on-call rotation",
+          "note": "on-call with runbooks"
+        }
+      ],
+      "rationale": "Weekly on-call rotation with 5 runbooks.",
+      "gap_question": "",
+      "advice": ""
+    }
+  ],
+  "coverage": {
+    "must_total": 6,
+    "must_strong": 4,
+    "must_partial": 1,
+    "must_none": 1,
+    "nice_total": 3,
+    "nice_strong": 3,
+    "nice_partial": 0,
+    "nice_none": 0
+  },
+  "seniority_fit": {
+    "assessment": "match",
+    "framing": "Junior role for a junior profile: lead with concrete pipeline and Terraform results and keep the real dates."
+  },
+  "metric_opportunities": [
+    {
+      "item_id": "exp-1.b5",
+      "question": "Roughly how many incidents did you handle in a typical month of on-call?",
+      "why": "Shows ownership of the reliability work the JD lists as a nice-to-have."
+    },
+    {
+      "item_id": "exp-1.b1",
+      "question": "About how many engineers use the GitHub Actions pipelines you built?",
+      "why": "Adds scale to the strongest must-have match."
+    },
+    {
+      "item_id": "exp-1.b2",
+      "question": "Roughly how many Terraform modules did you write?",
+      "why": "Quantifies the infrastructure-as-code experience."
+    }
+  ],
+  "strategy": {
+    "template": "modern",
+    "emphasis": "AWS delivery automation: GitHub Actions, Terraform and Docker",
+    "include_earlier_experience": false,
+    "rationale": "Two short roles fit one page, so earlier experience adds nothing."
+  }
+}

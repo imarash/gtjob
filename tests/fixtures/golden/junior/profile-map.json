@@ -1,0 +1,156 @@
+{
+  "schema_version": "1",
+  "basics": {
+    "name": "Jamie Rivera",
+    "label": "Junior DevOps Engineer",
+    "email": "jamie.rivera@example.com",
+    "phone": "",
+    "url": "",
+    "city": "Columbus",
+    "region": "OH",
+    "country": "",
+    "profiles": [
+      {
+        "network": "github",
+        "url": "https://github.com/jamierivera-dev"
+      }
+    ],
+    "lines": [
+      "1-3"
+    ]
+  },
+  "summary_lines": [
+    "6-7"
+  ],
+  "work": [
+    {
+      "name": "Brightfield Logistics",
+      "location": "Columbus, OH",
+      "position": "Junior DevOps Engineer",
+      "employment_type": "employee",
+      "start_date": "2024-02",
+      "end_date": "present",
+      "date_text": "Feb 2024 - Present",
+      "header_lines": "10",
+      "summary_lines": [],
+      "highlights": [
+        {
+          "kind": "bullet",
+          "lines": "11-12"
+        },
+        {
+          "kind": "bullet",
+          "lines": "13-14"
+        },
+        {
+          "kind": "bullet",
+          "lines": "15"
+        },
+        {
+          "kind": "bullet",
+          "lines": "16-17"
+        },
+        {
+          "kind": "bullet",
+          "lines": "18"
+        },
+        {
+          "kind": "tools",
+          "lines": "19"
+        }
+      ],
+      "engagements": []
+    },
+    {
+      "name": "Cedar Valley College",
+      "location": "Dayton, OH",
+      "position": "IT Support Intern",
+      "employment_type": "employee",
+      "start_date": "2023-07",
+      "end_date": "2023-12",
+      "date_text": "Jul 2023 - Dec 2023",
+      "header_lines": "21",
+      "summary_lines": [],
+      "highlights": [
+        {
+          "kind": "bullet",
+          "lines": "22-23"
+        },
+        {
+          "kind": "bullet",
+          "lines": "24-25"
+        },
+        {
+          "kind": "bullet",
+          "lines": "26"
+        }
+      ],
+      "engagements": []
+    }
+  ],
+  "education": [
+    {
+      "institution": "Lakeshore State University",
+      "area": "Computer Science",
+      "study_type": "BSc",
+      "location": "Columbus, OH",
+      "end_date": "2023-08",
+      "lines": "34"
+    }
+  ],
+  "certificates": [
+    {
+      "name": "AWS Certified Cloud Practitioner",
+      "issuer": "AWS",
+      "date": "",
+      "lines": "37"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Cloud & Infrastructure",
+      "lines": [
+        "29"
+      ]
+    },
+    {
+      "name": "CI/CD & Automation",
+      "lines": [
+        "30"
+      ]
+    },
+    {
+      "name": "Monitoring & Operations",
+      "lines": [
+        "31"
+      ]
+    }
+  ],
+  "other_sections": [
+    {
+      "title": "Projects",
+      "lines": [
+        "40-41"
+      ]
+    }
+  ],
+  "ignored_lines": [
+    "5",
+    "9",
+    "28",
+    "33",
+    "36",
+    "39"
+  ],
+  "source_issues": [
+    {
+      "kind": "date_overlap",
+      "severity": "warn",
+      "message": "The IT Support Intern role starts in Jul 2023, but the BSc ends in Aug 2023, so the two overlap by 2 months.",
+      "item_ids": [
+        "exp-2",
+        "edu-1"
+      ]
+    }
+  ]
+}

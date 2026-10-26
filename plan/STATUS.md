@@ -4,7 +4,7 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 
 | Wave | State | Gate verdict | Fix-up rounds | Commit | Build tokens (approx.) |
 | --- | --- | --- | --- | --- | --- |
-| 1 | TODO | | | | |
+| 1 | APPROVED | APPROVE (re-gate 2) | 2 | see log | |
 | 2 | TODO | | | | |
 | 3 | TODO | | | | |
 | 4 | TODO | | | | |
@@ -13,14 +13,14 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 
 | WP | Wave | Status | Note |
 | --- | --- | --- | --- |
-| WP-01 | 1 | TODO | |
-| WP-02 | 1 | TODO | lite (Haiku) |
-| WP-03 | 1 | TODO | |
-| WP-04 | 1 | TODO | |
-| WP-05 | 1 | TODO | |
-| WP-06 | 1 | TODO | |
-| WP-07 | 1 | TODO | |
-| WP-I1 | 1 | TODO | lite (Haiku) |
+| WP-01 | 1 | DONE | 6/6 acceptance, 207 unit tests |
+| WP-02 | 1 | DONE | finished by cv-builder after lite run was interrupted; Semibold is its own Typst family (select by name, not weight) |
+| WP-03 | 1 | DONE | 4 JDs, checkpoint fixtures, triggers |
+| WP-04 | 1 | DONE | Jamie Rivera CV + 9 golden artifacts |
+| WP-05 | 1 | DONE | style-guide, truthfulness, critic-rubric |
+| WP-06 | 1 | DONE | profile/jd/match stage guides |
+| WP-07 | 1 | DONE | questions/answers/tailor/change stage guides |
+| WP-I1 | 1 | DONE | lite; 270 tests pass; flagged --visual vs --critic-visual naming gap for gate |
 | WP-G1 | 1 | TODO | |
 | WP-08 | 2 | TODO | |
 | WP-09 | 2 | TODO | |
@@ -58,3 +58,12 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 
 - 2026-10-23: plan written (contracts, 39 briefs, agents). Waiting for wave 1 kickoff.
 - 2026-10-23: token-efficiency redesign: WP-29 added (40 briefs), `cv-builder-lite` agent, delta re-gates.
+- 2026-10-25: wave 1 build dispatched; session interrupted. WP-01,03-07 DONE; WP-02 PARTIAL, re-dispatching to cv-builder.
+- 2026-10-25: WP-02 DONE (3/3 acceptance, tests/unit 217 pass). Next: WP-I1, then WP-G1.
+- 2026-10-25: WP-I1 DONE (270 pass). Escalation for gate: critic visual flag name (--visual in s13 vs --critic-visual in s14.6). Next: WP-G1.
+- 2026-10-25: WP-G1 FIX-UPS (round 1). User approved WP-G1-contract-change (C1 PII removal, C2 critic flag names); applied to plan/contracts/. Dispatched FIX-1-1, FIX-1-2; FIX-1-3 next.
+- 2026-10-25: FIX-1-1 DONE (286 pass), FIX-1-2 DONE (278 pass). Dispatched FIX-1-3.
+- 2026-10-25: FIX-1-3 DONE (286 pass). Dispatching delta re-gate 1.
+- 2026-10-25: Re-gate 1 FIX-UPS (round 2 pending): UNDOCUMENTED_FLAGS allowlist not actually removed. Dispatched FIX-1-4 (lite).
+- 2026-10-25: FIX-1-4 DONE (allowlist verified empty on disk, 286 pass). Dispatching delta re-gate 2.
+- 2026-10-25: WP-G1 APPROVE after 2 fix-up rounds (FIX-1-1..1-4; contract change C1+C2 applied). Committing wave 1.

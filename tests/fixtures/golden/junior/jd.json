@@ -1,0 +1,254 @@
+{
+  "schema_version": "1",
+  "jd_sha256": "da983c3231988c8acf77da224b0023cdbf5ffc24f169a0093bc23765b906e4e7",
+  "source": {
+    "kind": "file",
+    "ref": "tests/fixtures/jds/junior-devops-engineer.md",
+    "format": "posting"
+  },
+  "title": "Junior DevOps Engineer",
+  "company": "Harbor Point Software",
+  "location": "Columbus, OH",
+  "seniority": "junior",
+  "years_experience_text": "1-2 years of experience",
+  "ic_or_manager": "ic",
+  "domain": [
+    "logistics",
+    "freight software"
+  ],
+  "role_summary": "Junior platform role on a four-person team that keeps scheduling and tracking tools for freight carriers easy to ship. Work centers on CI/CD pipelines, infrastructure as code on AWS, and service deployment and monitoring.",
+  "requirements": [
+    {
+      "id": "req-1",
+      "kind": "must",
+      "text": "Hands-on experience with AWS (ECS, S3, IAM)",
+      "category": "cloud",
+      "keywords": [
+        "AWS",
+        "ECS",
+        "S3",
+        "IAM"
+      ],
+      "weight": 5
+    },
+    {
+      "id": "req-2",
+      "kind": "must",
+      "text": "Experience building CI/CD pipelines with GitHub Actions or a similar tool",
+      "category": "cicd",
+      "keywords": [
+        "CI/CD",
+        "GitHub Actions"
+      ],
+      "weight": 5
+    },
+    {
+      "id": "req-3",
+      "kind": "must",
+      "text": "Infrastructure as code with Terraform",
+      "category": "iac",
+      "keywords": [
+        "Terraform"
+      ],
+      "weight": 4
+    },
+    {
+      "id": "req-4",
+      "kind": "must",
+      "text": "Containers with Docker",
+      "category": "containers",
+      "keywords": [
+        "Docker"
+      ],
+      "weight": 4
+    },
+    {
+      "id": "req-5",
+      "kind": "must",
+      "text": "Scripting in Python or Bash",
+      "category": "language",
+      "keywords": [
+        "Python",
+        "Bash"
+      ],
+      "weight": 3
+    },
+    {
+      "id": "req-6",
+      "kind": "must",
+      "text": "Packaging and deploying services with Helm",
+      "category": "containers",
+      "keywords": [
+        "Helm"
+      ],
+      "weight": 3
+    },
+    {
+      "id": "req-7",
+      "kind": "nice",
+      "text": "Prometheus and Grafana for monitoring and alerting",
+      "category": "observability",
+      "keywords": [
+        "Prometheus",
+        "Grafana"
+      ],
+      "weight": 2
+    },
+    {
+      "id": "req-8",
+      "kind": "nice",
+      "text": "AWS Certified Cloud Practitioner or higher",
+      "category": "cloud",
+      "keywords": [
+        "AWS Certified Cloud Practitioner"
+      ],
+      "weight": 2
+    },
+    {
+      "id": "req-9",
+      "kind": "nice",
+      "text": "Experience with an on-call rotation",
+      "category": "reliability",
+      "keywords": [
+        "on-call"
+      ],
+      "weight": 1
+    }
+  ],
+  "keywords": [
+    {
+      "term": "AWS",
+      "synonyms": [
+        "Amazon Web Services"
+      ],
+      "weight": 5,
+      "req_ids": [
+        "req-1",
+        "req-8"
+      ]
+    },
+    {
+      "term": "CI/CD",
+      "synonyms": [
+        "continuous integration",
+        "continuous delivery"
+      ],
+      "weight": 5,
+      "req_ids": [
+        "req-2"
+      ]
+    },
+    {
+      "term": "GitHub Actions",
+      "synonyms": [],
+      "weight": 5,
+      "req_ids": [
+        "req-2"
+      ]
+    },
+    {
+      "term": "Terraform",
+      "synonyms": [],
+      "weight": 4,
+      "req_ids": [
+        "req-3"
+      ]
+    },
+    {
+      "term": "Docker",
+      "synonyms": [],
+      "weight": 4,
+      "req_ids": [
+        "req-4"
+      ]
+    },
+    {
+      "term": "Python",
+      "synonyms": [],
+      "weight": 3,
+      "req_ids": [
+        "req-5"
+      ]
+    },
+    {
+      "term": "Bash",
+      "synonyms": [],
+      "weight": 3,
+      "req_ids": [
+        "req-5"
+      ]
+    },
+    {
+      "term": "Helm",
+      "synonyms": [],
+      "weight": 3,
+      "req_ids": [
+        "req-6"
+      ]
+    },
+    {
+      "term": "Prometheus",
+      "synonyms": [],
+      "weight": 2,
+      "req_ids": [
+        "req-7"
+      ]
+    },
+    {
+      "term": "Grafana",
+      "synonyms": [],
+      "weight": 2,
+      "req_ids": [
+        "req-7"
+      ]
+    },
+    {
+      "term": "AWS Certified Cloud Practitioner",
+      "synonyms": [],
+      "weight": 2,
+      "req_ids": [
+        "req-8"
+      ]
+    },
+    {
+      "term": "on-call",
+      "synonyms": [
+        "on call"
+      ],
+      "weight": 1,
+      "req_ids": [
+        "req-9"
+      ]
+    }
+  ],
+  "implicit_signals": [
+    {
+      "signal": "on_call",
+      "evidence_text": "Take part in a weekly on-call rotation"
+    }
+  ],
+  "noise": [
+    {
+      "kind": "compensation",
+      "text": "Salary range: $72,000-$88,000 per year"
+    },
+    {
+      "kind": "work_arrangement",
+      "text": "Hybrid: 2 days per week on site in Columbus"
+    },
+    {
+      "kind": "visa",
+      "text": "We cannot sponsor work visas for this role."
+    },
+    {
+      "kind": "recruiter_contact",
+      "text": "Recruiter contact: talent@harborpoint.example"
+    },
+    {
+      "kind": "other",
+      "text": "Harbor Point Software is an equal opportunity employer."
+    }
+  ],
+  "recruiter_asks": [],
+  "injection_flags": []
+}

@@ -1,0 +1,13 @@
+/out/
+/profiles/
+.cache/
+/dist/
+/CVs/
+/JDs/
+tests/fixtures/private/
+evals/results/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.DS_Store

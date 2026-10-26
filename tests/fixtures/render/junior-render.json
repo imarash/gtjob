@@ -1,0 +1,116 @@
+{
+  "schema_version": "1",
+  "meta": {
+    "title": "Jamie Rivera — CV — Junior Data Analyst",
+    "author": "Jamie Rivera",
+    "subject": "Synthetic render fixture (invented person)",
+    "keywords": ["data analysis", "sql", "python"],
+    "draft": false
+  },
+  "theme": {
+    "template": "classic",
+    "paper": "a4",
+    "density": "comfortable",
+    "accent": "#3B3B3B"
+  },
+  "header": {
+    "name": "Jamie Rivera",
+    "headline": "Junior Data Analyst",
+    "contacts": [
+      {"kind": "email", "text": "jamie.rivera@example.com", "url": "mailto:jamie.rivera@example.com"},
+      {"kind": "phone", "text": "+1 555 010 0200", "url": "tel:+15550100200"},
+      {"kind": "location", "text": "Austin, TX", "url": ""},
+      {"kind": "linkedin", "text": "linkedin.com/in/jamierivera-example", "url": "https://linkedin.com/in/jamierivera-example"}
+    ]
+  },
+  "sections": [
+    {
+      "kind": "summary",
+      "title": "Summary",
+      "paragraphs": [
+        "Detail-oriented analytics student with hands-on experience building SQL reports and Python data-cleaning scripts for retail and library operations. Eager to join a data team and learn production analytics practice."
+      ],
+      "skill_rows": [],
+      "entries": [],
+      "lines": []
+    },
+    {
+      "kind": "skills",
+      "title": "Skills",
+      "paragraphs": [],
+      "skill_rows": [
+        {"label": "Languages", "items_text": "SQL, Python, R"},
+        {"label": "Tools", "items_text": "Excel, Tableau, Git, Google Sheets"},
+        {"label": "Methods", "items_text": "Descriptive statistics, data cleaning, A/B test basics"}
+      ],
+      "entries": [],
+      "lines": []
+    },
+    {
+      "kind": "experience",
+      "title": "Experience",
+      "paragraphs": [],
+      "skill_rows": [],
+      "entries": [
+        {
+          "heading": "Cedar Retail Co.",
+          "subheading": "Data Analyst Intern",
+          "location": "Austin, TX",
+          "dates": "Jun 2024 – Aug 2024",
+          "intro": "",
+          "bullets": [
+            "Wrote SQL queries to produce weekly sales dashboards for four store regions.",
+            "Cleaned and merged point-of-sale exports with Python (pandas), removing duplicate transactions before reporting.",
+            "Presented findings on promotion performance to the regional operations team."
+          ],
+          "subentries": [],
+          "collapsed_line": ""
+        },
+        {
+          "heading": "Greenfield Public Library",
+          "subheading": "Student Assistant, Circulation Data",
+          "location": "San Marcos, TX",
+          "dates": "Sep 2022 – May 2024",
+          "intro": "",
+          "bullets": [
+            "Maintained a spreadsheet tracking of circulation statistics used in quarterly board reports.",
+            "Helped patrons find reliable research data sources."
+          ],
+          "subentries": [],
+          "collapsed_line": ""
+        }
+      ],
+      "paragraphs": [],
+      "lines": []
+    },
+    {
+      "kind": "certifications",
+      "title": "Certifications",
+      "paragraphs": [],
+      "skill_rows": [],
+      "entries": [],
+      "lines": [
+        "Google Data Analytics Professional Certificate — 2024"
+      ]
+    },
+    {
+      "kind": "education",
+      "title": "Education",
+      "paragraphs": [],
+      "skill_rows": [],
+      "entries": [
+        {
+          "heading": "Texas State University",
+          "subheading": "B.S., Statistics",
+          "location": "San Marcos, TX",
+          "dates": "Aug 2021 – May 2025",
+          "intro": "",
+          "bullets": [],
+          "subentries": [],
+          "collapsed_line": ""
+        }
+      ],
+      "lines": []
+    }
+  ]
+}

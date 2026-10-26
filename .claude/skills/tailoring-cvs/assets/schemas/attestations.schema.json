@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/attestations.schema.json",
+  "title": "Durable attestation store",
+  "description": "profiles/<person-slug>/attestations.json. Facts the user has stated about their own experience. Written only by scripts (`cvt answers-apply`, `cvt approve`, `cvt attest`). Reused by every later run for the same person. Truthfulness: an attestation is the only evidence besides CV text that a tailored claim may cite.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "person_slug", "next_seq", "attestations"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "person_slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "next_seq": { "type": "integer", "description": "Next numeric suffix for att-NNN. Starts at 1; never reused, even after revocation." },
+    "attestations": { "type": "array", "items": { "$ref": "#/$defs/attestation" } }
+  },
+  "$defs": {
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "role_label", "item_ids", "description"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["global", "role_label", "items", "unresolved"],
+          "description": "global = may be cited by any item; role_label = items whose role_label matches (case-insensitive substring); items = explicit list; unresolved = the user's scope was ambiguous and a scope question must be asked before use."
+        },
+        "role_label": { "type": "string", "description": "Selector value when kind=role_label, e.g. 'SRE'. '' otherwise." },
+        "item_ids": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^exp-[0-9]+(\\.e[0-9]+)?$" },
+          "description": "Resolved profile engagement/work IDs. Filled by scripts for kind=role_label|items; [] for global/unresolved."
+        },
+        "description": { "type": "string", "description": "The user's scope words, e.g. 'the SRE related cv items'." }
+      }
+    },
+    "correction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id", "field", "old_value", "new_value"],
+      "properties": {
+        "item_id": { "type": "string", "description": "Profile ID being corrected, or '' when type != correction." },
+        "field": {
+          "type": "string",
+          "enum": ["", "start_date", "end_date", "date_text", "position", "name", "location", "role_label", "email", "phone", "url", "text"]
+        },
+        "old_value": { "type": "string" },
+        "new_value": { "type": "string" }
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "claim", "terms", "detail", "scope", "placement", "correction", "verbatim", "question_id", "run_id", "created_at", "status", "status_changed_at", "caveat"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^att-[0-9]{3,}$" },
+        "type": { "type": "string", "enum": ["skill", "practice", "metric", "correction", "experience"] },
+        "claim": { "type": "string", "description": "Normalized claim, e.g. 'Istio', 'SLOs and error budgets', 'Mindgeek dates are 2016 - 2017'." },
+        "terms": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Exact terms/numbers this attestation licenses in tailored text, e.g. ['SLO', 'SLOs', 'error budget', 'error budgets']. The provenance validator only accepts these terms (plus synonyms) from this attestation."
+        },
+        "detail": { "type": "string", "description": "Extra context the user gave (role, project, number). '' if none. Never expanded by AI." },
+        "scope": { "$ref": "#/$defs/scope" },
+        "placement": {
+          "type": "string",
+          "enum": ["skills", "bullets", "skills_and_bullets", "correction_only"],
+          "description": "Where the claim may appear. skills = skills block only (default for a bare skill without a role)."
+        },
+        "correction": { "$ref": "#/$defs/correction" },
+        "verbatim": { "type": "string", "description": "The user's exact words that produced this attestation." },
+        "question_id": { "type": "string", "description": "q-N it answered, or '' for unsolicited statements." },
+        "run_id": { "type": "string", "description": "Run where it was created." },
+        "created_at": { "type": "string", "format": "date-time" },
+        "status": {
+          "type": "string",
+          "enum": ["proposed", "active", "revoked"],
+          "description": "proposed = parsed but not yet approved at checkpoint 2 (usable only in its own run, only with --draft or before approval); active = approved, reusable by all runs; revoked = never usable."
+        },
+        "status_changed_at": { "type": "string", "format": "date-time" },
+        "caveat": { "type": "string", "description": "One-line defensibility note shown once to the user, or ''." }
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@
       "additionalProperties": false,
       "required": ["title", "author", "subject", "keywords", "draft"],
       "properties": {
-        "title": { "type": "string", "description": "PDF title, e.g. 'Arash Morattab — CV — Staff Platform & Reliability Engineer'." },
+        "title": { "type": "string", "description": "PDF title, e.g. 'Alex Chen — CV — Staff Platform & Reliability Engineer'." },
         "author": { "type": "string" },
         "subject": { "type": "string" },
         "keywords": { "type": "array", "items": { "type": "string" } },
@@ -50,7 +50,7 @@
             "required": ["kind", "text", "url"],
             "properties": {
               "kind": { "type": "string", "enum": ["email", "phone", "location", "website", "linkedin", "github", "other"] },
-              "text": { "type": "string", "description": "Display text, e.g. 'me@arashmor.com'." },
+              "text": { "type": "string", "description": "Display text, e.g. 'alex.chen@example.com'." },
               "url": { "type": "string", "description": "mailto:/tel:/https: link or '' for location." }
             }
           }

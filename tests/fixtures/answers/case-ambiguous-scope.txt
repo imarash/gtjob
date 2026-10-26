@@ -1,0 +1,1 @@
+add Kafka to the relevant roles

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gtjob.local/contracts/answers.schema.json",
+  "title": "Parsed user answers",
+  "description": "out/<run-slug>/answers.json, append-only list of rounds. The AI parses one user reply into a single `round` object (LLM output schema = $defs/round, see interfaces.md 'subschema') and writes it to out/<run-slug>/answers.round.json; `cvt answers-apply` validates it, resolves scopes, appends it here, and creates attestations. The AI never assigns attestation IDs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "rounds"],
+  "properties": {
+    "schema_version": { "const": "1" },
+    "run_id": { "type": "string" },
+    "rounds": { "type": "array", "items": { "$ref": "#/$defs/round" } }
+  },
+  "$defs": {
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "role_label", "item_ids", "description"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["global", "role_label", "items", "unresolved"] },
+        "role_label": { "type": "string" },
+        "item_ids": { "type": "array", "items": { "type": "string" } },
+        "description": { "type": "string", "description": "The user's scope words verbatim, e.g. 'the sre related cv items'." }
+      }
+    },
+    "proposed_attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "claim", "terms", "detail", "scope", "placement", "correction", "verbatim", "caveat"],
+      "properties": {
+        "type": { "type": "string", "enum": ["skill", "practice", "metric", "correction", "experience"] },
+        "claim": { "type": "string" },
+        "terms": { "type": "array", "items": { "type": "string" } },
+        "detail": { "type": "string" },
+        "scope": { "$ref": "#/$defs/scope" },
+        "placement": { "type": "string", "enum": ["skills", "bullets", "skills_and_bullets", "correction_only"] },
+        "correction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["item_id", "field", "old_value", "new_value"],
+          "properties": {
+            "item_id": { "type": "string" },
+            "field": { "type": "string", "enum": ["", "start_date", "end_date", "date_text", "position", "name", "location", "role_label", "email", "phone", "url", "text"] },
+            "old_value": { "type": "string" },
+            "new_value": { "type": "string" }
+          }
+        },
+        "verbatim": { "type": "string", "description": "The exact substring of raw_text this came from." },
+        "caveat": { "type": "string", "description": "Defensibility note, e.g. 'Istio with no role context is hard to defend; placed in skills only.' or ''." }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question_id", "action", "choice_ids", "attestations", "instruction", "note"],
+      "properties": {
+        "question_id": { "type": "string", "description": "q-N this answers, or '' for an unsolicited statement/instruction." },
+        "action": {
+          "type": "string",
+          "enum": ["attest", "reject", "correct", "choose", "confirm_scope", "instruct", "skip"],
+          "description": "attest = user claims experience; reject = user says they lack it; correct = source fix; choose = picks choices (strategy/template/scope); confirm_scope = accepts/adjusts a scope mapping via choice_ids; instruct = free-text change request for tailoring (applied later as edits); skip = accept the default."
+        },
+        "choice_ids": { "type": "array", "items": { "type": "string" } },
+        "attestations": { "type": "array", "items": { "$ref": "#/$defs/proposed_attestation" } },
+        "instruction": { "type": "string", "description": "For action=instruct: the change request verbatim. '' otherwise." },
+        "note": { "type": "string" }
+      }
+    },
+    "round": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["round", "checkpoint", "received_at", "channel", "raw_text", "items", "unmentioned_question_ids"],
+      "properties": {
+        "round": { "type": "integer" },
+        "checkpoint": { "type": "integer", "enum": [1, 2] },
+        "received_at": { "type": "string", "format": "date-time" },
+        "channel": { "type": "string", "enum": ["host_tool", "chat", "cli", "answers_file", "auto"] },
+        "raw_text": { "type": "string", "description": "The user's reply verbatim (for host_tool: the selections serialized as 'q-1: a, b; q-2: free text')." },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+        "unmentioned_question_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Pending questions the reply did not address. They take their default and are not re-asked in this run."
+        }
+      }
+    }
+  }
+}

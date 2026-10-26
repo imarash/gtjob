@@ -1,0 +1,191 @@
+{
+  "schema_version": "1",
+  "meta": {
+    "title": "Alex Chen — CV — Senior Platform & Reliability Engineer",
+    "author": "Alex Chen",
+    "subject": "Synthetic render fixture (invented person)",
+    "keywords": ["platform engineering", "site reliability", "kubernetes", "terraform"],
+    "draft": true
+  },
+  "theme": {
+    "template": "modern",
+    "paper": "us-letter",
+    "density": "standard",
+    "accent": "#1F4E79"
+  },
+  "header": {
+    "name": "Alex Chen",
+    "headline": "Senior Platform & Reliability Engineer",
+    "contacts": [
+      {"kind": "email", "text": "alex.chen@example.com", "url": "mailto:alex.chen@example.com"},
+      {"kind": "phone", "text": "+1 555 010 0100", "url": "tel:+15550100100"},
+      {"kind": "location", "text": "Toronto, ON", "url": ""},
+      {"kind": "website", "text": "alexchen.example.com", "url": "https://alexchen.example.com"},
+      {"kind": "linkedin", "text": "linkedin.com/in/alexchen-example", "url": "https://linkedin.com/in/alexchen-example"},
+      {"kind": "github", "text": "github.com/alexchen-example", "url": "https://github.com/alexchen-example"}
+    ]
+  },
+  "sections": [
+    {
+      "kind": "summary",
+      "title": "Summary",
+      "paragraphs": [
+        "Platform and reliability engineer with over 12 years of experience running production Linux, Kubernetes, and cloud infrastructure for regulated financial and healthcare organizations. Builds paved roads that let product teams ship safely, and sets the SLOs that keep them honest.",
+        "Known for turning ad-hoc operations into documented, automated systems, and for mentoring engineers across platform, SRE, and DevOps practice. Comfortable owning outcomes from architecture review through the on-call pager."
+      ],
+      "skill_rows": [],
+      "entries": [],
+      "lines": []
+    },
+    {
+      "kind": "skills",
+      "title": "Skills",
+      "paragraphs": [],
+      "skill_rows": [
+        {"label": "Cloud and platforms", "items_text": "AWS, GCP, Kubernetes, Helm, Terraform, Ansible, Linux"},
+        {"label": "Reliability", "items_text": "SLOs and error budgets, incident response, chaos engineering, capacity planning"},
+        {"label": "Languages", "items_text": "Python, Go, Bash, SQL"},
+        {"label": "Observability", "items_text": "Prometheus, Grafana, OpenTelemetry, ELK, PagerDuty"}
+      ],
+      "entries": [],
+      "lines": []
+    },
+    {
+      "kind": "experience",
+      "title": "Experience",
+      "paragraphs": [],
+      "skill_rows": [],
+      "entries": [
+        {
+          "heading": "Northwind Systems",
+          "subheading": "Staff Platform Engineer",
+          "location": "Toronto, ON",
+          "dates": "Mar 2022 – Present",
+          "intro": "Platform group of nine engineers supporting more than 40 product teams.",
+          "bullets": [
+            "Led the migration of 120 services from self-managed Kubernetes to a managed, multi-region platform with no customer-facing downtime during cutover.",
+            "Built a golden-path service template and CI pipeline that cut new-service setup from two weeks to under one day.",
+            "Defined SLOs and error-budget policy for 14 tier-1 services; paging volume dropped by 45% over two quarters.",
+            "Operated [[CONFIRM: number of services]] microservices on Kubernetes across three regions with automated rollback on failed health checks.",
+            "Mentored four engineers into senior roles and chaired the platform design review board."
+          ],
+          "subentries": [
+            {
+              "heading": "Royal Bank of Canada (RBC)",
+              "subheading": "SRE",
+              "bullets": [
+                "Hardened payment-ledger clusters ahead of a PCI DSS assessment; closed 22 findings before the audit window.",
+                "Introduced canary analysis in release pipelines, catching three regressions before full rollout."
+              ]
+            },
+            {
+              "heading": "Lumen Logistics",
+              "subheading": "Platform Engineer",
+              "bullets": [
+                "Rebuilt the shipment-tracking event bus on Kafka with consumer-lag alerting and replay tooling.",
+                "Reduced monthly cloud spend by 28% through right-sizing and scheduled shutdown of non-production environments."
+              ]
+            },
+            {
+              "heading": "Harbor Health Network",
+              "subheading": "Cloud Engineer",
+              "bullets": [
+                "Stood up Terraform modules for network, IAM, and logging baselines across three AWS accounts.",
+                "Automated evidence collection for SOC 2 controls, cutting audit preparation from six weeks to two."
+              ]
+            }
+          ],
+          "collapsed_line": "Also: Pioneer Insurance (Consultant) · Quarry Labs (Consultant)"
+        },
+        {
+          "heading": "Brightpath Analytics",
+          "subheading": "Senior DevOps Engineer",
+          "location": "Ottawa, ON",
+          "dates": "Jun 2019 – Feb 2022",
+          "intro": "",
+          "bullets": [
+            "Owned CI/CD for a monorepo of 60 services; median build time fell from 38 to 9 minutes.",
+            "Introduced infrastructure as code with Terraform and Ansible across cloud and on-premises environments.",
+            "Ran the on-call rotation and blameless incident reviews for a 24/7 analytics platform with 99.9% monthly availability.",
+            "Migrated the metrics pipeline from Graphite to Prometheus and Grafana, with per-team dashboards and alert routing."
+          ],
+          "subentries": [],
+          "collapsed_line": ""
+        },
+        {
+          "heading": "Maple Digital Labs",
+          "subheading": "Systems Engineer",
+          "location": "Waterloo, ON",
+          "dates": "Jan 2016 – May 2019",
+          "intro": "",
+          "bullets": [
+            "Managed Linux fleets (RHEL and Ubuntu) of more than 300 hosts with Ansible and scheduled patching.",
+            "Built centralized logging on the ELK stack, halving mean time to diagnose production issues.",
+            "Wrote the PostgreSQL failover runbook and ran quarterly disaster-recovery drills."
+          ],
+          "subentries": [],
+          "collapsed_line": ""
+        },
+        {
+          "heading": "Ironbridge Telecom",
+          "subheading": "Systems Administrator",
+          "location": "Mississauga, ON",
+          "dates": "Sep 2013 – Dec 2015",
+          "intro": "",
+          "bullets": [
+            "Administered VMware vSphere clusters and backup infrastructure for a regional telecom carrier.",
+            "Scripted provisioning and monitoring tasks in Python and Bash, retiring 15 manual procedures."
+          ],
+          "subentries": [],
+          "collapsed_line": ""
+        }
+      ],
+      "paragraphs": [],
+      "lines": []
+    },
+    {
+      "kind": "earlier",
+      "title": "Earlier experience",
+      "paragraphs": [],
+      "skill_rows": [],
+      "entries": [],
+      "lines": ["Pinecrest Hosting — Systems Administrator, 2010 – 2013"]
+    },
+    {
+      "kind": "certifications",
+      "title": "Certifications",
+      "paragraphs": [],
+      "skill_rows": [],
+      "entries": [],
+      "lines": [
+        "Certified Kubernetes Administrator (CKA), CNCF — 2023",
+        "AWS Certified Solutions Architect – Associate — 2022",
+        "Google Cloud Professional Cloud Architect — 2024",
+        "HashiCorp Certified: Terraform Associate — 2021",
+        "Prometheus Certified Associate (PCA) — 2024",
+        "ITIL 4 Foundation — 2020",
+        "Linux Foundation Certified System Administrator (LFCS) — 2019",
+        "Red Hat Certified Engineer (RHCE) — 2017"
+      ]
+    },
+    {
+      "kind": "education",
+      "title": "Education",
+      "paragraphs": [],
+      "skill_rows": [],
+      "entries": [
+        {
+          "heading": "Lakeshore Institute of Technology",
+          "subheading": "B.Eng., Computer Engineering",
+          "location": "Toronto, ON",
+          "dates": "Sep 2009 – Apr 2013",
+          "intro": "",
+          "bullets": [],
+          "subentries": [],
+          "collapsed_line": ""
+        }
+      ],
+      "lines": []
+    }
+  ]
+}

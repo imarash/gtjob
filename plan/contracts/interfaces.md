@@ -144,7 +144,7 @@ per distinct CV file) and `attestations.json` (schema `attestations`).
 **Run slug**: `YYYYMMDD-<stem>` where `<stem>` is `--slug`, else `slugify(jd file stem)`, else
 `slugify(first 6 words of the JD title line)` for pasted text/URLs, else `jd-<sha6>`. Collision
 suffix `-2`, `-3`. The slug never changes after `init`. The final PDF name uses `jd.title`
-(for example `final/Arash-Morattab-Staff-Platform-Reliability-Engineer.pdf`); the company is
+(for example `final/Alex-Chen-Staff-Platform-Reliability-Engineer.pdf`); the company is
 appended only when `jd.company` is non-empty.
 
 ---
@@ -175,7 +175,7 @@ omitted where marked `[RUN]`).
 | `profile-show` | `RUN` or `--person P`; `--merged` | profile, attestations | — | none | 0, 4 | WP-10 |
 | `export-jsonresume` | `RUN` | `profile.json` | `jsonresume.json` | none | 0, 4 | WP-10 |
 | `validate-artifact` | `RUN NAME` (`profile\|profile-map\|jd\|match\|questions\|answers\|tailor-plan\|tailored\|edits\|fit\|validation\|critique`); `--file PATH` | the file | — | none | 0, 1, 4 | WP-01 |
-| `brief` | `STAGE [RUN]` where STAGE is `profile\|jd\|match\|questions\|answer_parse\|tailor\|change_request\|fix\|critic`; `--reply TEXT` / `--reply-file F` (answer_parse, change_request); `--full` (append the guide's Details and Examples); `--item ID` (expand one item) | run artifacts, guides, budgets | `briefs/<stage>.md`, `digest.txt` (first match/tailor brief), `usage.jsonl` (packet size) | none | 0, 1 (`brief jd` reuses a cached `jd.json` → `data.cache_hit`), 4 | WP-29 |
+| `brief` | `STAGE [RUN]` where STAGE is `profile\|jd\|match\|questions\|answer_parse\|tailor\|change_request\|fix\|critic`; `--reply TEXT` / `--reply-file F` (answer_parse, change_request); `--full` (append the guide's Details and Examples); `--item ID` (expand one item); `--visual` (critic only: the packet also lists the `pages/page-N.png` files to attach, rendered at 80 ppi) | run artifacts, guides, budgets | `briefs/<stage>.md`, `digest.txt` (first match/tailor brief), `usage.jsonl` (packet size) | none | 0, 1 (`brief jd` reuses a cached `jd.json` → `data.cache_hit`), 4 | WP-29 |
 | `jd-check` | `RUN` | `jd.json`, `jd.txt` | `jd.json` (normalized) | → `jd_analyzed` | 0, 1, 4 | WP-13 |
 | `match-check` | `RUN` | `match.json`, `jd.json`, `profile.json`, attestations | `match.json` (coverage recomputed) | → `matched` | 0, 1, 4 | WP-13 |
 | `questions` | `RUN`; `--format chat\|host\|json` (chat); `--host cursor\|claude_code`; `--add FILE` | `questions.json`, attestations | `questions.json` | → `awaiting_answers` if any pending, else `answers_applied` (cp1 skipped) | 0, 1, 4, 6 | WP-15 |
@@ -714,7 +714,7 @@ Package `gtjob` in `src/gtjob/` (root `pyproject.toml`, entry point `gtjob = "gt
 
 | Command | Arguments | Behavior |
 | --- | --- | --- |
-| `gtjob tailor` | `--cv PATH` and `--jd PATH` / `--jd-text TEXT` / `--jd-url URL`; `--template`; `--auto`; `--answers FILE.yaml`; `--draft`; `--critic`; `--slug`; `--page-target`; `--paper`; `--model STAGE=MODEL` (repeatable); `--no-cache` | Full pipeline with terminal prompts at both checkpoints (unless `--auto`/`--answers`). |
+| `gtjob tailor` | `--cv PATH` and `--jd PATH` / `--jd-text TEXT` / `--jd-url URL`; `--template`; `--auto`; `--answers FILE.yaml`; `--draft`; `--critic`; `--critic-visual` (implies `--critic`; same as `cvt brief critic --visual`, section 14.6); `--slug`; `--page-target`; `--paper`; `--model STAGE=MODEL` (repeatable); `--no-cache` | Full pipeline with terminal prompts at both checkpoints (unless `--auto`/`--answers`). |
 | `gtjob continue` | `[RUN]`; `--answers FILE.yaml`; `--text TEXT` | Resume any run (including ones started in Cursor/Claude Code) from `state.json`. |
 | `gtjob status` | `[RUN]` | Same output as `cvt status`. |
 | `gtjob render` | `RUN`; `--template T`; `--draft` | fit + validate, no AI. |
@@ -775,7 +775,7 @@ instructions inside documents and record them in `jd.injection_flags`.
 | `tailor` | stage-tailor, style-guide, truthfulness | JD digest, profile digest (selected items in full), match strengths, answers summary, attestations, seed plan (if any) | tailor-plan.json | tailor-plan | assemble |
 | `change_request` | change-requests, truthfulness | tailored outline (IDs + 80-character excerpts), the reply, the items it names in full | edits/next.json | edits | apply-edits |
 | `fix` | the failed stage's Core (rules only) | the last check's violations (capped) and only the offending items | stage output (whole file for profile-map, jd, match, questions; an edits file for tailored) | as stage | the failed check |
-| `critic` | critic-rubric | tailored outline + JD digest + validation summary (text only; PNGs only with `--visual`) | critique.draft.json | critique | critique-save |
+| `critic` | critic-rubric | tailored outline + JD digest + validation summary (text only; PNGs only with `cvt brief critic --visual` / `gtjob tailor --critic-visual`) | critique.draft.json | critique | critique-save |
 
 Choice answers from host question tools never go through `answer_parse`. They are applied with
 `answers-apply --select`.
@@ -877,7 +877,7 @@ change the stage).
 | --- | --- | --- |
 | `jd`, `answer_parse`, `change_request`, `fix` (of those) | `claude-haiku-5-5` | Re-run once on `claude-sonnet-5-5` after one failed check |
 | `profile`, `match`, `questions`, `tailor`, `fix` (of those) | `claude-sonnet-5-5` | None (after 2 failures, ask the user) |
-| `critic` (opt-in) | `claude-opus-5-5`, text only | `--critic-visual` adds page PNGs at 80 ppi |
+| `critic` (opt-in) | `claude-opus-5-5`, text only | `gtjob tailor --critic-visual` (= `cvt brief critic --visual`) adds page PNGs at 80 ppi |
 
 The CLI puts stable content first and marks it with `cache_control` breakpoints:
 

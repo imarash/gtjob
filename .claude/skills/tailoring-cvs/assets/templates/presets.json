@@ -1,0 +1,6 @@
+{
+  "floor": {"body_pt": 9.5, "margin_in": 0.5},
+  "comfortable": {"body_pt": 10.5, "margin_in": 0.7, "leading_em": 0.62, "section_gap_pt": 9},
+  "standard": {"body_pt": 10.0, "margin_in": 0.6, "leading_em": 0.58, "section_gap_pt": 7},
+  "compact": {"body_pt": 9.5, "margin_in": 0.5, "leading_em": 0.55, "section_gap_pt": 5}
+}

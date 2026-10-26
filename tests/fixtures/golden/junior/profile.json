@@ -1,0 +1,182 @@
+{
+  "schema_version": "1",
+  "person_slug": "jamie-rivera",
+  "cv_sha256": "bd7eae1179b4c4f53668cc96b5af856472251af800575048502097584af494b3",
+  "created_at": "2026-10-25T00:00:00Z",
+  "basics": {
+    "id": "basics",
+    "name": "Jamie Rivera",
+    "label": "Junior DevOps Engineer",
+    "email": "jamie.rivera@example.com",
+    "phone": "",
+    "url": "",
+    "location": {
+      "city": "Columbus",
+      "region": "OH",
+      "country": ""
+    },
+    "profiles": [
+      {
+        "network": "github",
+        "url": "https://github.com/jamierivera-dev"
+      }
+    ]
+  },
+  "summary": [
+    {
+      "id": "sum-1",
+      "text": "Junior DevOps engineer who automates cloud deployments, CI/CD pipelines and monitoring for a logistics platform. BSc in Computer Science, AWS certified."
+    }
+  ],
+  "work": [
+    {
+      "id": "exp-1",
+      "name": "Brightfield Logistics",
+      "location": "Columbus, OH",
+      "position": "Junior DevOps Engineer",
+      "employment_type": "employee",
+      "start_date": "2024-02",
+      "end_date": "present",
+      "date_text": "Feb 2024 - Present",
+      "summary": "",
+      "highlights": [
+        {
+          "id": "exp-1.b1",
+          "kind": "bullet",
+          "text": "Built GitHub Actions pipelines for 12 services, cutting average deploy time from 25 minutes to 8 minutes."
+        },
+        {
+          "id": "exp-1.b2",
+          "kind": "bullet",
+          "text": "Wrote Terraform modules for AWS networking and ECS services, replacing manual console changes across 3 environments."
+        },
+        {
+          "id": "exp-1.b3",
+          "kind": "bullet",
+          "text": "Containerized 6 legacy services with Docker and moved them to Amazon ECS."
+        },
+        {
+          "id": "exp-1.b4",
+          "kind": "bullet",
+          "text": "Set up Prometheus and Grafana dashboards and alerts, reducing mean time to detect incidents by about 40%."
+        },
+        {
+          "id": "exp-1.b5",
+          "kind": "bullet",
+          "text": "Joined a weekly on-call rotation and wrote 5 runbooks for common incidents."
+        },
+        {
+          "id": "exp-1.b6",
+          "kind": "tools",
+          "text": "Tools in use: AWS, Terraform, Docker, GitHub Actions, Prometheus, Grafana"
+        }
+      ],
+      "engagements": []
+    },
+    {
+      "id": "exp-2",
+      "name": "Cedar Valley College",
+      "location": "Dayton, OH",
+      "position": "IT Support Intern",
+      "employment_type": "employee",
+      "start_date": "2023-07",
+      "end_date": "2023-12",
+      "date_text": "Jul 2023 - Dec 2023",
+      "summary": "",
+      "highlights": [
+        {
+          "id": "exp-2.b1",
+          "kind": "bullet",
+          "text": "Resolved about 30 support tickets per week for students and staff, keeping first-response time under 4 hours."
+        },
+        {
+          "id": "exp-2.b2",
+          "kind": "bullet",
+          "text": "Automated account provisioning with PowerShell scripts, saving roughly 5 hours per week."
+        },
+        {
+          "id": "exp-2.b3",
+          "kind": "bullet",
+          "text": "Documented 15 knowledge base articles for common Windows and Wi-Fi issues."
+        }
+      ],
+      "engagements": []
+    }
+  ],
+  "education": [
+    {
+      "id": "edu-1",
+      "institution": "Lakeshore State University",
+      "area": "Computer Science",
+      "study_type": "BSc",
+      "location": "Columbus, OH",
+      "end_date": "2023-08",
+      "text": "BSc Computer Science | Lakeshore State University | Columbus, OH | Aug 2023"
+    }
+  ],
+  "certificates": [
+    {
+      "id": "cert-1",
+      "name": "AWS Certified Cloud Practitioner",
+      "issuer": "AWS",
+      "date": ""
+    }
+  ],
+  "skills": [
+    {
+      "id": "skl-1",
+      "name": "Cloud & Infrastructure",
+      "keywords": [
+        "AWS",
+        "ECS",
+        "S3",
+        "IAM",
+        "Terraform",
+        "Docker",
+        "Linux"
+      ]
+    },
+    {
+      "id": "skl-2",
+      "name": "CI/CD & Automation",
+      "keywords": [
+        "GitHub Actions",
+        "Git",
+        "Bash",
+        "Python",
+        "PowerShell"
+      ]
+    },
+    {
+      "id": "skl-3",
+      "name": "Monitoring & Operations",
+      "keywords": [
+        "Prometheus",
+        "Grafana",
+        "CloudWatch",
+        "PagerDuty",
+        "runbooks"
+      ]
+    }
+  ],
+  "other_sections": [
+    {
+      "id": "oth-1",
+      "title": "Projects",
+      "text": "terraform-lint-action: an open-source GitHub Action that runs terraform fmt and validate on pull requests, used in 4 personal repositories."
+    }
+  ],
+  "source_issues": [
+    {
+      "id": "iss-1",
+      "kind": "date_overlap",
+      "severity": "warn",
+      "message": "The IT Support Intern role starts in Jul 2023, but the BSc ends in Aug 2023, so the two overlap by 2 months.",
+      "item_ids": [
+        "exp-2",
+        "edu-1"
+      ],
+      "origin": "ai"
+    }
+  ]
+}

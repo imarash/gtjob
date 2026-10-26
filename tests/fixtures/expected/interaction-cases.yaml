@@ -1,0 +1,90 @@
+# Machine-readable assertions for the checkpoint interaction cases.
+# Item IDs refer to the sample-CV profile map (see plan/tasks/WP-03-text-fixtures.md).
+# Consumed by the e2e tests and the evals harness; every case is keyed by name.
+
+canonical:
+  reply_file: tests/fixtures/answers/staff-platform-sre.checkpoint1.txt
+  question_file: tests/fixtures/answers/staff-platform-sre.checkpoint1.question.txt
+  attestations:
+    - {claim_any: ["Service mesh", "service mesh"], type: skill, placement: skills, scope_kind: global}
+    - {claim_any: ["Istio"], type: skill, placement: skills, scope_kind: global, caveat_nonempty: true}
+    - {claim_any: ["TypeScript"], type: skill, placement: skills, scope_kind: global}
+    - {claim_any: ["SLO", "SLOs"], type: practice, placement: bullets, scope_kind: role_label, role_label: SRE, resolved_item_ids: [exp-2.e4, exp-2.e5]}
+    - {claim_any: ["error budget", "error budgets"], type: practice, placement: bullets, scope_kind: role_label, role_label: SRE, resolved_item_ids: [exp-2.e4, exp-2.e5]}
+  remain_gaps: ["SOC 2", "startup"]
+  forbidden_number_regex: "\\b\\d+(\\.\\d+)?\\s*%"
+  final_cv:
+    skills_contain: ["Istio", "TypeScript"]
+    bullets_in_any_of: {items: [exp-2.e4, exp-2.e5], contain_any: ["SLO", "error budget"]}
+  second_run_jd: tests/fixtures/jds/ai-llm-platform-engineer.md
+  second_run_must_not_ask_about: ["service mesh", "Istio", "TypeScript"]
+
+rejection:
+  reply_file: tests/fixtures/answers/case-rejection.txt
+  attestations: []
+  new_attestation_count: 0
+  declined_gaps: ["service mesh", "SOC 2", "TypeScript", "SLO", "startup"]
+  remain_gaps: ["service mesh", "SOC 2", "TypeScript", "SLO", "startup"]
+  followup_questions_created: 0
+  forbidden_terms_in_final_cv: ["Istio", "service mesh", "SOC 2", "SLO", "error budget"]
+  exit_code: 0
+  final_cv:
+    skills_not_contain: ["Istio", "TypeScript"]
+    claims_without_evidence: 0
+
+correction:
+  reply_file: tests/fixtures/answers/case-correction.txt
+  attestations:
+    - type: correction
+      placement: correction_only
+      scope_kind: items
+      resolved_item_ids: [exp-5]
+      corrections:
+        - {item_id: exp-5, field: start_date, new_value_contains: "2016"}
+        - {item_id: exp-5, field: end_date, new_value_contains: "2017"}
+  new_attestation_count: 1
+  forbidden_in_attestation_terms: ["skill", "bullet"]
+  followup_questions_created: 0
+  exit_code: 0
+  final_cv:
+    item_dates: {exp-5: {start_contains: "2016", end_contains: "2017"}}
+    corrected_dates_in_bullets: false
+    no_new_skills_or_bullets: true
+
+ambiguous_scope:
+  reply_file: tests/fixtures/answers/case-ambiguous-scope.txt
+  attestations:
+    - {claim_any: ["Kafka"], type: skill, scope_kind: unresolved, usable: false}
+  usable_attestation_count: 0
+  scope_question:
+    created: true
+    topic: scope
+    type: scope_confirm
+    checkpoint: 1
+    parent_question_mentions: ["Kafka"]
+    has_default: true
+  exit_code: 6
+  exit_state: AWAITING_USER
+  forbidden_terms_in_final_cv: ["Kafka"]
+
+edit_earlier:
+  reply_file: tests/fixtures/answers/case-edit-earlier.txt
+  edits:
+    source_any: [checkpoint2, instruction]
+    ops:
+      - {op: set_field, field: include_earlier_experience, value: "false"}
+  op_count: 1
+  check_tailored_must_pass: true
+  final_cv:
+    earlier_experience_line_present: false
+    no_other_items_changed: true
+  exit_code: 0
+
+followup_skip:
+  reply_file: tests/fixtures/answers/case-followup-skip.txt
+  attestations: []
+  new_attestation_count: 0
+  pending_followups_defaulted: all
+  open_question_count_after: 0
+  question_status_after: defaulted
+  exit_code: 0

@@ -1,0 +1,1 @@
+add service mesh, istio, typescript. and add slo and error budget to the sre related cv items
