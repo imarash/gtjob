@@ -5,7 +5,7 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 | Wave | State | Gate verdict | Fix-up rounds | Commit | Build tokens (approx.) |
 | --- | --- | --- | --- | --- | --- |
 | 1 | APPROVED | APPROVE (re-gate 2) | 2 | bdbdb19 | |
-| 2 | IN PROGRESS | | | | |
+| 2 | APPROVED | APPROVE (re-gate 3) | 3 | 73a6a31 | |
 | 3 | TODO | | | | |
 | 4 | TODO | | | | |
 | 5 | TODO | | | | |
@@ -85,3 +85,4 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 - 2026-10-26: user allowed round 3. Dispatching FIX-2-7.
 - 2026-10-26: FIX-2-7 DONE (630 pass). Dispatching delta re-gate 3.
 - 2026-10-26: WP-G2 APPROVE after 3 fix-up rounds (FIX-2-1..2-7; contract changes C1+C2+C3 applied). Non-blocking: 'Engineer- Intern' (hyphen+space) missed; PII-grep residual hits in schemas/senior-render.json unchecked. Committing wave 2.
+- 2026-10-26: wave 2 committed (73a6a31) and marked APPROVED. Next: wave 3.
