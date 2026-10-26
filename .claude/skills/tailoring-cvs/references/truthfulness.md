@@ -12,7 +12,7 @@ Code enforces these rules; the checker rejects violations. Same numbering as the
 
 1. Every bullet, summary, headline, skills item, and non-empty intro cites at least 1 ref (`source_refs`).
 2. Every ref must exist in the profile or in the usable attestations. Do not make up IDs.
-3. An attestation in a bullet needs placement `bullets` or `skills_and_bullets`, and its scope must cover the bullet's engagement (or be `global`). In a skills item it needs `skills` or `skills_and_bullets`.
+3. An attestation in a bullet needs placement `bullets` or `skills_and_bullets`, and its scope must cover the bullet's engagement (or be `global`). In a skills item it needs `skills` or `skills_and_bullets`. A bullet or intro may cite only `exp-*` refs from its own job (rule 3a); each needs at least one own-job ref or in-scope attestation.
 4. Every technology or tool term must appear in the text of the element's refs (synonyms and plurals count).
 5. Every number must appear in the element's refs. No invented counts, scale, durations, percentages, or team sizes.
 6. Employer, title, location, dates, client, role label, certification, degree, and header contact values equal the profile. A certification name may only be shortened.
@@ -108,6 +108,7 @@ Before the check command, read each element once and ask: does the ref text cont
 - `att-002`: terms `["Istio"]`, scope the retail platform engagement, placement `skills_and_bullets`.
 - Allowed: a bullet under that engagement that cites `att-002` and the engagement ref.
 - Forbidden: the same bullet under a bank engagement (`ref_out_of_scope`).
+- Forbidden: a bullet under one job that cites another job's lines (`ref_out_of_scope`).
 
 **Placeholder (rule 8)**
 - Source: "Migrate and re-design Snowflake Liquibase pipelines from Octopus Deploy to GitHub".

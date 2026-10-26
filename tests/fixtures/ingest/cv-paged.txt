@@ -1,0 +1,15 @@
+Jordan Sample  www.sample.test
+Summary
+❖​ Built a thing
+❖​ Ran a thing
+  2
+Jordan Sample  jordan@sample.test ♦ www.sample.test
+
+➢ Second page bullet
+  3
+Jordan Sample  jordan@sample.test ♦ www.sample.test
+
+
+
+
+➢ Third page bullet

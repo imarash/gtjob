@@ -1,0 +1,120 @@
+{
+  "linkerd": {
+    "set": {"experience.0.bullets.1.text": "Replaced manual console changes across 3 environments with Terraform modules for AWS networking and ECS services, plus Linkerd."},
+    "expect": [{"code": "unsupported_term", "item_id": "t-exp-1.b2", "message": "bullet t-exp-1.b2 mentions 'Linkerd'; not found in refs [exp-1.b2]"}]
+  },
+  "changed_number": {
+    "set": {"experience.0.bullets.0.text": "Built GitHub Actions pipelines for 20 services, cutting average deploy time from 25 minutes to 8 minutes."},
+    "expect": [{"code": "unsupported_number", "item_id": "t-exp-1.b1", "message": "bullet t-exp-1.b1 mentions number '20'; not found in refs [exp-1.b1]"}]
+  },
+  "att_out_of_scope": {
+    "set": {"experience.1.bullets.1.source_refs": ["exp-2.b2", "att-001"]},
+    "expect": [{"code": "ref_out_of_scope", "item_id": "t-exp-2.b2"}]
+  },
+  "skills_only_att_in_bullet": {
+    "set": {"experience.0.bullets.0.source_refs": ["exp-1.b1", "att-002"]},
+    "expect": [{"code": "placement", "item_id": "t-exp-1.b1"}]
+  },
+  "employer_date": {
+    "set": {"experience.0.start_date": "2023-02"},
+    "expect": [{"code": "fact_mismatch", "item_id": "t-exp-1"}]
+  },
+  "employer_title": {
+    "set": {"experience.0.title": "Senior DevOps Engineer"},
+    "expect": [{"code": "fact_mismatch", "item_id": "t-exp-1"}]
+  },
+  "uncited_skill": {
+    "append": {"skills.0.items": {"name": "Kubernetes", "source_refs": ["skl-1"]}},
+    "expect": [{"code": "skill_unsupported", "item_id": "t-skl-1", "message": "skill t-skl-1 lists 'Kubernetes'; not found in profile text or any usable attestation"}]
+  },
+  "skill_without_refs": {
+    "append": {"skills.0.items": {"name": "Docker", "source_refs": []}},
+    "expect": [{"code": "missing_refs", "item_id": "t-skl-1"}]
+  },
+  "skill_wrong_ref": {
+    "append": {"skills.0.items": {"name": "PowerShell", "source_refs": ["skl-1"]}},
+    "expect": [{"code": "unsupported_term", "item_id": "t-skl-1", "message": "skill t-skl-1 mentions 'PowerShell'; not found in refs [skl-1]"}]
+  },
+  "salary_in_summary": {
+    "set": {"summary.text": "Junior DevOps engineer who automates AWS deployments with Terraform, Docker and GitHub Actions, and keeps services observable with Prometheus and Grafana. AWS Certified Cloud Practitioner. Expecting $240,000 per year."},
+    "expect": [{"code": "unsupported_number", "item_id": "t-sum"}],
+    "expect_logistics": [{"code": "logistics_leak", "item_id": "t-sum"}]
+  },
+  "noise_in_summary": {
+    "set": {"summary.text": "Junior DevOps engineer who automates AWS deployments with Terraform, Docker and GitHub Actions. Salary range: $72,000-$88,000 per year"},
+    "expect_logistics": [{"code": "logistics_leak", "item_id": "t-sum"}]
+  },
+  "visa_in_bullet": {
+    "set": {"experience.0.bullets.5.text": "Joined a weekly on-call rotation; no visa sponsorship needed."},
+    "expect_logistics": [{"code": "logistics_leak", "item_id": "t-exp-1.b6"}]
+  },
+  "placeholder": {
+    "set": {"experience.0.bullets.0.text": "Built GitHub Actions pipelines for 12 services, cutting average deploy time from 25 minutes to [[CONFIRM: new deploy time]]."},
+    "expect": [],
+    "expect_placeholders": [{"code": "placeholder", "item_id": "t-exp-1.b1"}]
+  },
+  "revoked_att": {
+    "set": {"experience.0.bullets.3.source_refs": ["exp-1.b3", "att-004"]},
+    "expect": [{"code": "unknown_ref", "item_id": "t-exp-1.b4"}]
+  },
+  "unresolved_att": {
+    "set": {"experience.0.bullets.3.source_refs": ["exp-1.b3", "att-006"]},
+    "expect": [{"code": "unknown_ref", "item_id": "t-exp-1.b4"}]
+  },
+  "other_run_att": {
+    "set": {"experience.0.bullets.3.source_refs": ["exp-1.b3", "att-007"]},
+    "expect": [{"code": "unknown_ref", "item_id": "t-exp-1.b4"}]
+  },
+  "missing_refs": {
+    "set": {"experience.0.bullets.0.source_refs": []},
+    "expect": [{"code": "missing_refs", "item_id": "t-exp-1.b1"}]
+  },
+  "unknown_ref": {
+    "set": {"experience.0.bullets.0.source_refs": ["exp-9.b1"]},
+    "expect": [{"code": "unknown_ref", "item_id": "t-exp-1.b1"}]
+  },
+  "cert_changed": {
+    "set": {"certifications.0.name": "AWS Certified Solutions Architect"},
+    "expect": [{"code": "cert_unsupported", "item_id": "t-cert-1"}]
+  },
+  "degree_changed": {
+    "set": {"education.0.degree": "MSc, Computer Science"},
+    "expect": [{"code": "fact_mismatch", "item_id": "t-edu-1"}]
+  },
+  "headline_term": {
+    "set": {"header.headline": "Junior DevOps Engineer · Kubernetes"},
+    "expect": [{"code": "unsupported_term", "item_id": "t-header", "message": "headline t-header mentions 'Kubernetes'; not found in refs [basics, exp-1]"}]
+  },
+  "header_name": {
+    "set": {"header.name": "Jamie Rivers"},
+    "expect": [{"code": "fact_mismatch", "item_id": "t-header"}]
+  },
+  "proposed_cited": {
+    "set": {"summary.source_refs": ["sum-1", "exp-1", "cert-1", "att-005"]},
+    "expect": [{"code": "attestation_not_active", "item_id": "t-sum"}]
+  },
+  "synonym_ok": {
+    "set": {"experience.0.bullets.1.text": "Replaced manual console changes across 3 environments with Terraform modules for Amazon Web Services networking and ECS services."},
+    "expect": []
+  },
+  "cert_shortened": {
+    "set": {"certifications.0.name": "Cloud Practitioner"},
+    "expect": []
+  },
+  "correction_applies": {
+    "set": {"experience.1.start_date": "2023-08"},
+    "expect": []
+  },
+  "cross_employer_bullet": {
+    "set": {"experience.1.bullets.0.text": "Built GitHub Actions pipelines for 12 services, cutting average deploy time from 25 minutes to 8 minutes.", "experience.1.bullets.0.source_refs": ["exp-1.b1"]},
+    "expect": [{"code": "ref_out_of_scope", "item_id": "t-exp-2.b1", "message": "bullet t-exp-2.b1 cites exp-1.b1 from another job; parent is exp-2"}, {"code": "ref_out_of_scope", "item_id": "t-exp-2.b1", "message": "bullet t-exp-2.b1 has no ref from its own job; parent is exp-2"}]
+  },
+  "bullet_only_skill_ref": {
+    "set": {"experience.0.bullets.0.source_refs": ["skl-1"]},
+    "expect": [{"code": "ref_out_of_scope", "item_id": "t-exp-1.b1", "message": "bullet t-exp-1.b1 has no ref from its own job; parent is exp-1"}]
+  },
+  "own_job_tools_line_ok": {
+    "set": {"experience.0.bullets.2.source_refs": ["exp-1.b6", "exp-1.b3"]},
+    "expect": []
+  }
+}

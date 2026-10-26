@@ -1,0 +1,202 @@
+# Common English words and resume verbs. Whitespace-separated, lowercase, '#' starts a comment line.
+# A capitalized word that is in this list never counts as a claim-bearing term. Plural, possessive and
+# -ed/-ing/-ly forms of a listed word are accepted automatically, so base forms are enough.
+# Never add product names, employers, clients, places or personal names here: those must be traced to the CV.
+# --- articles, pronouns, prepositions, conjunctions, auxiliaries ---
+a an the this that these those it its he she they we you i me my our your their his her them us who whom whose which what when where why how
+and or but nor so yet for of in on at by to from with without within into onto over under above below between among through during before after
+about against across along around behind beside beyond despite down except inside near off out outside per since than toward towards until up upon via versus
+is are was were be been being am do does did done doing have has had having will would shall should can could may might must ought
+not no yes any all both each every either neither some none one two three four five six seven eight nine ten first second third last next other another
+many much more most less least few fewer several such own same very too also only just even still already again ever never always often once twice
+here there then now today yesterday tomorrow soon later early late well
+if else because while although though unless whether whereas however therefore thus hence moreover furthermore otherwise meanwhile instead
+# --- resume verbs (base forms; -ed/-ing/-s are derived) ---
+led lead leading lead managed manage owned own drove drive driven designed design built build created create developed develop delivered deliver
+launched launch implemented implement improved improve increased increase reduced reduce decreased decrease cut grew grow achieved achieve
+established establish introduced introduce streamlined streamline automated automate migrated migrate modernized modernize optimized optimize
+orchestrated orchestrate architected architect engineered engineer deployed deploy provisioned provision configured configure maintained maintain
+monitored monitor operated operate supported support supervised supervise mentored mentor coached coach trained train taught teach guided guide
+directed direct coordinated coordinate collaborated collaborate partnered partner contributed contribute facilitated facilitate championed champion
+spearheaded spearhead pioneered pioneer initiated initiate executed execute performed perform conducted conduct analyzed analyse analyze assessed assess
+evaluated evaluate audited audit reviewed review inspected inspect investigated investigate diagnosed diagnose debugged debug resolved resolve fixed fix
+troubleshot troubleshoot remediated remediate mitigated mitigate prevented prevent eliminated eliminate replaced replace refactored refactor rewrote rewrite
+wrote write documented document published publish presented present reported report communicated communicate negotiated negotiate advised advise
+consulted consult recommended recommend proposed propose planned plan scheduled schedule prioritized prioritize organized organize standardized standardize
+simplified simplify consolidated consolidate integrated integrate connected connect extended extend expanded expand scaled scale accelerated accelerate
+enabled enable ensured ensure enforced enforce secured secure protected protect hardened harden validated validate verified verify tested test measured measure
+tracked track logged log recorded record collected collect gathered gather aggregated aggregate processed process transformed transform converted convert
+translated translate packaged package containerized containerize shipped ship released release rolled roll rolling tuned tune upgraded upgrade patched patch
+installed install updated update revamped revamp redesigned redesign restructured restructure reorganized reorganize rebuilt rebuild renewed renew
+reviewed founded found started start joined join onboarded onboard recruited recruit hired hire interviewed interview promoted promote awarded award
+earned earn won win saved save generated generate boosted boost raised raise lowered lower doubled double tripled triple halved halve slashed slash
+shortened shorten sped speed ran run runs running handled handle served serve provided provide offered offer authored author drafted draft edited edit
+curated curate cataloged catalog mapped map modeled model prototyped prototype piloted pilot trialed trial experimented experiment researched research
+studied study learned learn applied apply adopted adopt adapted adapt customized customize tailored tailor tested typed took take made make got get gave give
+kept keep held hold set sat put brought bring found find saw see said say told tell asked ask used use utilized utilize leveraged leverage employed employ
+embedded embed invented invent discovered discover identified identify defined define specified specify scoped scope sized size estimated estimate
+budgeted budget forecasted forecast allocated allocate negotiated procured procure sourced source vetted vet onboarded
+# --- general nouns and adjectives common in professional writing ---
+ability able access account accountability accuracy action active activity addition additional address administration advanced advantage agency agent agile
+agreement aim alert alignment alternative amount analysis analytics annual answer application approach appropriate approval architecture area art article
+aspect asset assistant associate assurance attention audience authority automation availability average award awareness back background balance bank base basic
+basis batch beginning behavior benefit best better big bill billing board body bonus book boundary brand breadth bridge brief broad budget bug bulk business
+buyer calendar call campaign candidate capability capacity card care career carrier case cash catalog category cause center central certain certificate
+certification certified chain challenge challenging champion change channel chapter charge chart chat check choice circle city claim class clean clear client
+clinical close cloud code coding collaboration collection college color column combination command comment commercial commitment committee common
+communication community company comparison competitive complete complex compliance component comprehensive concept concern condition confidence configuration
+conflict connection consistent constraint construction consultant consulting consumer contact container content context continuous contract control convention
+core corporate cost count country course cover coverage craft credit criteria critical cross crucial culture current custom customer cycle daily data database
+date day deadline deal dealing decision dedicated deep default definition degree delay delivery demand department dependency depth description desk detail
+detailed detection developer development device diagram difference digital dimension direction director discipline discussion display distance distribution
+division doc document domain draft drive driver duty dynamic ease east economic edge education effect effective efficiency efficient effort element email
+emergency employee employer end endpoint energy engagement engine engineer engineering enhancement enough enterprise entire entry environment equipment
+error essential estimate evening event evidence example excellence excellent exception executive exercise existing expectation expense experience expert
+expertise explanation exposure external extra face facility fact factor failure fair family fast feature feedback field figure file final finance financial
+fine firm fit fix flexible flow focus follow following force foreign form formal format formation forward foundation frame framework free frequent friendly
+front full function functional fund fundamental future gap gate general global goal good government grade graduate grant great ground group growth guarantee
+guidance guide guideline half hand hands-on hard hardware head headline health healthy heart heavy help helpful high highly history home hour house
+human idea identity image impact implementation importance important impressive improvement incident include including income independent index individual
+industry influence information infrastructure initial initiative innovation innovative input insight inspection instance institution instruction integration
+integrity intelligence intent interest interface internal international internet intern internship interview introduction inventory investment invoice
+involvement issue item job journey judgment key kind knowledge label lab labor landscape language large launch law layer leader leadership learning
+leave left legacy legal length lesson level library license life lifecycle light limit line link list live load local location long loss low machine
+mail main maintenance major majority management manager manual manufacturing margin market marketing master material matter maturity maximum meaning
+measure measurement mechanism media meeting member membership memory mental mention message method metric middle mid milestone million mind minimum
+minor minute mission mobile mode model moderate module moment money month monthly morning motion move movement multiple name narrow national native
+natural nature need network new news night nine noise normal north note notice notification number object objective obligation observation office
+official old online open operation operational opinion opportunity option order ordinary organization organizational original outcome outline output
+overall overview owner ownership pace package page pair panel paper parameter parent part participant participation particular partner partnership party
+pass past path pattern payment peer people percent percentage performance period permanent permission person personal personnel phase phone physical
+picture piece pipeline place plan planning platform plus point policy pool poor popular portal portfolio position positive possible post potential
+power practical practice precision preference preparation presence present presentation pressure previous price primary principal principle print
+prior priority private problem procedure process product production productivity professional profile profit program programme progress project
+promotion proof property proposal proposition prospect protection protocol provider public purchase purpose quality quarter quarterly question queue
+quick quote range rank rate rating ratio raw reach reaction reading ready real reality reason recent recognition recommendation record recovery
+reduction reference region regional regular regulation regulatory relation relationship relevant reliability reliable remote repeat replacement report
+reporting repository representation request requirement research reserve resolution resource respect response responsibility responsible rest
+restriction result resume retail retention return revenue review reward right rigorous risk robust role room root round route routine row rule
+runtime safe safety sale sales sample scale scenario schedule scheme school science scope score screen script search season section sector security
+segment selection self senior sense sensitive sequence series server service session setting setup share sharp shift short side sign signal significant
+similar simple single site situation size skill slide small smart social society software solid solution source south space spec special specialist
+specific specification speed spirit split sponsor sport spot staff stage stakeholder standard star start state statement station statistics status
+step stock storage store story strategic strategy stream street strength stress strong structure student studio study style subject submission
+success successful sufficient suggestion summary supply support sure surface survey sustainable switch symbol system table tactical tag talent target
+task team technical technique technology template tenure term territory test text theme theory thing thinking thought threat threshold tier time
+timeline timely title tool top topic total touch track trade traditional traffic training transaction transfer transition transparency travel tree
+trend trial trouble trust truth turn type typical ultimate understanding unique unit universal university update upper urgent usage use useful
+user utility valid validation value variable variety various vendor version vertical video view vision visual voice volume wave way weak web week
+weekly weight whole wide window wireless wise word work worker workflow workforce workload workshop world worth year yearly young zone
+# --- more verbs, adjectives, adverbs, nouns ---
+accept accomplish accordingly accrue acquire act adjust administer advance advocate affect afford aid align allow alter amend anticipate appear appoint
+approve arise arrange arrive ask assign assist assume attach attempt attend attract avoid backed backup bake balance bar base become begin believe
+belong benchmark blend block bring browse bundle buy calculate capture carry cascade cast catch cease celebrate certify challenge chair choose clarify
+classify clear click climb clone code combine come commence commission commit compare compete compile complete comply compose compress compute conceive
+concentrate conclude confirm conform consider consist constitute construct consume contain continue contrast control convey cooperate copy correct
+correspond count cover crash cross cultivate customize cycle deal debate decide declare dedicate defend defer delegate demonstrate depend depict derive
+describe deserve detect determine differ discuss dispatch display dispose distribute divide draw drop eat embrace emerge emphasize enhance enjoy enrich
+enroll enter equip escalate establish exceed exchange exclude exist expect explain explore export express face fail fall feature feed feel fetch fill
+filter finalize finish flag focus fold follow forecast form formulate foster frame fulfill gain govern grant grasp greet handle happen harness help hit
+host identify illustrate imagine impact implement imply import impose inform inherit inject input insert insist inspire instruct insure intend interact
+interpret invest invite involve isolate iterate join judge jump justify lack land last launch layer lay learn leave lend let lift limit list listen
+load locate lock look maintain mark master match matter mean meet merge migrate mind mirror miss mix mount name navigate need note notify obtain occur
+open operate oppose opt order originate overcome oversee participate pay perceive permit persist pick place plan play point pose position possess post
+pour practice prefer prepare preserve press prevail price probe proceed procure profile program project promise prompt prove publish pull purchase pursue
+push qualify query question quote raise rank reach read realize rebuild receive recognize reconcile recover recur redirect reflect refine reform
+refresh refuse regard register regulate reinforce reject relate relax rely remain remember remind remove render repair repeat replicate reply represent
+request require reserve reset reshape resist respond restore restrict retain retire retrieve reuse reveal reverse revert revise reward rise roll
+route rule safeguard sample satisfy scan score screen script seek select sell send sense separate sequence settle shape share shift show shrink
+sign simulate sit skip slice solve sort span speak spend split sponsor spread stabilize stack stage stand state stay steer stop store strengthen stress
+stretch strike structure struggle submit subscribe succeed suffer suggest sum summarize supplement supply surface survive suspend sustain swap switch
+synchronize synthesize tackle target team tend terminate thrive throw tie track trade transfer transition transmit trigger trust turn understand
+undertake unify unlock unveil update uphold upload urge utilize vary view visit visualize wait walk want warn watch weigh welcome widen withstand
+wonder work worry wrap yield
+absolute abstract academic accurate acting actual adaptive adequate advisory affordable aggressive agreed ambitious analytical ancient annually
+anonymous apparent applicable appreciated architectural articulate artificial associated assorted attractive authentic automatic autonomous available
+aware backward bare bespoke bold brilliant bright broader calm capable careful casual cautious certain cheap chief civil classic closely coherent
+cohesive collaborative collective comfortable compact comparable compatible competent compelling complementary compliant composite compound concise
+concrete confident confidential conscious consecutive conservative considerable consistent constant constructive contemporary continual
+contractual contrary controlled conventional cooperative corporate correct corresponding creative crisp cultural curious customer-facing
+cutting-edge damaged dangerous dedicated defined definite delicate deliberate dense dependable detailed determined developed diagnostic diverse
+documented domestic dominant dramatic durable eager earlier easy economical effective elaborate electronic elegant eligible embedded emerging
+emotional empirical empowered encouraging end-to-end endless engaged enormous entire environmental equal equivalent essential ethical evolving
+exact exceptional exclusive executive existing exotic expanding expected expensive experienced experimental explicit extensive external extreme
+fair familiar famous fascinating favorable federal feasible fierce fixed flat flawless fluent formal former fragile frequent fresh friendly
+frontline full-time fully functional furthermore gentle genuine global gradual grand graphic grateful growing guaranteed hands-on happy harmonious
+hidden holistic honest hosted hybrid ideal identical idle immediate immense impartial imperative implicit impressive inadequate inbound incoming
+incremental indirect individual industrial inevitable influential informal informed initial innovative insightful instant integral intelligent
+intense intensive interactive intermediate internal interpersonal intuitive invaluable involved irregular joint junior key keen knowledgeable
+large-scale lasting latest lean legitimate lengthy liable light lightweight likely limited linear liquid literal little logical long-term loyal
+magnetic mainstream manageable mandatory manual massive mature meaningful measurable mechanical medium memorable mental merely meticulous minimal
+mixed mobile modern modest modular monthly multiple mutual narrow nationwide necessary negative nervous neutral nimble nominal non-profit notable
+noticeable novel numerous objective obvious occasional offline ongoing online open operational optimal optional organic organized outbound
+outdated outgoing outstanding overall overseas parallel part-time partial passionate patient perfect periodic permanent persistent personalized
+pertinent physical plain pleasant plenty portable positive powerful practical precise predictable preferred preliminary premium prepared present
+pretty previous primary prime principal prior private proactive probable productive professional proficient profitable progressive prominent
+promising prompt proper proprietary protective proven prudent public punctual pure qualified quantitative quick quiet radical random rapid rare
+rational raw reactive realistic reasonable receptive recent reciprocal recurring redundant reflective regional regular related relative relevant
+reliable remarkable remote repeatable repeated representative required resilient resourceful respective responsive restricted retired reusable
+rich rigid rigorous robust rough routine royal rural safe satisfied scalable scarce scientific seamless secondary secure selective self-service
+semi senior sensible separate sequential serious several shared sharp shiny short-term significant silent similar simplified simultaneous sincere
+single skilled slight slow smooth social solid sophisticated sound spare special specialized specific spontaneous stable standalone standard
+static steady steep sterile stable strategic streamlined strict strong structural structured stunning subsequent substantial subtle successful
+sudden suitable superior supportive supreme sustainable swift systematic tangible technical temporary tentative thorough tight tiny total tough
+traditional transparent tremendous trusted typical ultimate unable unclear underlying unified uniform unique universal unlimited unusual upcoming
+updated upfront upstream urgent usable useful user-friendly usual valid valuable various vast versatile viable vibrant virtual visible vital
+vivid voluntary vulnerable warm weak weekly well-known wholesale widespread willing wonderful worldwide worthwhile written
+# --- everyday nouns and misc ---
+ability accident act addition adult advice affair age agenda agreement air airline alarm album alley amount angle animal anniversary apartment apple
+appointment arm army arrow artist atmosphere attack attitude attorney auction aunt author autumn baby bag ball band bank bar barrier basket bath battery
+beach bean bed bell belt bench bird birth bit blade blank blanket blood blue boat bone border bottle bottom bowl box boy brain branch bread break
+breakfast brick brother budget building bus butter button cabin cable cake camera camp cap captain car carpet cartoon castle cat cave ceiling cell
+cent century chain chair chance character cheese chief child chip church cigarette circle classroom clock cloth clothes club coal coast coat coffee
+coin cold collar comfort companion competition computer concert conference connection continent conversation cook cookie copper corn corner cotton
+cough court cousin cow crowd crown cup curtain curve cushion dance danger daughter dawn deck deer desert design desk dessert dinner dirt disease dish
+doctor dog doll dollar door dream dress drink drum duck dust ear earth egg election elephant engine entrance envelope error evening exam exit
+eye fabric factory fall farm farmer father fear feather fence ferry festival fever finger fire fish flag flame floor flower fly fog food foot forest
+fork fountain fox friend frog fruit furniture garage garden gas gate gift girl glass glove goat gold golf grain grass guest guitar gun hair hall
+hammer harbor hat heat hill hobby hole holiday honey hook horse hospital hotel hunt husband ice island jacket jar jewel judge juice key kid king
+kitchen kite knee knife lake lamp leaf leg lemon letter lion lip lunch magazine map mask match meal meat medicine mirror monkey moon mother mountain
+mouse mouth movie museum music nail neck needle nest nose nurse nut ocean onion orange oven pan parade park passenger peace pen pencil pepper piano
+pie pig pillow pin pipe pizza plane plant plate player pocket poem pond potato pound prince princess prison pumpkin puppy queen rabbit radio rain
+rainbow rat ribbon rice ring river road rock roof rope rose rubber sail salad salt sand sausage scarf sea seat seed sheep sheet shelf ship shirt
+shoe shop shoulder silver sister skin skirt sky snake snow soap sock soil soldier son song soup spider spoon spring square stamp stone storm
+stove strawberry sugar suit summer sun supper swim table tail tea teacher tent theater thumb ticket tiger toe tomato tongue tooth towel tower toy
+train tray trip truck tube tunnel turkey twin umbrella uncle valley van vegetable village wall wallet watch water weather wedding wheel whistle
+wife wind window wine winter wolf woman wood wool worm yard zero zoo
+# --- calendar, time, quantity, direction ---
+january february march april may june july august september october november december monday tuesday wednesday thursday friday saturday sunday
+spring summer autumn fall winter morning afternoon evening night noon midnight decade century annual quarterly monthly weekly daily hourly
+north south east west northern southern eastern western left right top bottom front rear center middle
+hundred thousand million billion dozen half quarter double triple single couple pair percent
+# --- resume section names and labels ---
+summary skills experience education certifications certificates projects publications awards languages interests references volunteer volunteering
+profile objective highlights achievements accomplishments responsibilities duties contact links portfolio employment history details additional
+tools technologies technical competencies expertise proficiencies proficiency qualifications training courses coursework thesis dissertation honors
+cv resume curriculum vitae present current ongoing remote hybrid onsite full-time part-time contract contractor freelance permanent temporary
+bachelor bachelors master masters doctorate diploma degree associate major minor gpa cum laude
+# --- seniority and role words ---
+junior mid senior staff principal lead head chief vice director manager supervisor associate assistant analyst specialist consultant architect
+engineer developer programmer administrator technician operator coordinator representative executive officer president founder partner owner
+intern trainee apprentice mentor mentee advisor adviser expert generalist professional practitioner owner stakeholder contributor
+platform reliability site infrastructure systems software hardware network security cloud data application applications solutions solution
+services service product products operations delivery support quality release releases automation integration deployment development
+# --- misc professional vocabulary ---
+across acquisition adoption agnostic agreed alignment allocation amid analysis approach arrangement assembly asynchronous attribute audit
+authentication authorization automation baseline benchmark bottleneck breakdown briefing broker bug build bundle cadence capacity cascade
+catalog certification checkpoint checklist churn clarity cluster cohort commit compatibility completion compliance composition computing
+concurrency consensus consistency consolidation continuity contribution convergence cost-effective coverage cross-functional cross-team
+dashboard deadline decision decommission decoupling delegation dependency deprecation derivative diagnosis discovery disruption documentation
+downtime drift duplication efficiency elasticity enablement endpoint engagement escalation evaluation evolution exception execution
+exposure extension failover fallback feedback fidelity fleet footprint forecast fragmentation framework fulfillment gateway governance
+granularity guardrail handoff handover harmonization heuristic hotfix hygiene idempotent implementation inception incubation ingestion
+inheritance initiative inventory iteration latency lifecycle load logging maintainability mandate manifest mapping maturity memo merge
+metadata methodology migration milestone mitigation modularity momentum monetization monitoring multitasking namespace negotiation
+normalization notification observability onboarding optimization orchestration outage oversight ownership parity partition pathway
+payload persistence pipeline playbook portability postmortem precedent predictability prerequisite proactive procurement profiling
+proposal provenance provisioning proxy pull quota ramp rationale readiness rebase recap reconciliation redundancy refactor regression
+rehearsal reinforcement reliability remediation replication repository reproducibility resilience resolution retrospective rollback
+rollout runbook sandbox saturation scalability scaffolding scheduling schema scoping scorecard sequencing serialization shadowing
+sharding sign-off simulation snapshot spike sprint stabilization stakeholders standup stewardship stub subscription successor surge
+sustainability synchronization synergy taxonomy telemetry throughput timeline timeboxed tooling traceability tradeoff transcript
+triage turnaround turnkey uptime validation variance versioning visibility walkthrough whitepaper workaround workstream

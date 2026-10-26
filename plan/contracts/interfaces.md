@@ -334,7 +334,8 @@ def clean_jd_text(raw: str) -> str                     # whitespace/nbsp normali
 ```python
 def normalize_ids(profile: dict) -> dict                    # canonical renumbering (section 1)
 def normalize_text(s: str) -> str                           # NFKC, collapse whitespace, unify dashes/quotes, strip glyphs; used for verbatim checks
-def verify_verbatim(profile: dict, cv_text: str) -> list[dict]  # violations code "fact_mismatch" for texts not found
+def verify_verbatim(profile: dict, cv_text: str) -> list[dict]  # violations code "fact_mismatch" for texts not found,
+    # dates inconsistent with date_text, and titles/role labels that drop a seniority qualifier (as build_profile)
 def script_source_issues(profile: dict, cv_text: str, today: datetime.date) -> list[dict]
 def iter_items(profile: dict) -> Iterator[tuple[str, str, dict]]  # (id, kind, obj) for every addressable item
 def item_text(profile: dict, item_id: str) -> str           # text of item; for exp-N/exp-N.eK includes all descendant texts + names + role label + dates
@@ -346,7 +347,16 @@ def numbered_cv(cv_text: str) -> str                         # "  41| text" per 
 def build_profile(pmap: dict, cv_text: str, *, person_slug: str, cv_sha256: str) -> tuple[dict, list[dict]]
     # verbatim text from ranges (leading bullet markers stripped, wrapped lines joined with one space), canonical IDs,
     # violations: range_error (out of bounds/overlap), unmapped_line (non-blank line not covered or ignored),
-    # not_verbatim (name/employer/title/client/cert/institution not found in its cited lines)
+    # not_verbatim (name/employer/title/client/role label/cert/institution/degree area/study type not found in its
+    # cited lines; each comma-separated part of a work, education, or basics location not found in its cited lines;
+    # start_date/end_date inconsistent with date_text, or an education end_date / certificate date whose year is not
+    # in its cited lines). Date consistency: the year must appear in date_text; a month (YYYY-MM) must appear as its
+    # English name or 3-4 letter abbreviation ("Sep"/"Sept") or its number; `present` needs Present/Current/Now/Today;
+    # "" is always allowed.
+    # A title or role label is also not_verbatim when, at every occurrence in its cited lines, the word directly
+    # before or after it (only spaces or a hyphen in between) is a seniority qualifier left out of the value
+    # (`profile.SENIORITY_QUALIFIERS`: junior, intern, trainee, assistant, associate, co-, …). Example: title
+    # "DevOps Engineer" from "Junior DevOps Engineer".
 ```
 
 ### WP-11 `attestations.py`, `scope.py`
@@ -606,6 +616,12 @@ Rules per tailored element (violation code in parentheses):
 3. An attestation cited by a bullet must have `placement` `bullets` or `skills_and_bullets` (`placement`), and the
    bullet's parent engagement or work ID must be in `scope.item_ids` unless `scope.kind` is `global` (`ref_out_of_scope`).
    An attestation cited by a skills item must have `placement` `skills` or `skills_and_bullets`.
+3a. A bullet or `intro` under tailored work `exp-N` may cite profile refs `exp-N` or any ref starting with `exp-N.`.
+   Under tailored engagement `exp-N.eK` it may cite `exp-N.eK`, refs starting with `exp-N.eK.`, and work-level
+   highlights `exp-N.bJ` (for example a tools line). Any other `exp-*` ref is `ref_out_of_scope`. Non-experience refs
+   (`basics`, `sum-*`, `skl-*`, `cert-*`, `edu-*`) are allowed, but each bullet needs at least one ref that is in its
+   allowed `exp-*` set or a usable attestation in scope (`ref_out_of_scope`). Message:
+   `"bullet <id> cites <ref> from another job; parent is <parent profile_id>"`.
 4. Every term from `lexicon.find_terms(text)` must be supported by the union of the element's sources, using
    `lexicon.supports` (case-insensitive, singular/plural, possessive, `synonyms.json` equivalence classes) (`unsupported_term`).
    Terms present in `common-words.txt` are ignored.

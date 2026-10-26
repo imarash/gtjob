@@ -32,7 +32,7 @@ Structure
 - Anything else (languages, awards, projects) goes in `other_sections`, titled as written.
 
 Values
-- Typed values (names, employers, titles, clients, role labels, certificate names) must appear verbatim in their cited lines. Drop the `Client:` and `Role:` prefixes.
+- Typed values (names, employers, titles, clients, role labels, certificate names, degree area and type, location parts) must appear verbatim in their cited lines. Drop the `Client:` and `Role:` prefixes. Normalized dates must agree with `date_text`. Copy titles and role labels whole, with every qualifier (Junior, Intern, Assistant).
 - Only dates are normalized: `YYYY-MM` when a month is given, `YYYY` when only a year, `present` for current, `""` unknown. Also copy `date_text` verbatim.
 - `employment_type` is `unknown` unless the CV says otherwise.
 - Unknown contact fields are `""`. `basics.name` is the full name as written (it becomes the person slug).

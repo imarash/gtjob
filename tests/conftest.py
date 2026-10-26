@@ -17,6 +17,9 @@ DEFAULT_SAMPLE_CV = REPO_ROOT / "CVs" / "ArashMorattab-CV-2026-10.pdf"
 SAMPLE_CV_ENV = "GTJOB_SAMPLE_CV"
 HOME_ENV = "GTJOB_HOME"
 HOST_ENV = "GTJOB_HOST"
+# Host-detection inputs read by cvtlib.hostdetect; cleared so tests never see the driving host.
+HOST_DETECT_ENV_PREFIXES = ("CURSOR_",)
+HOST_DETECT_ENV_NAMES = ("CLAUDECODE",)
 
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
@@ -24,11 +27,16 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 @pytest.fixture
 def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """An empty workspace root: GTJOB_HOME points at it, GTJOB_HOST is cleared."""
+    """An empty workspace root: GTJOB_HOME points at it, GTJOB_HOST and host-detection env vars are cleared."""
     root = tmp_path / "ws"
     root.mkdir()
     monkeypatch.setenv(HOME_ENV, str(root))
     monkeypatch.delenv(HOST_ENV, raising=False)
+    for name in HOST_DETECT_ENV_NAMES:
+        monkeypatch.delenv(name, raising=False)
+    for key in list(os.environ):
+        if key.startswith(HOST_DETECT_ENV_PREFIXES):
+            monkeypatch.delenv(key, raising=False)
     return root
 
 

@@ -1,0 +1,15 @@
+[
+  {"kind": "salary_range", "regex": "[$€£]\\s?\\d[\\d,]*(?:\\.\\d+)?\\s?[kK]?\\s?(?:-|–|—|to)\\s?[$€£]?\\s?\\d[\\d,]*(?:\\.\\d+)?\\s?[kK]?\\b"},
+  {"kind": "salary_period", "regex": "[$€£]\\s?\\d[\\d,]*(?:\\.\\d+)?\\s?[kK]?\\s?(?:/|per|a|an)\\s?(?:yr|year|annum|hr|hour|month|mo)\\b"},
+  {"kind": "salary_term", "regex": "\\b(?:base\\s+salary|salary|total\\s+comp(?:ensation)?|compensation|pay\\s+range|pay\\s+band|hourly\\s+rate|day\\s+rate|OTE)\\b[^.\\n]{0,40}?(?:[$€£]\\s?\\d|\\b\\d{2,3},\\d{3}\\b|\\b\\d{2,3}\\s?[kK]\\b)"},
+  {"kind": "base_equity", "regex": "\\bbase\\s*\\+\\s*(?:equity|bonus|stock|options|commission)"},
+  {"kind": "equity_offer", "regex": "\\b(?:equity|stock\\s+options|RSUs?)\\s+(?:grant|package|offer)\\b"},
+  {"kind": "visa", "regex": "(?-i:\\bvisas?\\b)"},
+  {"kind": "visa", "regex": "\\b(?:work|student|tourist|immigration|business|travel)\\s+visas?\\b|\\bvisas?\\s+(?:sponsorship|status|required|requirement|holder|transfer|support)\\b|\\bH-?1B\\b|\\bgreen\\s+card\\b|\\bwork\\s+permit\\b"},
+  {"kind": "work_authorization", "regex": "\\bwork(?:ing)?\\s+authori[sz]ation\\b|\\bauthori[sz]ed\\s+to\\s+work\\b|\\bright\\s+to\\s+work\\b|\\beligible\\s+to\\s+work\\b"},
+  {"kind": "sponsorship", "regex": "\\b(?:visa|work|employer|immigration)\\s+sponsorship\\b|\\bsponsor(?:ed|ing)?\\s+(?:a\\s+|your\\s+|my\\s+)?(?:work\\s+)?(?:visa|permit)s?\\b|\\brequires?\\s+sponsorship\\b|\\bsponsorship\\s+(?:is\\s+)?(?:required|available|not)\\b"},
+  {"kind": "relocation", "regex": "\\b(?:willing|open|able|ready|available)\\s+to\\s+relocate\\b|\\brelocation\\s+(?:assistance|package|support|required|bonus|expenses?)\\b|\\b(?:will|would|can|must)\\s+relocate\\b"},
+  {"kind": "onsite_days", "regex": "\\b\\d\\s*(?:-\\s*\\d\\s*)?days?\\s*(?:per|a|each|/)\\s*week\\b"},
+  {"kind": "onsite_days", "regex": "\\b(?:on-?site|in[- ]office|hybrid)\\b[^.\\n]{0,30}\\b\\d\\s*days?\\b"},
+  {"kind": "recruiter_email", "regex": "[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)+"}
+]

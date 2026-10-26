@@ -1,0 +1,229 @@
+{
+  "schema_version": "1",
+  "person_slug": "sam-testperson",
+  "cv_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "created_at": "2026-01-01T00:00:00Z",
+  "basics": {
+    "id": "basics",
+    "name": "Sam Testperson",
+    "label": "Platform Engineer",
+    "email": "sam@example.invalid",
+    "phone": "",
+    "url": "",
+    "location": {
+      "city": "Exampleton",
+      "region": "",
+      "country": "Nowhere"
+    },
+    "profiles": []
+  },
+  "summary": [
+    {
+      "id": "sum-1",
+      "text": "Synthetic platform engineer used only for tests."
+    }
+  ],
+  "work": [
+    {
+      "id": "exp-1",
+      "name": "Quillmark Systems",
+      "location": "Exampleton",
+      "position": "Platform Engineer",
+      "employment_type": "employee",
+      "start_date": "2023-01",
+      "end_date": "present",
+      "date_text": "Jan 2023 - Present",
+      "summary": "",
+      "highlights": [
+        {
+          "id": "exp-1.b1",
+          "kind": "bullet",
+          "text": "Maintained internal deployment tooling."
+        }
+      ],
+      "engagements": []
+    },
+    {
+      "id": "exp-2",
+      "name": "Fernbrook Consulting",
+      "location": "Exampleton",
+      "position": "Consultant",
+      "employment_type": "consultant",
+      "start_date": "2019-01",
+      "end_date": "2022-12",
+      "date_text": "Jan 2019 - Dec 2022",
+      "summary": "",
+      "highlights": [],
+      "engagements": [
+        {
+          "id": "exp-2.e1",
+          "kind": "client",
+          "name": "Tallgrass Insurance",
+          "role_label": "Platform Engineer",
+          "summary": "",
+          "highlights": [
+            {
+              "id": "exp-2.e1.b1",
+              "kind": "bullet",
+              "text": "Built a CI pipeline for the claims team."
+            }
+          ]
+        },
+        {
+          "id": "exp-2.e2",
+          "kind": "client",
+          "name": "Oakline Telecom",
+          "role_label": "DevOps Engineer",
+          "summary": "",
+          "highlights": [
+            {
+              "id": "exp-2.e2.b1",
+              "kind": "bullet",
+              "text": "Automated server provisioning."
+            }
+          ]
+        },
+        {
+          "id": "exp-2.e3",
+          "kind": "client",
+          "name": "Redwater Utilities",
+          "role_label": "Cloud Engineer",
+          "summary": "",
+          "highlights": [
+            {
+              "id": "exp-2.e3.b1",
+              "kind": "bullet",
+              "text": "Moved batch jobs to managed containers."
+            }
+          ]
+        },
+        {
+          "id": "exp-2.e4",
+          "kind": "client",
+          "name": "Harborline Bank",
+          "role_label": "SRE",
+          "summary": "",
+          "highlights": [
+            {
+              "id": "exp-2.e4.b1",
+              "kind": "bullet",
+              "text": "Reduced alert noise on the payments dashboard."
+            }
+          ]
+        },
+        {
+          "id": "exp-2.e5",
+          "kind": "client",
+          "name": "Pinecrest Outfitters",
+          "role_label": "SRE",
+          "summary": "",
+          "highlights": [
+            {
+              "id": "exp-2.e5.b1",
+              "kind": "bullet",
+              "text": "Documented incident runbooks for the web storefront."
+            }
+          ]
+        },
+        {
+          "id": "exp-2.e6",
+          "kind": "partner",
+          "name": "Stonebridge Software",
+          "role_label": "Backend Developer",
+          "summary": "",
+          "highlights": [
+            {
+              "id": "exp-2.e6.b1",
+              "kind": "bullet",
+              "text": "Wrote integration services in Go."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exp-3",
+      "name": "Lumenfield Partners",
+      "location": "Exampleton",
+      "position": "Consultant",
+      "employment_type": "consultant",
+      "start_date": "2015-01",
+      "end_date": "2018-12",
+      "date_text": "Jan 2015 - Dec 2018",
+      "summary": "",
+      "highlights": [],
+      "engagements": [
+        {
+          "id": "exp-3.e1",
+          "kind": "client",
+          "name": "Maplecrest Logistics",
+          "role_label": "Release Engineer",
+          "summary": "",
+          "highlights": [
+            {
+              "id": "exp-3.e1.b1",
+              "kind": "bullet",
+              "text": "Scripted release packaging."
+            }
+          ]
+        },
+        {
+          "id": "exp-3.e2",
+          "kind": "client",
+          "name": "Driftwood Media",
+          "role_label": "Data Engineer",
+          "summary": "",
+          "highlights": [
+            {
+              "id": "exp-3.e2.b1",
+              "kind": "bullet",
+              "text": "Maintained nightly ETL jobs."
+            }
+          ]
+        },
+        {
+          "id": "exp-3.e3",
+          "kind": "client",
+          "name": "Ironvale Health",
+          "role_label": "Infrastructure Engineer",
+          "summary": "",
+          "highlights": [
+            {
+              "id": "exp-3.e3.b1",
+              "kind": "bullet",
+              "text": "Standardised server images."
+            }
+          ]
+        },
+        {
+          "id": "exp-3.e4",
+          "kind": "internal",
+          "name": "Lumenfield Labs",
+          "role_label": "Automation Engineer",
+          "summary": "",
+          "highlights": [
+            {
+              "id": "exp-3.e4.b1",
+              "kind": "bullet",
+              "text": "Built internal test harnesses."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "education": [],
+  "certificates": [],
+  "skills": [
+    {
+      "id": "skl-1",
+      "name": "Tools",
+      "keywords": [
+        "Go",
+        "Terraform"
+      ]
+    }
+  ],
+  "other_sections": [],
+  "source_issues": []
+}

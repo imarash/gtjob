@@ -1,0 +1,686 @@
+# Claim-bearing terms: one per line. Matching is case-insensitive on word boundaries, longest first.
+# A leading "=" makes an entry case-sensitive (for words that are also ordinary English).
+# Hyphen and space are interchangeable inside an entry. Plural and possessive forms match automatically.
+# --- cloud providers and services ---
+AWS
+Amazon Web Services
+Azure
+Microsoft Azure
+GCP
+Google Cloud
+Google Cloud Platform
+Alibaba Cloud
+Oracle Cloud
+OCI
+IBM Cloud
+DigitalOcean
+Linode
+Hetzner
+Cloudflare
+Vercel
+Netlify
+Heroku
+Fly.io
+OpenStack
+VMware
+vSphere
+Proxmox
+EC2
+S3
+ECS
+EKS
+ECR
+Fargate
+Lambda
+AWS Lambda
+RDS
+Aurora
+DynamoDB
+ElastiCache
+SQS
+SNS
+Kinesis
+CloudFormation
+AWS CDK
+CDK
+CloudWatch
+CloudTrail
+IAM
+VPC
+Route 53
+ALB
+ELB
+API Gateway
+Step Functions
+EventBridge
+Redshift
+Athena
+Glue
+EMR
+SageMaker
+Bedrock
+GuardDuty
+Security Hub
+KMS
+Secrets Manager
+Systems Manager
+Control Tower
+Cognito
+CodePipeline
+CodeBuild
+CodeDeploy
+Elastic Beanstalk
+Lightsail
+Transit Gateway
+Direct Connect
+Amazon ECS
+Amazon EKS
+Amazon S3
+Amazon EC2
+Amazon RDS
+Amazon Elastic Container Service
+AKS
+Azure DevOps
+Azure Functions
+Azure Pipelines
+Cosmos DB
+Azure AD
+Entra ID
+Bicep
+ARM templates
+GKE
+Cloud Run
+BigQuery
+Cloud Functions
+Pub/Sub
+Spanner
+Cloud SQL
+Dataflow
+Anthos
+Compute Engine
+App Engine
+Firebase
+Firestore
+Vertex AI
+Azure OpenAI
+hybrid cloud
+multi-cloud
+multi-region
+multi-tenant
+# --- containers and orchestration ---
+Kubernetes
+k8s
+K3s
+Docker
+Docker Compose
+Docker Swarm
+Podman
+containerd
+CRI-O
+Helm
+Kustomize
+OpenShift
+Rancher
+=Nomad
+HashiCorp Nomad
+Istio
+Linkerd
+Envoy
+HashiCorp Consul
+=Consul
+Cilium
+Calico
+Karpenter
+KEDA
+Knative
+service mesh
+Argo Rollouts
+Flagger
+Skaffold
+Buildah
+Kaniko
+Crossplane
+Velero
+Kyverno
+OPA
+Open Policy Agent
+Gatekeeper
+Falco
+Trivy
+cert-manager
+NGINX
+HAProxy
+Traefik
+Kong
+Apigee
+Mesos
+operators
+# --- infrastructure as code and configuration ---
+Terraform
+OpenTofu
+Pulumi
+Ansible
+=Chef
+Puppet
+SaltStack
+Packer
+Vagrant
+Terragrunt
+Terraform Cloud
+Atlantis
+Spacelift
+infrastructure as code
+IaC
+IaaC
+configuration management
+GitOps
+ArgoCD
+Argo CD
+Flux
+FluxCD
+Backstage
+internal developer platform
+platform engineering
+# --- CI/CD and build ---
+CI/CD
+CICD
+continuous integration
+continuous delivery
+continuous deployment
+Jenkins
+GitHub Actions
+GitLab
+GitLab CI
+CircleCI
+Travis CI
+TeamCity
+Bamboo
+Buildkite
+Tekton
+Spinnaker
+Argo Workflows
+Octopus Deploy
+Bazel
+Gradle
+Maven
+npm
+Yarn
+pnpm
+Webpack
+Vite
+Turborepo
+blue-green
+canary releases
+feature flags
+LaunchDarkly
+release engineering
+trunk-based development
+# --- observability ---
+Prometheus
+Grafana
+Grafana Loki
+Grafana Tempo
+Mimir
+Thanos
+Alertmanager
+Datadog
+New Relic
+Dynatrace
+Splunk
+Elastic Stack
+ELK
+Elasticsearch
+Logstash
+Kibana
+OpenTelemetry
+OTel
+Jaeger
+Zipkin
+Sentry
+PagerDuty
+Opsgenie
+VictorOps
+Honeycomb
+Lightstep
+AppDynamics
+Nagios
+Zabbix
+Fluentd
+Fluent Bit
+StatsD
+InfluxDB
+Telegraf
+X-Ray
+Statuspage
+SignalFx
+Sumo Logic
+observability
+distributed tracing
+# --- SRE and reliability practices ---
+SRE
+site reliability engineering
+site reliability engineer
+SLO
+SLI
+SLA
+error budget
+service level objective
+service level indicator
+service level agreement
+incident response
+incident management
+incident commander
+postmortem
+post-mortem
+blameless
+on-call
+chaos engineering
+Chaos Monkey
+Gremlin
+LitmusChaos
+game day
+capacity planning
+disaster recovery
+business continuity
+high availability
+RTO
+RPO
+MTTR
+MTTD
+runbook
+load testing
+k6
+Locust
+JMeter
+Gatling
+performance engineering
+FinOps
+cost optimization
+reliability engineering
+DevOps
+DevSecOps
+DORA metrics
+SecOps
+zero downtime
+zero-downtime
+five nines
+mission-critical
+24/7
+# --- security and compliance ---
+SOC 2
+SOC2
+SOC 1
+PCI DSS
+PCI-DSS
+PCI
+ISO 27001
+ISO 27002
+ISO 9001
+HIPAA
+FedRAMP
+GDPR
+CCPA
+NIST
+NIST 800-53
+CIS benchmarks
+HITRUST
+SOX
+Sarbanes-Oxley
+zero trust
+SAST
+DAST
+SBOM
+supply chain security
+SLSA
+Sigstore
+cosign
+HashiCorp Vault
+secrets management
+SSO
+SAML
+OIDC
+OAuth
+OAuth 2.0
+LDAP
+Active Directory
+Okta
+Auth0
+Keycloak
+Kerberos
+mTLS
+TLS
+SSL
+PKI
+WAF
+penetration testing
+pen testing
+threat modeling
+vulnerability management
+SIEM
+SOAR
+Snyk
+SonarQube
+Checkov
+tfsec
+Prisma Cloud
+Wiz
+CrowdStrike
+Qualys
+Nessus
+Burp Suite
+OWASP
+CVE
+RBAC
+least privilege
+encryption
+GRC
+# --- languages and runtimes ---
+Python
+Java
+JavaScript
+TypeScript
+Golang
+=Go
+=Rust
+=Swift
+C++
+C#
+=Ruby
+Ruby on Rails
+PHP
+Kotlin
+Scala
+Elixir
+Erlang
+Haskell
+Clojure
+Perl
+Lua
+=Dart
+Bash
+Zsh
+PowerShell
+shell scripting
+SQL
+PL/SQL
+T-SQL
+GraphQL
+gRPC
+REST APIs
+=REST
+Protobuf
+Node.js
+Deno
+.NET
+ASP.NET
+Django
+Flask
+FastAPI
+Spring Boot
+Spring Framework
+Express.js
+NestJS
+Laravel
+Symfony
+Solidity
+Groovy
+Julia
+MATLAB
+COBOL
+Fortran
+WebAssembly
+WASM
+Objective-C
+# --- data and messaging ---
+PostgreSQL
+Postgres
+MySQL
+MariaDB
+SQLite
+SQL Server
+=Oracle
+MongoDB
+Redis
+Memcached
+Cassandra
+CouchDB
+Neo4j
+Apache Spark
+=Spark
+Kafka
+Apache Kafka
+RabbitMQ
+ActiveMQ
+NATS
+Pulsar
+Flink
+Airflow
+dbt
+Snowflake
+Databricks
+Hadoop
+Apache Hive
+Presto
+Trino
+ClickHouse
+OpenSearch
+Solr
+Fivetran
+Airbyte
+Looker
+Tableau
+Power BI
+Metabase
+Superset
+data warehouse
+data lake
+ETL
+ELT
+pandas
+NumPy
+SciPy
+Jupyter
+scikit-learn
+PyTorch
+TensorFlow
+Keras
+XGBoost
+machine learning
+MLOps
+deep learning
+NLP
+computer vision
+# --- AI and LLM tooling ---
+LLM
+large language model
+RAG
+retrieval-augmented generation
+Claude Code
+Claude
+Anthropic
+OpenAI
+GPT
+ChatGPT
+=Gemini
+Llama
+Mistral
+=Cursor
+Copilot
+GitHub Copilot
+Windsurf
+Codex
+MCP
+Model Context Protocol
+vLLM
+Ollama
+Hugging Face
+LangChain
+LangGraph
+LlamaIndex
+vector database
+Pinecone
+Weaviate
+Qdrant
+Milvus
+pgvector
+embeddings
+fine-tuning
+LoRA
+prompt engineering
+agentic
+AI agents
+generative AI
+GenAI
+TensorRT
+=Ray
+MLflow
+Kubeflow
+Weights & Biases
+# --- frontend and mobile ---
+React
+React Native
+Next.js
+Vue
+Vue.js
+Nuxt
+Angular
+Svelte
+SvelteKit
+Redux
+TanStack Query
+React Query
+Tailwind
+Tailwind CSS
+Material UI
+Chakra UI
+Storybook
+Jest
+Vitest
+Cypress
+Playwright
+Selenium
+Puppeteer
+Testing Library
+HTML
+CSS
+Sass
+SCSS
+styled-components
+Astro
+Remix
+Gatsby
+Web Components
+PWA
+WCAG
+Core Web Vitals
+Figma
+ESLint
+Prettier
+Babel
+Rollup
+esbuild
+design system
+micro-frontends
+Module Federation
+jQuery
+Bootstrap
+Electron
+Flutter
+React Router
+Zustand
+MobX
+Apollo Client
+Three.js
+D3
+# --- operating systems, networking and tooling ---
+Linux
+Ubuntu
+Debian
+RHEL
+Red Hat
+CentOS
+Amazon Linux
+Windows
+Windows Server
+macOS
+Unix
+FreeBSD
+systemd
+Git
+GitHub
+Bitbucket
+Gerrit
+Jira
+Confluence
+=Slack
+=Notion
+TCP/IP
+DNS
+BGP
+load balancing
+VPN
+WireGuard
+OpenVPN
+SD-WAN
+Cisco
+Juniper
+Palo Alto
+Fortinet
+F5
+VLAN
+SSH
+KVM
+Hyper-V
+Ceph
+NFS
+iSCSI
+NetApp
+Pure Storage
+# --- architecture, process and claim phrases ---
+microservices
+monolith
+serverless
+event-driven
+domain-driven design
+DDD
+TDD
+BDD
+Agile
+Scrum
+Kanban
+SAFe
+pair programming
+code review
+SDLC
+ITIL
+ITSM
+ServiceNow
+Salesforce
+SAP
+Workday
+Zendesk
+SaaS
+PaaS
+IaaS
+B2B
+B2C
+fintech
+banking
+healthcare
+e-commerce
+startup
+start-up
+early-stage
+seed-stage
+Series A
+Series B
+scale-up
+team lead
+tech lead
+technical lead
+engineering manager
+people management
+open source
+open-source
+Fortune 500
+Fortune 100
