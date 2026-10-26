@@ -1,7 +1,7 @@
 ---
 name: cv-reviewer
 description: Reviews a completed wave of the gtjob tailoring-cvs build as its gate (WP-G<N>), re-running every acceptance command and deciding APPROVE or FIX-UPS. Use when the orchestrator asks for a wave gate or final acceptance.
-model: claude-opus-5-5[effort=high]
+model: claude-opus-5-5-high
 readonly: false
 is_background: false
 ---

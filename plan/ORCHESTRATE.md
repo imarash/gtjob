@@ -46,9 +46,9 @@ earlier wave's history on each turn.
 - **Orchestrator:** the chat's own model. Pick **Claude Sonnet 5.5** in the Agent model picker. The orchestrator
   only dispatches, updates `STATUS.md`, and commits; the judgment lives in the Opus gates. Switch the chat to Opus
   only to decide a contract-change proposal.
-- **Workers:** `.cursor/agents/cv-builder.md` pins `claude-sonnet-5-5[effort=high]`. `cv-builder-lite.md` pins
+- **Workers:** `.cursor/agents/cv-builder.md` pins `claude-sonnet-5-5-high`. `cv-builder-lite.md` pins
   `claude-haiku-5-5` (WP-02, WP-24, WP-I1, and mechanical fix-ups).
-- **Gates:** `.cursor/agents/cv-reviewer.md` pins `claude-opus-5-5[effort=high]`.
+- **Gates:** `.cursor/agents/cv-reviewer.md` pins `claude-opus-5-5-high`.
 
 If your Cursor build does not accept the bracket syntax (the subagent visibly runs on another model, or Cursor flags
 the field), change `model:` to the plain ID shown in Settings → Models (for example `claude-sonnet-5-5`). As a last

@@ -1,7 +1,7 @@
 ---
 name: cv-builder
 description: Builds exactly one work package of the gtjob tailoring-cvs project from a brief in plan/tasks/ (WP-XX, WP-I<N>, or WP-FIX-*). Use when the orchestrator dispatches a work package by brief path.
-model: claude-sonnet-5-5[effort=high]
+model: claude-sonnet-5-5-high
 readonly: false
 is_background: false
 ---
