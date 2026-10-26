@@ -27,16 +27,48 @@ MIN_ES_LEN = 5
 MIN_ACRONYM_LEN = 2
 SENTENCE_BREAKS = frozenset(".!?\n\r·|•")
 LEADING_PUNCT = frozenset(" \t\"'([{“‘*-–—_\x00")
-MULTIPLIERS = {"k": 1_000, "m": 1_000_000, "b": 1_000_000_000}
+MULTIPLIERS = {
+    "k": 1_000, "m": 1_000_000, "b": 1_000_000_000, "t": 1_000_000_000_000,
+    "bn": 1_000_000_000, "mn": 1_000_000, "tn": 1_000_000_000_000,
+}
+# Cardinal words that count as numbers (`two`..`nineteen`, tens). `one`, `a`, `an` are not standalone numbers
+# ("one of", "one idea per bullet"); `one` only counts as the unit of a compound ("twenty-one").
+NUMBER_WORD_UNITS = {
+    "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+    "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16,
+    "seventeen": 17, "eighteen": 18, "nineteen": 19,
+}
+NUMBER_WORD_TENS = {
+    "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90,
+}
+COMPOUND_ONLY_WORD = "one"
+# Articles that count as 1 only when a multiplier follows directly ("a million users" -> 1000000).
+ARTICLE_MULTIPLIER_WORDS = frozenset({"a", "an", "one"})
+# Abbreviated scales never take an article ("a TN town" is a place, not 10^12); they need a digit before them.
+ABBREVIATED_SCALE_WORDS = frozenset({"bn", "bln", "mn", "mln", "tn"})
+NUMBER_WORD_MULTIPLIERS = {
+    "hundred": 100, "thousand": 1_000, "million": 1_000_000, "billion": 1_000_000_000, "dozen": 12,
+    "trillion": 1_000_000_000_000, "bn": 1_000_000_000, "bln": 1_000_000_000, "mn": 1_000_000, "mln": 1_000_000,
+    "tn": 1_000_000_000_000, "lakh": 100_000, "crore": 10_000_000,
+}
+HUNDRED_WORD = "hundred"
+DOZEN_WORD = "dozen"
+SCALE_WORDS = frozenset({
+    "thousand", "million", "billion", "trillion", "bn", "bln", "mn", "mln", "tn", "lakh", "crore",
+})
+_KIND_NUM, _KIND_UNIT, _KIND_TENS, _KIND_MULT, _KIND_ONE = "num", "unit", "tens", "mult", "one"
 QUOTE_MAP = str.maketrans({"’": "'", "‘": "'", "“": '"', "”": '"'})
 
 _WORD_RE = re.compile(r"[A-Za-z][A-Za-z0-9]*")
 _ACRONYM_RE = re.compile(r"(?=[A-Z0-9]*[A-Z])[A-Z0-9]{%d,}" % MIN_ACRONYM_LEN)
 _INNER_CAPS_RE = re.compile(r"[a-z][A-Z]")
 _NUMBER_RE = re.compile(
-    r"(?<![A-Za-z0-9_.])(?<!\d,)(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?:([kKmMbB])(?![A-Za-z0-9]))?",
+    r"(?<![A-Za-z0-9_.])(?<!\d,)(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
+    r"(?:((?i:bn|mn|tn|[kmbt]))(?![A-Za-z0-9]))?",
 )
 _SEPARATOR_RE = re.compile(r"[\s\-]+")
+_AND_JOIN_RE = re.compile(r"[\s\-]+and[\s\-]+", re.IGNORECASE)
+_NUMBER_WORD_RE = re.compile(r"(?<![A-Za-z0-9_])[A-Za-z]+(?![A-Za-z0-9])")
 _SUFFIX = r"(?:'s|s|es)?"
 
 
@@ -198,19 +230,123 @@ def _format_number(value: decimal.Decimal) -> str:
     return text.rstrip("0").rstrip(".") if "." in text else text
 
 
-def numbers(text: str) -> list[str]:
-    """Normalized numeric tokens: `800+` -> `800`, `99.99%` -> `99.99`, `5,000` -> `5000`, `5k` -> `5000`.
+def _word_kind(word: str) -> tuple[str, decimal.Decimal] | None:
+    if word == COMPOUND_ONLY_WORD:
+        return _KIND_ONE, decimal.Decimal(1)
+    for table, kind in ((NUMBER_WORD_UNITS, _KIND_UNIT), (NUMBER_WORD_TENS, _KIND_TENS),
+                        (NUMBER_WORD_MULTIPLIERS, _KIND_MULT)):
+        if word in table:
+            return kind, decimal.Decimal(table[word])
+    return None
 
-    Digits glued to letters (`S3`, `k8s`, `Q3`) are part of a name, not a number. Order of appearance, no duplicates.
-    """
-    out: list[str] = []
-    for m in _NUMBER_RE.finditer(unicodedata.normalize("NFKC", text)):
+
+def _atoms(text: str) -> list[tuple[int, int, str, str, decimal.Decimal]]:
+    """(start, end, kind, word, value) for digit tokens and number words, in text order."""
+    atoms: list[tuple[int, int, str, str, decimal.Decimal]] = []
+    for m in _NUMBER_RE.finditer(text):
         value = decimal.Decimal(m.group(1).replace(",", ""))
         if m.group(2):
             value *= MULTIPLIERS[m.group(2).casefold()]
-        token = _format_number(value)
-        if token not in out:
-            out.append(token)
+        atoms.append((m.start(), m.end(), _KIND_NUM, "", value))
+    words = [(m.start(), m.end(), m.group(0).casefold()) for m in _NUMBER_WORD_RE.finditer(text)]
+    for i, (start, end, word) in enumerate(words):
+        if word in ARTICLE_MULTIPLIER_WORDS and i + 1 < len(words):
+            next_start, _, next_word = words[i + 1]
+            if (next_word in NUMBER_WORD_MULTIPLIERS and next_word not in ABBREVIATED_SCALE_WORDS
+                    and _SEPARATOR_RE.fullmatch(text[end:next_start])):
+                atoms.append((start, end, _KIND_UNIT, word, decimal.Decimal(1)))
+                continue
+        kind = _word_kind(word)
+        if kind:
+            atoms.append((start, end, kind[0], word, kind[1]))
+    atoms.sort(key=lambda a: a[0])
+    return atoms
+
+
+def _parse_run(run: list[tuple[int, int, str, str, decimal.Decimal]]) -> list[decimal.Decimal]:
+    """Values of one run of adjacent atoms ("two hundred fifty" -> 250, "twenty five" -> 25, "5 thousand" -> 5000)."""
+    values: list[decimal.Decimal] = []
+    total = decimal.Decimal(0)
+    cur: decimal.Decimal | None = None
+    last = ""
+
+    def flush() -> None:
+        nonlocal total, cur, last
+        if cur is not None or total:
+            values.append(total + (cur or 0))
+        total, cur, last = decimal.Decimal(0), None, ""
+
+    for _, _, kind, word, value in run:
+        if kind == _KIND_NUM:
+            flush()
+            cur, last = value, kind
+        elif kind in (_KIND_UNIT, _KIND_ONE):
+            if cur is None and not total and kind == _KIND_ONE:
+                continue  # bare "one" is not a number
+            if cur is None:
+                cur = value
+            elif last in (_KIND_TENS, HUNDRED_WORD) and (cur % 100 == 0 or last == _KIND_TENS):
+                cur += value
+            else:
+                flush()
+                if kind == _KIND_ONE:
+                    continue
+                cur = value
+            last = _KIND_UNIT
+        elif kind == _KIND_TENS:
+            if cur is None:
+                cur = value
+            elif last == HUNDRED_WORD:
+                cur += value
+            else:
+                flush()
+                cur = value
+            last = _KIND_TENS
+        elif word == HUNDRED_WORD:
+            if cur is None or cur >= 100 or last == DOZEN_WORD:
+                flush()  # bare "hundred" is not a number
+                continue
+            cur, last = cur * value, HUNDRED_WORD
+        elif word in SCALE_WORDS:
+            if cur is None:
+                continue
+            total, cur, last = total + cur * value, None, word
+        else:  # dozen
+            cur = value if cur is None else cur * value
+            last = DOZEN_WORD
+    flush()
+    return values
+
+
+def _joins(prev: tuple[int, int, str, str, decimal.Decimal], gap: str) -> bool:
+    """Adjacent atoms join across spaces/hyphens, and across "and" after a scale word ("two hundred and fifty")."""
+    if _SEPARATOR_RE.fullmatch(gap):
+        return True
+    return prev[3] in (HUNDRED_WORD, *SCALE_WORDS) and bool(_AND_JOIN_RE.fullmatch(gap))
+
+
+def numbers(text: str) -> list[str]:
+    """Normalized numeric tokens: `800+` -> `800`, `99.99%` -> `99.99`, `5,000` -> `5000`, `5k` -> `5000`,
+    `2bn` -> `2000000000`.
+
+    Cardinal words count too: `Five` -> `5`, `twenty-five` -> `25`, `a dozen` -> `12`, `two hundred` -> `200`,
+    `a trillion` -> `1000000000000` (`one`, `a`, `an` alone do not). Digits glued to letters (`S3`, `k8s`, `Q3`)
+    are part of a name, not a number.
+    Order of appearance, no duplicates.
+    """
+    norm = unicodedata.normalize("NFKC", text)
+    runs: list[list[tuple[int, int, str, str, decimal.Decimal]]] = []
+    for atom in _atoms(norm):
+        if runs and _joins(runs[-1][-1], norm[runs[-1][-1][1]:atom[0]]):
+            runs[-1].append(atom)
+        else:
+            runs.append([atom])
+    out: list[str] = []
+    for run in runs:
+        for value in _parse_run(run):
+            token = _format_number(value)
+            if token not in out:
+                out.append(token)
     return out
 
 

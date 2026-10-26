@@ -1,0 +1,25 @@
+{
+  "chars_per_token": 3.8,
+  "core_max_lines": 60,
+  "seed_min_score": 0.6,
+  "max_fix_attempts": 2,
+  "excerpt_chars": 240,
+  "outline_excerpt_chars": 80,
+  "max_fix_violations": 10,
+  "fix_item_chars": 600,
+  "prematch_top": 5,
+  "recency_years": 5,
+  "recency_boost": 1.5,
+  "attestation_boost": 2,
+  "stages": {
+    "profile": {"input": 1500, "output": 4000},
+    "jd": {"input": 3000, "output": 2000},
+    "match": {"input": 7000, "output": 3000},
+    "questions": {"input": 4000, "output": 1500},
+    "answer_parse": {"input": 2500, "output": 1000},
+    "tailor": {"input": 8000, "output": 4000},
+    "change_request": {"input": 3000, "output": 1000},
+    "fix": {"input": 2500, "output": 1500},
+    "critic": {"input": 4000, "output": 1500}
+  }
+}

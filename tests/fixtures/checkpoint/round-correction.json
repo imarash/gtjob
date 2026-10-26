@@ -1,0 +1,44 @@
+{
+  "round": 1,
+  "checkpoint": 1,
+  "received_at": "2026-01-01T00:00:00Z",
+  "channel": "chat",
+  "raw_text": "I started at Quillmark in 2022-06, the CV is wrong",
+  "items": [
+    {
+      "question_id": "",
+      "action": "correct",
+      "choice_ids": [],
+      "attestations": [
+        {
+          "type": "correction",
+          "claim": "Quillmark start date is 2022-06",
+          "terms": [],
+          "detail": "",
+          "scope": {
+            "kind": "global",
+            "role_label": "",
+            "item_ids": [],
+            "description": ""
+          },
+          "placement": "correction_only",
+          "correction": {
+            "item_id": "exp-1",
+            "field": "start_date",
+            "old_value": "2023-01",
+            "new_value": "2022-06"
+          },
+          "verbatim": "I started at Quillmark in 2022-06",
+          "caveat": ""
+        }
+      ],
+      "instruction": "",
+      "note": ""
+    }
+  ],
+  "unmentioned_question_ids": [
+    "q-1",
+    "q-2",
+    "q-3"
+  ]
+}

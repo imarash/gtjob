@@ -1,0 +1,177 @@
+{
+  "round": 1,
+  "checkpoint": 1,
+  "received_at": "2026-01-01T00:00:00Z",
+  "channel": "chat",
+  "raw_text": "add service mesh, istio, typescript. and add slo and error budget to the sre related cv items",
+  "items": [
+    {
+      "question_id": "q-1",
+      "action": "attest",
+      "choice_ids": [],
+      "attestations": [
+        {
+          "type": "skill",
+          "claim": "Service mesh",
+          "terms": [
+            "service mesh"
+          ],
+          "detail": "",
+          "scope": {
+            "kind": "global",
+            "role_label": "",
+            "item_ids": [],
+            "description": ""
+          },
+          "placement": "skills",
+          "correction": {
+            "item_id": "",
+            "field": "",
+            "old_value": "",
+            "new_value": ""
+          },
+          "verbatim": "service mesh",
+          "caveat": "Service mesh with no role context; placed in skills only."
+        }
+      ],
+      "instruction": "",
+      "note": ""
+    },
+    {
+      "question_id": "q-1",
+      "action": "attest",
+      "choice_ids": [],
+      "attestations": [
+        {
+          "type": "skill",
+          "claim": "Istio",
+          "terms": [
+            "Istio"
+          ],
+          "detail": "",
+          "scope": {
+            "kind": "global",
+            "role_label": "",
+            "item_ids": [],
+            "description": ""
+          },
+          "placement": "skills",
+          "correction": {
+            "item_id": "",
+            "field": "",
+            "old_value": "",
+            "new_value": ""
+          },
+          "verbatim": "istio",
+          "caveat": "Istio with no role context is hard to defend; skills section only unless you name a role."
+        }
+      ],
+      "instruction": "",
+      "note": ""
+    },
+    {
+      "question_id": "q-1",
+      "action": "attest",
+      "choice_ids": [],
+      "attestations": [
+        {
+          "type": "skill",
+          "claim": "TypeScript",
+          "terms": [
+            "TypeScript"
+          ],
+          "detail": "",
+          "scope": {
+            "kind": "global",
+            "role_label": "",
+            "item_ids": [],
+            "description": ""
+          },
+          "placement": "skills",
+          "correction": {
+            "item_id": "",
+            "field": "",
+            "old_value": "",
+            "new_value": ""
+          },
+          "verbatim": "typescript",
+          "caveat": ""
+        }
+      ],
+      "instruction": "",
+      "note": ""
+    },
+    {
+      "question_id": "q-1",
+      "action": "attest",
+      "choice_ids": [],
+      "attestations": [
+        {
+          "type": "practice",
+          "claim": "SLOs",
+          "terms": [
+            "SLO",
+            "SLOs",
+            "service level objective",
+            "service level objectives"
+          ],
+          "detail": "",
+          "scope": {
+            "kind": "role_label",
+            "role_label": "SRE",
+            "item_ids": [],
+            "description": "the sre related cv items"
+          },
+          "placement": "bullets",
+          "correction": {
+            "item_id": "",
+            "field": "",
+            "old_value": "",
+            "new_value": ""
+          },
+          "verbatim": "slo",
+          "caveat": ""
+        }
+      ],
+      "instruction": "",
+      "note": ""
+    },
+    {
+      "question_id": "q-1",
+      "action": "attest",
+      "choice_ids": [],
+      "attestations": [
+        {
+          "type": "practice",
+          "claim": "Error budgets",
+          "terms": [
+            "error budget",
+            "error budgets"
+          ],
+          "detail": "",
+          "scope": {
+            "kind": "role_label",
+            "role_label": "SRE",
+            "item_ids": [],
+            "description": "the sre related cv items"
+          },
+          "placement": "bullets",
+          "correction": {
+            "item_id": "",
+            "field": "",
+            "old_value": "",
+            "new_value": ""
+          },
+          "verbatim": "error budget",
+          "caveat": ""
+        }
+      ],
+      "instruction": "",
+      "note": ""
+    }
+  ],
+  "unmentioned_question_ids": [
+    "q-2",
+    "q-3"
+  ]
+}

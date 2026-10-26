@@ -1,0 +1,21 @@
+{
+  "round": 1,
+  "checkpoint": 1,
+  "received_at": "2026-01-01T00:00:00Z",
+  "channel": "chat",
+  "raw_text": "skip the first one, defaults for the rest",
+  "items": [
+    {
+      "question_id": "q-1",
+      "action": "skip",
+      "choice_ids": [],
+      "attestations": [],
+      "instruction": "",
+      "note": ""
+    }
+  ],
+  "unmentioned_question_ids": [
+    "q-2",
+    "q-3"
+  ]
+}

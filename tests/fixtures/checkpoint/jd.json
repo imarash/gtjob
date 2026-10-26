@@ -1,0 +1,55 @@
+{
+  "schema_version": "1",
+  "jd_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "source": {
+    "kind": "text",
+    "ref": "pasted",
+    "format": "posting"
+  },
+  "title": "Platform Reliability Engineer",
+  "company": "Example Co",
+  "location": "Remote",
+  "seniority": "senior",
+  "years_experience_text": "",
+  "ic_or_manager": "ic",
+  "domain": [],
+  "role_summary": "Synthetic posting used only for tests.",
+  "requirements": [
+    {
+      "id": "req-1",
+      "kind": "must",
+      "text": "Service mesh experience",
+      "category": "containers",
+      "keywords": [
+        "service mesh"
+      ],
+      "weight": 4
+    },
+    {
+      "id": "req-2",
+      "kind": "must",
+      "text": "SLOs and error budgets",
+      "category": "reliability",
+      "keywords": [
+        "SLO",
+        "error budget"
+      ],
+      "weight": 5
+    },
+    {
+      "id": "req-3",
+      "kind": "nice",
+      "text": "SOC 2 exposure",
+      "category": "compliance",
+      "keywords": [
+        "SOC 2"
+      ],
+      "weight": 2
+    }
+  ],
+  "keywords": [],
+  "implicit_signals": [],
+  "noise": [],
+  "recruiter_asks": [],
+  "injection_flags": []
+}

@@ -1,0 +1,126 @@
+{
+  "schema_version": "1",
+  "run_id": "cp1",
+  "questions": [
+    {
+      "id": "q-1",
+      "checkpoint": 1,
+      "round": 1,
+      "type": "multi_select",
+      "topic": "gap",
+      "prompt": "Your CV does not show these. Which do you have?",
+      "choices": [
+        {
+          "id": "service_mesh",
+          "label": "Service mesh",
+          "value": "service mesh"
+        },
+        {
+          "id": "istio",
+          "label": "Istio",
+          "value": "Istio"
+        },
+        {
+          "id": "typescript",
+          "label": "TypeScript",
+          "value": "TypeScript"
+        },
+        {
+          "id": "slo",
+          "label": "SLOs and error budgets",
+          "value": "slo|slos|error budget|error budgets"
+        },
+        {
+          "id": "soc2",
+          "label": "SOC 2",
+          "value": "soc 2"
+        },
+        {
+          "id": "startup",
+          "label": "Startup employee",
+          "value": "startup"
+        }
+      ],
+      "allow_free_text": true,
+      "default": {
+        "choice_ids": [],
+        "text": "",
+        "description": "Keep as gaps; nothing is added."
+      },
+      "links": {
+        "req_ids": [
+          "req-1",
+          "req-2",
+          "req-3"
+        ],
+        "item_ids": [],
+        "issue_ids": [],
+        "attestation_ids": []
+      },
+      "parent_id": "",
+      "status": "pending",
+      "suppressed_reason": ""
+    },
+    {
+      "id": "q-2",
+      "checkpoint": 1,
+      "round": 1,
+      "type": "free_text",
+      "topic": "metric",
+      "prompt": "Any numbers for your platform work?",
+      "choices": [],
+      "allow_free_text": true,
+      "default": {
+        "choice_ids": [],
+        "text": "no number",
+        "description": "No number is added."
+      },
+      "links": {
+        "req_ids": [],
+        "item_ids": [],
+        "issue_ids": [],
+        "attestation_ids": []
+      },
+      "parent_id": "",
+      "status": "pending",
+      "suppressed_reason": ""
+    },
+    {
+      "id": "q-3",
+      "checkpoint": 1,
+      "round": 1,
+      "type": "single_select",
+      "topic": "strategy",
+      "prompt": "Which template?",
+      "choices": [
+        {
+          "id": "modern",
+          "label": "Modern",
+          "value": "modern"
+        },
+        {
+          "id": "classic",
+          "label": "Classic",
+          "value": "classic"
+        }
+      ],
+      "allow_free_text": true,
+      "default": {
+        "choice_ids": [
+          "modern"
+        ],
+        "text": "",
+        "description": "Use the modern template."
+      },
+      "links": {
+        "req_ids": [],
+        "item_ids": [],
+        "issue_ids": [],
+        "attestation_ids": []
+      },
+      "parent_id": "",
+      "status": "pending",
+      "suppressed_reason": ""
+    }
+  ]
+}

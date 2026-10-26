@@ -1,0 +1,45 @@
+{
+  "round": 1,
+  "checkpoint": 1,
+  "received_at": "2026-01-01T00:00:00Z",
+  "channel": "chat",
+  "raw_text": "add Kafka to the relevant roles",
+  "items": [
+    {
+      "question_id": "q-1",
+      "action": "attest",
+      "choice_ids": [],
+      "attestations": [
+        {
+          "type": "skill",
+          "claim": "Kafka",
+          "terms": [
+            "Kafka"
+          ],
+          "detail": "",
+          "scope": {
+            "kind": "unresolved",
+            "role_label": "",
+            "item_ids": [],
+            "description": "the relevant roles"
+          },
+          "placement": "skills_and_bullets",
+          "correction": {
+            "item_id": "",
+            "field": "",
+            "old_value": "",
+            "new_value": ""
+          },
+          "verbatim": "kafka",
+          "caveat": ""
+        }
+      ],
+      "instruction": "",
+      "note": ""
+    }
+  ],
+  "unmentioned_question_ids": [
+    "q-2",
+    "q-3"
+  ]
+}

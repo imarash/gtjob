@@ -1,0 +1,22 @@
+{
+  "round": 1,
+  "checkpoint": 1,
+  "received_at": "2026-01-01T00:00:00Z",
+  "channel": "chat",
+  "raw_text": "only the bank one for SLOs, keep the rest",
+  "items": [
+    {
+      "question_id": "q-4",
+      "action": "confirm_scope",
+      "choice_ids": [
+        "exp_2_e4"
+      ],
+      "attestations": [],
+      "instruction": "",
+      "note": ""
+    }
+  ],
+  "unmentioned_question_ids": [
+    "q-5"
+  ]
+}
