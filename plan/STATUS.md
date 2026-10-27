@@ -8,7 +8,7 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 | 2 | APPROVED | APPROVE (re-gate 3) | 3 | 73a6a31 | |
 | 3 | APPROVED | ACCEPTED by user after re-gate 4 (known limit: plural/glued scale words; FIX-3-12 not run) | 4 | 51727b5 | |
 | 4 | APPROVED | APPROVE (re-gate 1) | 1 | 10ea6b7 | |
-| 5 | APPROVED (pending live evals + host checklist) | APPROVE (re-gate 2) | 2 | | |
+| 5 | APPROVED (pending live evals + host checklist) | APPROVE (re-gate 2) | 2 | cf67d4b | |
 | 6 (optional) | TODO | | | | |
 
 | WP | Wave | Status | Note |
