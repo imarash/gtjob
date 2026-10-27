@@ -8,7 +8,7 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 | 2 | APPROVED | APPROVE (re-gate 3) | 3 | 73a6a31 | |
 | 3 | APPROVED | ACCEPTED by user after re-gate 4 (known limit: plural/glued scale words; FIX-3-12 not run) | 4 | 51727b5 | |
 | 4 | APPROVED | APPROVE (re-gate 1) | 1 | 10ea6b7 | |
-| 5 | TODO | | | | |
+| 5 | APPROVED (pending live evals + host checklist) | APPROVE (re-gate 2) | 2 | | |
 | 6 (optional) | TODO | | | | |
 
 | WP | Wave | Status | Note |
@@ -46,10 +46,10 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 | WP-24 | 4 | DONE | lite; README + docs; gtjob examples marked "not yet available" until WP-22 |
 | WP-I4 | 4 | DONE | 1197 pass; questions.py cap now per round (confirm at gate); GTJOB_FAKE_LLM hook; 5 guide items deferred |
 | WP-G4 | 4 | DONE | APPROVE after 1 fix-up round (FIX-4-1..4-6; contract change applied) |
-| WP-25 | 5 | TODO | |
-| WP-26 | 5 | TODO | |
-| WP-I5 | 5 | TODO | |
-| WP-G5 | 5 | TODO | |
+| WP-25 | 5 | DONE (xfails resolved by FIX-5-1/5-2) | 70 e2e pass + 2 strict xfails (answer_parse packet ~3067 vs 2500 budget; suppressed gap name left in question prompt); fixtures vs contract mismatch on correction/skip; next_action empty on exit 6/dry-run; rule 9 scan gap. Escalations left to gate |
+| WP-26 | 5 | DONE | 11 offline CLI tests pass; cross-host resume; use `uv run --no-sync` in sandbox |
+| WP-I5 | 5 | DONE | 1284 pass; lint ok; package clean |
+| WP-G5 | 5 | DONE | APPROVE after 2 fix-up rounds (FIX-5-1..5-6); gates 6 (live evals, needs ANTHROPIC_API_KEY) and 7 (host checklist) pending user |
 | WP-27 | 6 | TODO | optional |
 | WP-28 | 6 | TODO | optional |
 | WP-G6 | 6 | TODO | optional |
@@ -120,3 +120,5 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 - 2026-10-26: FIX-4-6 DONE (tests follow Recent Experience; 1214 pass). FIX-4-5 DONE. Round 1 fix-ups complete (4-1..4-6). Dispatching delta re-gate 1.
 - 2026-10-26: WP-G4 APPROVE (re-gate 1). Non-blocking: 8-question cap dodgeable via fake parent_id; live evals and ApiRunner never run (no API key). Committing wave 4.
 - 2026-10-26: wave 4 committed (10ea6b7) and marked APPROVED. Next: wave 5.
+- 2026-10-26: WP-26 DONE. WP-25 PARTIAL (product-defect escalations outside its files, 2 strict xfails; not re-dispatched since remaining work is not in its ownership). Dispatching WP-I5.
+- 2026-10-26: WP-G5 FIX-UPS round 1 (5-1..5-4) then round 2 (5-5, 5-6); re-gate 2 APPROVE (1349 pass, 0 xfail). Open for user: set .cursor/agents/cv-critic.md model to claude-opus-5-5-high, run live evals, run evals/HOST-CHECKLIST.md. Committing wave 5.

@@ -37,6 +37,16 @@ PROVENANCE_CODES = (
 KIND_BULLET, KIND_SUMMARY, KIND_HEADLINE = "bullet", "summary", "headline"
 KIND_SKILL, KIND_INTRO, KIND_TALKING = "skill", "intro", "talking point"
 HEADER_ID = "t-header"
+# Level words the headline and summary may only use when their refs show them (rule 4). `lead` and `executive`
+# are left out on purpose: they are mostly a verb / a harmless noun modifier in CV text.
+SENIORITY_WORDS = (
+    "junior", "senior", "staff", "principal", "distinguished", "chief", "head", "director", "vp", "vice president",
+)
+# Common abbreviations of the level words above ("Sr. DevOps Engineer"), mapped to their canonical word (casefolded).
+SENIORITY_ALIASES = {"sr": "senior", "snr": "senior", "jr": "junior", "jnr": "junior"}
+SENIORITY_KINDS = (KIND_HEADLINE, KIND_SUMMARY)
+_SENIORITY_RE = re.compile(r"\b(?:" + "|".join(sorted(map(re.escape, (*SENIORITY_WORDS, *SENIORITY_ALIASES)),
+                                                     key=len, reverse=True)) + r")\b", re.IGNORECASE)
 TARGET_ID = "target"
 TALKING_ID = "talking_points[{i}]"
 
@@ -203,6 +213,27 @@ def _check_job_scope(el: _Element, usable: dict[str, dict]) -> list[dict]:
     return out
 
 
+def _check_seniority(el: _Element, text: str, source: str) -> list[dict]:
+    """Rule 4 for level words: 'Senior', 'Sr.', 'Staff', ... must appear (whole word) in the element's sources.
+
+    A word is supported by its canonical form or any alias of it, so 'Sr.' is supported by 'Senior' and vice versa.
+    """
+    out: list[dict] = []
+    seen: set[str] = set()
+    for match in _SENIORITY_RE.finditer(text):
+        word = match.group(0)
+        canonical = SENIORITY_ALIASES.get(word.casefold(), word.casefold())
+        if canonical in seen:
+            continue
+        seen.add(canonical)
+        forms = {canonical, *(alias for alias, full in SENIORITY_ALIASES.items() if full == canonical)}
+        if not any(re.search(r"\b" + re.escape(form) + r"\b", source, re.IGNORECASE) for form in forms):
+            out.append(_violation(UNSUPPORTED_TERM, el.item_id,
+                                  f"{el.kind} {el.item_id} mentions '{word}'; not found in refs "
+                                  f"{_refs_label(el.refs)}"))
+    return out
+
+
 def _check_element(
     el: _Element, texts: dict[str, str], usable: dict[str, dict], all_atts: dict[str, dict], whole_profile: str,
     att_pool: str,
@@ -239,6 +270,8 @@ def _check_element(
             out.append(_violation(UNSUPPORTED_TERM, el.item_id,
                                   f"{el.kind} {el.item_id} mentions '{term}'; not found in refs "
                                   f"{_refs_label(el.refs)}"))
+    if el.kind in SENIORITY_KINDS:
+        out.extend(_check_seniority(el, text, source))
     known_numbers = set(lexicon.numbers(source))
     for number in lexicon.numbers(text):
         if number not in known_numbers:

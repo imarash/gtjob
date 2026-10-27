@@ -843,3 +843,58 @@ def test_output_caps_have_headroom_for_private_sample_outputs():
     if not PRIVATE_SAMPLE.is_dir():
         pytest.skip("private sample fixtures are absent")
     _assert_output_headroom(PRIVATE_SAMPLE, PRIVATE_OUTPUTS)
+
+
+# --- WP-FIX-5-1: compact answer_parse headers ---------------------------------------------------------------
+def test_answer_parse_headers_keep_every_id_label_and_choice_with_one_expand_footer(workspace):
+    run_dir = _make_run(workspace)
+    packet = _build(run_dir, "answer_parse").packet
+    profile = _golden("profile")
+    for w in profile["work"]:
+        assert w["id"] in packet
+        for e in w["engagements"]:
+            assert e["id"] in packet
+    labels = {e["role_label"] for w in profile["work"] for e in w["engagements"] if e["role_label"]}
+    assert all(label in packet for label in labels)
+    for q in _golden("questions")["questions"]:
+        if q["status"] == "pending":
+            assert q["id"] in packet
+            assert all(f"{c['id']}={c['label']}" in packet for c in q["choices"])
+    assert packet.count(briefs.EXPAND_FOOTER.format(stage="answer_parse")) == 1
+    assert "RUN --item" not in packet and REPLY in packet
+
+
+def test_answer_parse_compact_digest_clips_summaries_and_drops_per_line_commands():
+    profile, atts = _golden("profile"), []
+    full = briefs.profile_digest(profile, atts, None, 0, stage="answer_parse")
+    compact = briefs.profile_digest(profile, atts, None, 0, stage="answer_parse", compact=True)
+    assert "bullets hidden; cvt brief" in full and "bullets hidden;" not in compact
+    assert compact.endswith(briefs.EXPAND_FOOTER.format(stage="answer_parse"))
+    summary_lines = [ln for ln in compact.splitlines() if ln.startswith("sum-")]
+    assert summary_lines
+    for ln in summary_lines:
+        assert len(ln.split(" ", 1)[1]) <= briefs.ANSWER_PARSE_SUMMARY_CHARS
+    assert len(compact) < len(full)
+
+
+def test_answer_parse_clips_long_pending_prompts_but_keeps_choices(workspace):
+    run_dir = _make_run(workspace)
+    qs = _golden("questions")
+    long_prompt = "x" * (briefs.ANSWER_PARSE_PROMPT_CHARS * 3)
+    choice_q = next(q for q in qs["questions"] if q["status"] == "pending" and q["choices"])
+    choice_q["prompt"] = long_prompt
+    jsonio.dump_json(qs, run_dir / "questions.json")
+    packet = _build(run_dir, "answer_parse").packet
+    assert long_prompt not in packet and long_prompt[: briefs.ANSWER_PARSE_PROMPT_CHARS] not in packet
+    assert all(f"{c['id']}={c['label']}" in packet for c in choice_q["choices"])
+    assert "x" * briefs.ANSWER_PARSE_PROMPT_CHARS not in packet
+
+
+def test_questions_packet_headers_are_unchanged_by_the_answer_parse_compaction(workspace):
+    run_dir = _make_run(workspace)
+    packet = _build(run_dir, "questions").packet
+    profile = _golden("profile")
+    expected = briefs.profile_digest(profile, _atts(run_id=run_dir.name), None, 0, stage="questions")
+    assert expected in packet
+    assert "cvt brief questions RUN --item" in packet
+    assert briefs.EXPAND_FOOTER.format(stage="questions") not in packet

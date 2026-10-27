@@ -56,7 +56,23 @@ DOZEN_WORD = "dozen"
 SCALE_WORDS = frozenset({
     "thousand", "million", "billion", "trillion", "bn", "bln", "mn", "mln", "tn", "lakh", "crore",
 })
+# Multiplier words are implied metrics ("doubled", "tenfold", "halved"). Bare "double"/"triple" are not
+# ("double-check", "triple-A"). They never join a run with neighbouring number words.
+FOLD_SUFFIX = "fold"
+HALF_VALUE = 50
+SOLO_VALUE_WORDS = {
+    **{w: 2 for w in ("doubled", "doubling", "doubles", "twice")},
+    **{w: 3 for w in ("tripled", "tripling", "triples", "thrice")},
+    **{w: 4 for w in ("quadrupled", "quadrupling", "quadruples")},
+    **{w: 5 for w in ("quintupled", "quintupling", "quintuples")},
+    **{w: 6 for w in ("sextupled", "sextupling", "sextuples")},
+    **{w: 10 for w in ("decupled", "decupling")},
+    **{w: HALF_VALUE for w in ("half", "halved", "halving", "halves")},
+    **{f"{word}{FOLD_SUFFIX}": value
+       for table in (NUMBER_WORD_UNITS, NUMBER_WORD_TENS, {HUNDRED_WORD: 100}) for word, value in table.items()},
+}
 _KIND_NUM, _KIND_UNIT, _KIND_TENS, _KIND_MULT, _KIND_ONE = "num", "unit", "tens", "mult", "one"
+_KIND_SOLO = "solo"
 QUOTE_MAP = str.maketrans({"’": "'", "‘": "'", "“": '"', "”": '"'})
 
 _WORD_RE = re.compile(r"[A-Za-z][A-Za-z0-9]*")
@@ -233,6 +249,8 @@ def _format_number(value: decimal.Decimal) -> str:
 def _word_kind(word: str) -> tuple[str, decimal.Decimal] | None:
     if word == COMPOUND_ONLY_WORD:
         return _KIND_ONE, decimal.Decimal(1)
+    if word in SOLO_VALUE_WORDS:
+        return _KIND_SOLO, decimal.Decimal(SOLO_VALUE_WORDS[word])
     for table, kind in ((NUMBER_WORD_UNITS, _KIND_UNIT), (NUMBER_WORD_TENS, _KIND_TENS),
                         (NUMBER_WORD_MULTIPLIERS, _KIND_MULT)):
         if word in table:
@@ -277,7 +295,10 @@ def _parse_run(run: list[tuple[int, int, str, str, decimal.Decimal]]) -> list[de
         total, cur, last = decimal.Decimal(0), None, ""
 
     for _, _, kind, word, value in run:
-        if kind == _KIND_NUM:
+        if kind == _KIND_SOLO:
+            flush()
+            values.append(value)
+        elif kind == _KIND_NUM:
             flush()
             cur, last = value, kind
         elif kind in (_KIND_UNIT, _KIND_ONE):
@@ -318,8 +339,11 @@ def _parse_run(run: list[tuple[int, int, str, str, decimal.Decimal]]) -> list[de
     return values
 
 
-def _joins(prev: tuple[int, int, str, str, decimal.Decimal], gap: str) -> bool:
+def _joins(prev: tuple[int, int, str, str, decimal.Decimal], atom: tuple[int, int, str, str, decimal.Decimal],
+           gap: str) -> bool:
     """Adjacent atoms join across spaces/hyphens, and across "and" after a scale word ("two hundred and fifty")."""
+    if _KIND_SOLO in (prev[2], atom[2]):
+        return False
     if _SEPARATOR_RE.fullmatch(gap):
         return True
     return prev[3] in (HUNDRED_WORD, *SCALE_WORDS) and bool(_AND_JOIN_RE.fullmatch(gap))
@@ -332,12 +356,16 @@ def numbers(text: str) -> list[str]:
     Cardinal words count too: `Five` -> `5`, `twenty-five` -> `25`, `a dozen` -> `12`, `two hundred` -> `200`,
     `a trillion` -> `1000000000000` (`one`, `a`, `an` alone do not). Digits glued to letters (`S3`, `k8s`, `Q3`)
     are part of a name, not a number.
+    Multiplier words are implied metrics and never join neighbouring number words: `doubled`/`doubling`/`twice`/`twofold` -> `2`,
+    `tripled`/`thrice`/`threefold` -> `3`, `quadrupled`/`fourfold` -> `4`, `quintupled`/`quintupling` -> `5`,
+    `sextupled`/`sextupling` -> `6`, `decupled`/`decupling` -> `10`, `<cardinal>fold` (`tenfold`) -> its value,
+    `half`/`halved`/`halving`/`halves` -> `50`. Bare `double` and `triple` are not numbers ("double-check").
     Order of appearance, no duplicates.
     """
     norm = unicodedata.normalize("NFKC", text)
     runs: list[list[tuple[int, int, str, str, decimal.Decimal]]] = []
     for atom in _atoms(norm):
-        if runs and _joins(runs[-1][-1], norm[runs[-1][-1][1]:atom[0]]):
+        if runs and _joins(runs[-1][-1], atom, norm[runs[-1][-1][1]:atom[0]]):
             runs[-1].append(atom)
         else:
             runs.append([atom])

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 
 import pytest
 
@@ -163,9 +165,82 @@ def test_find_terms_possessive_and_plural():
     ("Relocated from a MN office.", []),
     ("a crore", ["10000000"]),
     ("a lakh", ["100000"]),
+    # WP-FIX-5-3: multiplier words are implied metrics; bare double/triple are not
+    (", tripling throughput", ["3"]),
+    (", doubling release frequency", ["2"]),
+    (", halving incident count", ["50"]),
+    (", a tenfold improvement", ["10"]),
+    ("Doubled traffic", ["2"]),
+    ("It doubles", ["2"]),
+    ("a twofold gain", ["2"]),
+    ("Tripled output", ["3"]),
+    ("It triples", ["3"]),
+    ("a threefold gain", ["3"]),
+    ("Quadrupled capacity", ["4"]),
+    ("quadrupling and quadruples", ["4"]),
+    ("a fourfold gain", ["4"]),
+    # WP-FIX-5-6: "twice"/"thrice" and the 5-10x multiplier verbs are implied metrics too
+    ("twice daily", ["2"]),
+    ("deploying thrice as often", ["3"]),
+    ("quintupling throughput", ["5"]),
+    ("sextupled the queue depth", ["6"]),
+    ("decupling batch size", ["10"]),
+    ("fivefold", ["5"]),
+    ("a TWENTYFOLD rise", ["20"]),
+    ("ninetyfold", ["90"]),
+    ("a hundredfold rise", ["100"]),
+    ("10-fold", ["10"]),
+    ("Halved costs", ["50"]),
+    ("by half", ["50"]),
+    ("It halves, then halving", ["50"]),
+    ("tripled twelve services", ["3", "12"]),  # never joins neighbouring number words
+    ("twelve doubled", ["12", "2"]),
+    ("double-check the config", []),
+    ("a triple-A rating", []),
+    ("double and triple", []),
+    ("on behalf of the team", []),
+    ("doubledown", []),
 ])
 def test_numbers_normalization(text, expected):
     assert lexicon.numbers(text) == expected
+
+
+GOLDEN_JUNIOR = Path(__file__).resolve().parent.parent / "fixtures" / "golden" / "junior"
+
+
+def _multiplier_violations(bullet_text: str, source_text: str | None = None) -> list[dict]:
+    from cvtlib import provenance
+
+    load = lambda name: json.loads((GOLDEN_JUNIOR / f"{name}.json").read_text(encoding="utf-8"))  # noqa: E731
+    tailored, profile = load("tailored"), load("profile")
+    tailored["experience"][0]["bullets"][0]["text"] = bullet_text
+    if source_text is not None:
+        profile["work"][0]["highlights"][0]["text"] = source_text
+    got = provenance.check_tailored(tailored, profile, [], run_id="golden-junior", draft=True)
+    return [v for v in got if v["code"] == "unsupported_number" and v["item_id"] == "t-exp-1.b1"]
+
+
+@pytest.mark.parametrize("suffix", [
+    ", tripling throughput", ", doubling release frequency", ", halving incident count", ", a tenfold improvement",
+    ", twice as fast", ", deploying thrice as often", ", quintupling throughput",
+])
+def test_invented_multiplier_words_are_unsupported_numbers(suffix):
+    base = "Built GitHub Actions pipelines for 12 services, cutting average deploy time from 25 minutes to 8 minutes"
+    assert _multiplier_violations(base + ".") == []
+    assert _multiplier_violations(base + suffix + ".")
+
+
+def test_multiplier_word_is_supported_by_matching_source_number():
+    source = "Built pipelines for 12 services and reduced costs by 50%."
+    assert _multiplier_violations("Built pipelines for 12 services and halved costs.", source) == []
+    assert _multiplier_violations("Built pipelines for 12 services and doubled costs.", source)
+    assert _multiplier_violations("Built pipelines for 12 services and doubled costs.", source.replace("50%", "2x")) == []
+
+
+def test_twice_is_supported_by_matching_source_number():
+    # WP-FIX-5-6: "twice a week" is the number 2, so a source saying "two times a week" supports it
+    assert _multiplier_violations("Ran reviews twice a week.", "Ran reviews two times a week.") == []
+    assert _multiplier_violations("Ran reviews twice a week.", "Ran reviews once a week.")
 
 
 @pytest.mark.parametrize("term,source,expected", [

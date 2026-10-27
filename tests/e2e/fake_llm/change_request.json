@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "run_id": "golden-junior",
+  "source": "instruction",
+  "raw_text": "drop the earlier experience line",
+  "ops": [
+    {
+      "op": "drop",
+      "target_id": "t-exp-2.b2",
+      "field": "",
+      "value": "",
+      "source_refs": [],
+      "items": []
+    }
+  ]
+}

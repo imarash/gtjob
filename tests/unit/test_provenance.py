@@ -323,3 +323,86 @@ def test_intro_is_scoped_only_when_not_empty(golden, atts):
                for v in run(t, golden, atts))
     t = mutate(golden["tailored"], {"set": {"experience.0.intro.source_refs": ["exp-2.b1"]}})
     assert run(t, golden, atts) == []  # empty intro text is not a claim
+
+
+# --- rule 4: seniority words in the headline and summary need support in their refs ---------------------------
+def _headline(text: str) -> dict:
+    return {"set": {"header.headline": text}}
+
+
+def _summary(text: str) -> dict:
+    return {"set": {"summary.text": text}}
+
+
+SENIORITY_MUTATIONS = {
+    "headline_senior": (_headline("Senior DevOps Engineer"), "headline", "t-header", "Senior"),
+    "headline_staff": (_headline("Staff Platform Architect"), "headline", "t-header", "Staff"),
+    "summary_senior": (_summary("Senior DevOps engineer who automates AWS deployments with Terraform."),
+                       "summary", "t-sum", "Senior"),
+    "summary_principal": (_summary("Principal DevOps architect who automates AWS deployments with Terraform."),
+                          "summary", "t-sum", "Principal"),
+    "headline_sr_dot": (_headline("Sr. DevOps Engineer · AWS"), "headline", "t-header", "Sr"),
+    "headline_snr": (_headline("Snr DevOps Engineer"), "headline", "t-header", "Snr"),
+    "summary_sr_dot": (_summary("Sr. DevOps engineer who automates AWS deployments with Terraform."),
+                       "summary", "t-sum", "Sr"),
+}
+
+
+@pytest.mark.parametrize("name", sorted(SENIORITY_MUTATIONS))
+def test_unsupported_seniority_word_is_reported(name, golden, atts):
+    spec, kind, item_id, word = SENIORITY_MUTATIONS[name]
+    violations = run(mutate(golden["tailored"], spec), golden, atts)
+    want = [v for v in violations if v["code"] == "unsupported_term" and f"'{word}'" in v["message"]]
+    assert [v["item_id"] for v in want] == [item_id]
+    assert want[0]["message"].startswith(f"{kind} {item_id} mentions '{word}'; not found in refs [")
+
+
+def test_seniority_message_uses_exact_format_and_text_casing(golden, atts):
+    t = mutate(golden["tailored"], _headline("Lead DevOps Engineer · STAFF platform"))
+    messages = [v["message"] for v in run(t, golden, atts)]
+    assert messages == ["headline t-header mentions 'STAFF'; not found in refs [basics, exp-1]"]
+
+
+def test_lead_is_allowed_by_design(golden, atts):
+    assert run(mutate(golden["tailored"], _headline("Lead DevOps Engineer · AWS")), golden, atts) == []
+
+
+def test_seniority_word_supported_by_a_ref_passes(golden, atts):
+    profile = copy.deepcopy(golden["profile"])
+    profile["summary"][0]["text"] += " Mentored by a Senior platform engineer."
+    t = mutate(golden["tailored"], _summary("Senior platform engineer who automates AWS deployments with Terraform."))
+    t["summary"]["source_refs"] = ["sum-1", "exp-1"]
+    assert provenance.check_tailored(t, profile, atts, run_id=RUN_ID, draft=False) == []
+    assert any(v["code"] == "unsupported_term" for v in run(t, golden, atts))  # unmodified profile: rejected
+
+
+def test_seniority_is_whole_word_and_only_for_headline_and_summary(golden, atts):
+    t = mutate(golden["tailored"], {"set": {"summary.text": "Junior DevOps engineer who headed a Terraform rollout."}})
+    assert run(t, golden, atts) == []  # 'headed' is not 'head'
+    t = mutate(golden["tailored"], {"set": {"experience.0.bullets.0.text": "Senior reviewers approved the Terraform modules."}})
+    assert not any("'Senior'" in v["message"] for v in run(t, golden, atts))
+
+
+def test_sr_abbreviation_is_supported_by_full_word_in_ref(golden, atts):
+    profile = copy.deepcopy(golden["profile"])
+    profile["summary"][0]["text"] += " Mentored by a Senior platform engineer."
+    t = mutate(golden["tailored"], _summary("Sr. platform engineer who automates AWS deployments with Terraform."))
+    t["summary"]["source_refs"] = ["sum-1", "exp-1"]
+    assert provenance.check_tailored(t, profile, atts, run_id=RUN_ID, draft=False) == []
+
+
+def test_full_seniority_word_is_supported_by_abbreviation_in_ref(golden, atts):
+    profile = copy.deepcopy(golden["profile"])
+    profile["summary"][0]["text"] += " Mentored by a Sr. platform engineer."
+    t = mutate(golden["tailored"], _summary("Senior platform engineer who automates AWS deployments with Terraform."))
+    t["summary"]["source_refs"] = ["sum-1", "exp-1"]
+    assert provenance.check_tailored(t, profile, atts, run_id=RUN_ID, draft=False) == []
+
+
+def test_sr_inside_sr_iov_is_not_a_seniority_claim(golden, atts):
+    profile = copy.deepcopy(golden["profile"])
+    profile["summary"][0]["text"] += " Tuned SR-IOV networking for AWS workloads."
+    t = mutate(golden["tailored"], _summary("Platform engineer who tunes SR-IOV networking for AWS workloads."))
+    t["summary"]["source_refs"] = ["sum-1", "exp-1"]
+    violations = provenance.check_tailored(t, profile, atts, run_id=RUN_ID, draft=False)
+    assert not any("'SR'" in v["message"] or "'Sr'" in v["message"] for v in violations)

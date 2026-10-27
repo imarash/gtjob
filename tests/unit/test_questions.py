@@ -160,6 +160,53 @@ def test_suppression_removes_covered_choice(workspace: Path) -> None:
     }]
 
 
+GAP_LABELS = ["LLM serving (vLLM or similar)", "GPU scheduling on Kubernetes", "RAG pipelines", "Service mesh",
+              "Agent frameworks such as LangGraph"]
+LISTED_PROMPT = ("Your CV doesn't currently show: LLM serving (vLLM or similar); GPU scheduling on Kubernetes; "
+                 "RAG pipelines; service mesh; agent frameworks such as LangGraph (multi-agent work shown). "
+                 "Which of these do you actually have experience with?")
+
+
+def _listed_gap_questions(prompt: str) -> dict:
+    rows = load("questions.json")
+    gap = rows["questions"][0]
+    gap["prompt"] = prompt
+    gap["choices"] = [{"id": f"c{i}", "label": label, "value": label.lower()} for i, label in enumerate(GAP_LABELS)]
+    gap["default"]["choice_ids"] = []
+    rows["questions"] = [gap]
+    return rows
+
+
+def test_suppression_removes_dropped_label_from_prompt(workspace: Path) -> None:
+    add_attestation("Service mesh", ["service mesh"])
+    store = attestations.load_store(PERSON)
+    checked, _ = qmod.suppress(_listed_gap_questions(LISTED_PROMPT), store["attestations"])
+    prompt = checked["questions"][0]["prompt"]
+    assert "service mesh" not in prompt.lower()
+    for label in ("LLM serving", "GPU scheduling on Kubernetes", "RAG pipelines", "agent frameworks such as LangGraph"):
+        assert label in prompt
+    assert "; ;" not in prompt and "  " not in prompt and prompt.endswith("Which of these do you actually have experience with?")
+
+
+def test_suppression_rewrites_prompt_when_term_cannot_be_removed(workspace: Path) -> None:
+    add_attestation("Service mesh", ["service mesh"])
+    store = attestations.load_store(PERSON)
+    prompt = "Does your Service-Mesh work (the service mesh kind) count? Pick any."
+    checked, _ = qmod.suppress(_listed_gap_questions(prompt), store["attestations"])
+    kept = [label for label in GAP_LABELS if label != "Service mesh"]
+    assert checked["questions"][0]["prompt"] == qmod.GAP_PROMPT_REWRITE.format(labels="; ".join(kept))
+
+
+def test_suppression_prompt_rewrite_is_idempotent_and_noop_without_drops(workspace: Path) -> None:
+    add_attestation("Service mesh", ["service mesh"])
+    store = attestations.load_store(PERSON)
+    once, _ = qmod.suppress(_listed_gap_questions(LISTED_PROMPT), store["attestations"])
+    twice, again = qmod.suppress(once, store["attestations"])
+    assert twice == once and again == []
+    untouched, none = qmod.suppress(_listed_gap_questions(LISTED_PROMPT), [])
+    assert none == [] and untouched["questions"][0]["prompt"] == LISTED_PROMPT
+
+
 def test_question_without_choices_is_suppressed_with_reason(workspace: Path) -> None:
     rows = load("questions.json")
     rows["questions"][0]["choices"] = rows["questions"][0]["choices"][:2]

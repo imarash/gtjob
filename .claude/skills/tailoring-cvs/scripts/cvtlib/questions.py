@@ -59,6 +59,10 @@ QUESTION_DEFAULTS: dict[str, Any] = {
 }
 LINK_KEYS = ("req_ids", "item_ids", "issue_ids", "attestation_ids")
 REQUIRED_NEW_FIELDS = ("type", "topic", "prompt", "default")
+LIST_SEPARATORS = ("; ", ", ", " and ", " or ")  # tried in order when removing a label from a prompt list
+LABEL_SEPARATOR = "; "
+GAP_PROMPT_REWRITE = ("Your CV doesn't currently show: {labels}. "
+                      "Which of these do you actually have experience with?")
 
 
 def _violation(code: str, item_id: str, message: str) -> dict:
@@ -115,6 +119,40 @@ def _choice_covering(choice: dict, attestations: list[dict], reqs: dict[str, dic
     return _covering_any(attestations, terms)
 
 
+def _word_re(text: str) -> re.Pattern[str]:
+    """Case-insensitive whole-word pattern for `text` (word boundaries that also work around punctuation)."""
+    return re.compile(rf"(?<!\w){re.escape(text)}(?!\w)", re.IGNORECASE)
+
+
+def _remove_label(prompt: str, label: str) -> str:
+    """Remove `label` plus one adjacent list separator (trailing first, else leading); unchanged when neither exists."""
+    seps = "|".join(re.escape(s) for s in LIST_SEPARATORS)
+    body = _word_re(label).pattern
+    for pattern in (rf"{body}(?:{seps})", rf"(?:{seps}){body}"):
+        out, count = re.subn(pattern, "", prompt, count=1, flags=re.IGNORECASE)
+        if count:
+            return out
+    return prompt
+
+
+def _tidy_prompt(prompt: str) -> str:
+    prompt = re.sub(r"([;,])(\s*[;,])+", r"\1", prompt)
+    prompt = re.sub(r"\s+([;,.?:])", r"\1", prompt)
+    return re.sub(r"\s{2,}", " ", prompt).strip()
+
+
+def _rewrite_gap_prompt(q: dict, dropped: list[dict], reqs: dict[str, dict]) -> None:
+    """Remove dropped choices' labels from a gap prompt; fall back to the template if any term is still named."""
+    prompt = q["prompt"]
+    for choice in dropped:
+        prompt = _remove_label(prompt, choice["label"])
+    prompt = _tidy_prompt(prompt)
+    named = [choice["label"] for choice in dropped] + [t for c in dropped for t in choice_terms(c, reqs)]
+    if any(_word_re(term).search(prompt) for term in named if term.strip()):
+        prompt = GAP_PROMPT_REWRITE.format(labels=LABEL_SEPARATOR.join(c["label"] for c in q["choices"]))
+    q["prompt"] = prompt
+
+
 def suppress(questions: dict, attestations: list[dict], *, jd: dict | None = None) -> tuple[dict, list[dict]]:
     """Drop gap choices that active attestations already cover. Returns (questions, suppressed entries).
 
@@ -143,6 +181,8 @@ def suppress(questions: dict, attestations: list[dict], *, jd: dict | None = Non
         kept_ids = {c["id"] for c in kept}
         q["default"]["choice_ids"] = [i for i in q["default"]["choice_ids"] if i in kept_ids]
         whole = not kept
+        if not whole:
+            _rewrite_gap_prompt(q, [c for c, _ in dropped], reqs)
         if whole:
             q["status"] = STATUS_SUPPRESSED
             q["suppressed_reason"] = "; ".join(reasons)

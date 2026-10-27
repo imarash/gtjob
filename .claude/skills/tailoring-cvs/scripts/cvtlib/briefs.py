@@ -42,6 +42,9 @@ MAX_FIT_ROUNDS = 8
 MAX_EVIDENCE_REFS = 4
 MAX_GAP_TEXT_CHARS = 100
 MAX_VALIDATION_LINES = 10
+ANSWER_PARSE_PROMPT_CHARS = 80  # answer_parse shows the start of each pending prompt; ids, topics, choices stay whole
+ANSWER_PARSE_SUMMARY_CHARS = 40  # answer_parse shows only the start of each summary paragraph
+EXPAND_FOOTER = "expand any item: cvt brief {stage} <RUN> --item <id>"
 PAGE_PNG_GLOB = "pages/page-*.png"
 CP2_DONE = "done"
 CP1_SKIPPED = "skipped"
@@ -396,14 +399,16 @@ def _highlight_line(hid: str, rel: str, kind: str, text: str, indent: int, limit
     return f"{' ' * indent}{rel} {tag}{body}"
 
 
-def _parents(profile: dict) -> list[_Parent]:
+def _parents(profile: dict, compact: bool = False) -> list[_Parent]:
     out: list[_Parent] = []
     for w in profile["work"]:
-        header = WORK_SEP.join([f"{w['id']} {w['name']}", w["position"], w["location"], _dates(w), w["employment_type"]])
+        header = WORK_SEP.join([f"{w['id']} {w['name']}", w["position"], *([] if compact else [w["location"]]),
+                                _dates(w), w["employment_type"]])
         out.append(_Parent(header, [(h["id"], h["id"].rsplit(".", 1)[1], h["kind"], h["text"])
                                     for h in w["highlights"]], 1))
         for e in w["engagements"]:
-            eh = f" {e['id']} [{e['kind']}] {e['name']}" + (f" | role: {e['role_label']}" if e["role_label"] else "")
+            role = f" | role: {e['role_label']}" if e["role_label"] and not compact else ""
+            eh = f" {e['id']} [{e['kind']}] {e['name']}{role}"
             out.append(_Parent(eh, [(h["id"], h["id"].rsplit(".", 1)[1], h["kind"], h["text"])
                                     for h in e["highlights"]], 2))
     return out
@@ -436,21 +441,26 @@ def _section_lines(profile: dict, limit: int) -> tuple[list[str], list[str]]:
 def profile_digest(
     profile: dict, attestations: list[dict], jd: dict | None, budget: int, *, stage: str = "tailor",
     today: datetime.date | None = None, full_ids: frozenset[str] = frozenset(), excerpt_chars: int | None = None,
+    compact: bool = False,
 ) -> str:
     """Section 14.3 digest, relevance-filled until `budget` tokens. Headers and attestations are always kept.
 
     Fill order: every work and engagement header (always), then highlights by descending relevance (ties: profile
     order) until the budget is reached, then skills, then attestations (always). `full_ids` forces items in full.
+
+    `compact` (answer_parse headers): summaries are clipped to `ANSWER_PARSE_SUMMARY_CHARS`, work and engagement
+    lines drop the location and `| role: X` (the packet's role-labels block lists every label with its engagement
+    ids), the per-line expand command is dropped from every hint, and one `EXPAND_FOOTER` line ends the digest.
     """
     today = today or datetime.date.today()
     limit = int(excerpt_chars if excerpt_chars is not None else budgets()["excerpt_chars"])
-    parents = _parents(profile)
+    parents = _parents(profile, compact)
     forced = _forced_ids(profile, full_ids)
     scores = _relevance(profile, attestations, jd, today)
     flat = [(p, h) for p in parents for h in p.highlights]
     order = sorted(range(len(flat)), key=lambda i: (-scores.get(flat[i][1][0], 0.0), i))
     char_budget = budget * budgets()["chars_per_token"]
-    summary, sections = _section_lines(profile, limit)
+    summary, sections = _section_lines(profile, ANSWER_PARSE_SUMMARY_CHARS if compact else limit)
     att_lines = attestation_lines(attestations)
     used = sum(len(ln) + 1 for ln in [p.header for p in parents] + summary + sections + att_lines)
     used += len("# profile digest\n")
@@ -476,8 +486,8 @@ def profile_digest(
     lines = ["# profile digest", *summary]
     for p in parents:
         hidden = [h for h in p.highlights if h[0] not in shown]
-        hint = (f"  (+{len(hidden)} bullets hidden; cvt brief {stage} RUN --item {_parent_id(p.header)})"
-                if hidden else "")
+        command = "" if compact else f"; cvt brief {stage} RUN --item {_parent_id(p.header)}"
+        hint = f"  (+{len(hidden)} bullets hidden{command})" if hidden else ""
         lines.append(p.header + hint)
         lines += [_highlight_line(hid, rel, kind, text, p.indent, None if hid in forced else limit)
                   for hid, rel, kind, text in p.highlights if hid in shown]
@@ -493,9 +503,11 @@ def profile_digest(
     lines += [line for _sid, line in skill_lines[:kept]]
     if kept < len(skill_lines):
         hidden_ids = [sid for sid, _ln in skill_lines[kept:]]
-        lines.append(f"(+{len(hidden_ids)} skill groups hidden: {', '.join(hidden_ids)}; "
-                     f"cvt brief {stage} RUN --item ID)")
+        command = "" if compact else f"; cvt brief {stage} RUN --item ID"
+        lines.append(f"(+{len(hidden_ids)} skill groups hidden: {', '.join(hidden_ids)}{command})")
     lines += att_lines
+    if compact:
+        lines.append(EXPAND_FOOTER.format(stage=stage))
     return "\n".join(lines)
 
 
@@ -650,7 +662,7 @@ def _jd_header_lines(st: dict) -> list[str]:
 
 
 def _headers_only(ctx: _Ctx, stage: str) -> str:
-    return profile_digest(ctx.profile, ctx.atts, None, 0, stage=stage)
+    return profile_digest(ctx.profile, ctx.atts, None, 0, stage=stage, compact=stage == "answer_parse")
 
 
 # --- tailored outline ---------------------------------------------------------------------------------------
@@ -830,14 +842,15 @@ def _source_issues(profile: dict) -> str:
     return "\n".join(lines) if len(lines) > 1 else "# source issues\n-"
 
 
-def _pending_questions(ctx: _Ctx) -> str:
+def _pending_questions(ctx: _Ctx, prompt_chars: int | None = None) -> str:
     qs = ctx.json(QUESTIONS_FILE)["questions"]
     lines = ["# pending questions"]
     for q in qs:
         if q["status"] != "pending":
             continue
         choices = "; ".join(f"{c['id']}={c['label']}" for c in q["choices"])
-        lines.append(f"{q['id']} {q['type']} {q['topic']}: {q['prompt']}" + (f" | choices: {choices}" if choices else ""))
+        prompt = q["prompt"] if prompt_chars is None else _clip(q["prompt"], prompt_chars)
+        lines.append(f"{q['id']} {q['type']} {q['topic']}: {prompt}" + (f" | choices: {choices}" if choices else ""))
     return "\n".join(lines) if len(lines) > 1 else "# pending questions\n-"
 
 
@@ -1098,7 +1111,7 @@ def _inputs_for(stage: str, ctx: _Ctx, *, reply: str, digest_budget: int | None,
                  _wrap("item headers", _headers_only(ctx, stage)), _wrap("role labels", _role_labels(ctx.profile))]
         return "\n\n".join(parts), 0
     if stage == "answer_parse":
-        parts = [_wrap("pending questions", _pending_questions(ctx)), "# reply\n<user_reply>\n" + reply + "\n</user_reply>",
+        parts = [_wrap("pending questions", _pending_questions(ctx, ANSWER_PARSE_PROMPT_CHARS)), "# reply\n<user_reply>\n" + reply + "\n</user_reply>",
                  _wrap("item headers", _headers_only(ctx, stage)), _wrap("role labels", _role_labels(ctx.profile))]
         return "\n\n".join(parts), 0
     if stage == "tailor":
