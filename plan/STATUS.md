@@ -7,7 +7,7 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 | 1 | APPROVED | APPROVE (re-gate 2) | 2 | bdbdb19 | |
 | 2 | APPROVED | APPROVE (re-gate 3) | 3 | 73a6a31 | |
 | 3 | APPROVED | ACCEPTED by user after re-gate 4 (known limit: plural/glued scale words; FIX-3-12 not run) | 4 | 51727b5 | |
-| 4 | APPROVED | APPROVE (re-gate 1) | 1 | | |
+| 4 | APPROVED | APPROVE (re-gate 1) | 1 | 10ea6b7 | |
 | 5 | TODO | | | | |
 | 6 (optional) | TODO | | | | |
 
@@ -119,3 +119,4 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 - 2026-10-26: FIX-4-5 PARTIAL->owned work DONE (caps raised; 141+36 pass) but 2 suite failures from user's uncommitted render.py edit (Experience -> Recent Experience). User confirmed intentional. Wrote WP-FIX-4-6 (tests/validator/docs follow the new title); dispatching lite/inherit.
 - 2026-10-26: FIX-4-6 DONE (tests follow Recent Experience; 1214 pass). FIX-4-5 DONE. Round 1 fix-ups complete (4-1..4-6). Dispatching delta re-gate 1.
 - 2026-10-26: WP-G4 APPROVE (re-gate 1). Non-blocking: 8-question cap dodgeable via fake parent_id; live evals and ApiRunner never run (no API key). Committing wave 4.
+- 2026-10-26: wave 4 committed (10ea6b7) and marked APPROVED. Next: wave 5.
