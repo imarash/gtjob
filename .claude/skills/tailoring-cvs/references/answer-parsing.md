@@ -27,7 +27,8 @@ On exit 1: patch only the listed items in answers.round.json and rerun the dry-r
 6. A named specific (Istio) is its own attestation. Prefer it over the generic term where space is tight.
 7. `terms` lists every surface form the claim licenses (SLO, SLOs, service level objective(s)).
 8. A correction: `action: correct`, `type: correction`, `placement: correction_only`, an exact `old_value` and
-   `new_value` for one profile `item_id` and `field`.
+   `new_value` for one profile `item_id` and `field`. One correction attestation changes one field: a new date range
+   is a single `date_text` correction (old and new full date text), not separate start and end corrections.
 9. A rejection ("none of those"): `action: reject`, no attestations.
 10. An instruction about the CV ("drop the Earlier experience line"): `action: instruct`, `instruction` verbatim.
     It becomes edits later; no attestation.
@@ -152,7 +153,8 @@ offers a skeleton question listing candidate engagements (default: skills sectio
 ```
 <!-- schema: answers#round -->
 
-`case-followup-skip.txt`: `skip the rest, use your defaults`. One `skip` item per pending question.
+`case-followup-skip.txt`: `skip the rest, use your defaults`. One `skip` item per pending question. A skipped question
+gets status `skipped`; questions the user never mentioned get `defaulted`.
 
 ```json
 {"round":2,"checkpoint":1,"received_at":"2026-10-25T00:35:00Z","channel":"chat","raw_text":"skip the rest, use your defaults","items":[{"question_id":"q-9","action":"skip","choice_ids":[],"attestations":[],"instruction":"","note":""},{"question_id":"q-10","action":"skip","choice_ids":[],"attestations":[],"instruction":"","note":""},{"question_id":"q-11","action":"skip","choice_ids":[],"attestations":[],"instruction":"","note":""},{"question_id":"q-12","action":"skip","choice_ids":[],"attestations":[],"instruction":"","note":""}],"unmentioned_question_ids":[]}

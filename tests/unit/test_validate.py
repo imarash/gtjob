@@ -234,8 +234,9 @@ def test_layout_passes_on_a_filled_page_and_works_without_pdftotext(tmp_path: Pa
 
 def test_layout_orphan_heading_names_the_page(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     model = model_for()
+    heading = next(sec["title"] for sec in model["sections"] if sec["kind"] == "experience").upper()
     pages = [
-        validate.PageText(792.0, [(60.0, 70.0, "Some text"), (700.0, 710.0, "EXPERIENCE"), (720.0, 730.0, "Acme Corp")]),
+        validate.PageText(792.0, [(60.0, 70.0, "Some text"), (700.0, 710.0, heading), (720.0, 730.0, "Acme Corp")]),
         validate.PageText(792.0, [(60.0, 70.0, "More text"), (600.0, 700.0, "Last line"), (758.0, 769.0, "2/2")]),
     ]
     monkeypatch.setattr(validate, "_bbox_pages", lambda _pdf: pages)
@@ -243,7 +244,7 @@ def test_layout_orphan_heading_names_the_page(tmp_path: Path, monkeypatch: pytes
     assert gate["status"] == "warn" and len(gate["violations"]) == 1
     assert gate["violations"][0] == {
         "code": "layout", "item_id": "page-1",
-        "message": "page 1: section heading 'EXPERIENCE' is orphaned at the bottom of the page",
+        "message": f"page 1: section heading '{heading}' is orphaned at the bottom of the page",
     }
 
 

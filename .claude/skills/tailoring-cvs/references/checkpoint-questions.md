@@ -17,7 +17,9 @@ On exit 1: run `cvt brief fix <run>`, patch only the listed questions, and rerun
 1. At most 8 questions in one batch, in this order: gap, source_issue, metric, strategy.
 2. Every question has `allow_free_text: true`, a `default` (`choice_ids`, `text`, `description` of what a skip does),
    `status: pending`, `round: 1`, `checkpoint: 1`, `parent_id: ""`, `suppressed_reason: ""`, all `links` keys.
-3. Gap question (`topic: gap`, `multi_select`): one choice per partial/none requirement, ordered by JD weight.
+3. Gap question (`topic: gap`, `multi_select`): one choice per partial/none requirement, ordered by JD weight (heaviest
+   first). Requirements that ask for the same thing (for example SLOs and error budgets) may share one choice that
+   links every `req_id`. Offer only gaps the user could plausibly confirm; the example below shows five.
    - Prompt: "Your CV doesn't currently show: A; B (you have X); C (only X and Y are listed). Which of these do you
      actually have experience with?" Name what the CV does show in parentheses.
    - Choice `value` = the terms joined with `|`, specific form first (`Istio|service mesh`). Choice `id` is `[a-z0-9_]+`.
@@ -62,6 +64,11 @@ Follow-ups (after the first answers; `answers-apply --dry-run` prints skeletons)
   (reliability-adjacent engagements, monitoring/on-call work). Resolved items are default-selected; extras are not.
 - Ask a `scope_confirm` for a gap term only when bullets could use it. A bare skill stays in the skills section.
 - Never re-ask, in the same run, things the user left unmentioned. They took their default and are reported once.
+- Suppression (`cvt questions`) drops choices an attestation already covers but never rewrites a prompt, so name in
+  each prompt only the choices you offer.
+- Follow-ups are their own batch (`round: 2`): the limit of 8 pending questions applies to each round separately, so
+  `questions --add` works before or after `answers-apply --commit`. `answers-apply --dry-run` only prints skeletons;
+  `questions --add` is the only way to create a follow-up.
 - Write follow-ups to a `followups.json` (same shape as `questions.json`, `round: 2`, `topic: scope` or `followup`,
   `parent_id` set) and add them with `cvt questions <run> --add followups.json`. The script renumbers ids.
 

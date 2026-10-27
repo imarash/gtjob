@@ -50,7 +50,7 @@ RANGE_SEPARATOR = " – "
 CONTACT_KINDS_ORDER = ("website", "linkedin", "github")
 MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 SECTION_TITLES = {
-    "summary": "Summary", "skills": "Skills", "experience": "Experience", "earlier": "Earlier experience",
+    "summary": "Summary", "skills": "Skills", "experience": "Recent Experience", "earlier": "Earlier experience",
     "certifications": "Certifications", "education": "Education",
 }
 INSTALL_HINT = "install a Typst backend with `uv pip install typst` or `brew install typst`, then rerun: cvt render RUN"

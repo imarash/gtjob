@@ -529,7 +529,7 @@ The AI writes `questions.json` (≤ 8 pending, every question `allow_free_text: 
 `metric` (3-5 bullets, free_text, default "no number"), `strategy` (template, emphasis, earlier-experience line).
 `cvt questions RUN` then:
 
-1. Validates schema and rules (violations: more than 8 pending cp1 questions, missing default, `allow_free_text` false,
+1. Validates schema and rules (violations: more than 8 pending cp1 questions in the initial batch (no `parent_id`) or in one follow-up round, missing default, `allow_free_text` false,
    duplicate ids, unknown req/item ids).
 2. Suppresses questions answered by usable attestations: a `gap` choice whose requirement keywords are all covered by the
    `terms` of an active attestation is removed; a question left with no choices gets `status: suppressed` and
@@ -859,15 +859,15 @@ always included, so the model can see the whole career.
 
 | Packet | Max input tokens (estimate) | CLI `max_tokens` (output) |
 | --- | --- | --- |
-| profile | 1,500 + the numbered CV | 4,000 |
-| jd | 3,000 | 2,000 |
-| match | 7,000 | 3,000 |
-| questions | 4,000 | 1,500 |
-| answer_parse | 2,500 | 1,000 |
-| tailor | 8,000 | 4,000 |
-| change_request | 3,000 | 1,000 |
+| profile | 1,500 + the numbered CV | 8,000 |
+| jd | 3,000 | 5,000 |
+| match | 7,000 | 6,000 |
+| questions | 4,000 | 3,000 |
+| answer_parse | 2,500 | 2,000 |
+| tailor | 8,000 | 8,000 |
+| change_request | 3,000 | 2,000 |
 | fix | 2,500 | 1,500 |
-| critic | 4,000 | 1,500 |
+| critic | 4,000 | 3,000 |
 
 `estimate_tokens = ceil(chars / chars_per_token)`, where `chars_per_token` is 3.8. When a packet would exceed its
 budget, `build_brief` trims in a fixed order: hidden bullets first, then the seed plan, then the remaining

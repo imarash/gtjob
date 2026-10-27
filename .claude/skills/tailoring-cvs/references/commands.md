@@ -4,7 +4,8 @@ Run from the repo root as `uv run .claude/skills/tailoring-cvs/scripts/cvt.py <c
 prefix. Type it out in full each time (do not assign it to a shell variable: zsh does not split it). Without `uv`:
 `python3 .claude/skills/tailoring-cvs/scripts/cvt.py` (needs `jsonschema`, `pypdf`, `typst`).
 
-`RUN` is a run slug, a run directory, or `latest` (the default where shown as `[RUN]`). Every command accepts
+`RUN` is a run slug (the full date-prefixed id, for example `20261026-staff-platform-sre`; a bare suffix is not
+resolved), a run directory, or `latest` (the default where shown as `[RUN]`). Every command accepts
 `--json` (one minified line: `ok`, `command`, `exit_code`, `run`, `stage`, `data`, `messages`, `next_action`,
 `error`) before or after the subcommand, and `--all` to lift output caps (15 lines, 10 list items).
 

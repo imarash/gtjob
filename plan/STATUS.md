@@ -6,8 +6,8 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 | --- | --- | --- | --- | --- | --- |
 | 1 | APPROVED | APPROVE (re-gate 2) | 2 | bdbdb19 | |
 | 2 | APPROVED | APPROVE (re-gate 3) | 3 | 73a6a31 | |
-| 3 | APPROVED | ACCEPTED by user after re-gate 4 (known limit: plural/glued scale words, FIX-3-12 not run) | 4 | | |
-| 4 | TODO | | | | |
+| 3 | APPROVED | ACCEPTED by user after re-gate 4 (known limit: plural/glued scale words; FIX-3-12 not run) | 4 | 51727b5 | |
+| 4 | APPROVED | APPROVE (re-gate 1) | 1 | | |
 | 5 | TODO | | | | |
 | 6 (optional) | TODO | | | | |
 
@@ -39,13 +39,13 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 | WP-29 | 3 | DONE | brief + assemble; 92 tests; golden tailor-plan assembles |
 | WP-I3 | 3 | DONE | 949 pass, 1 skipped; lint-skill --all exit 0 |
 | WP-G3 | 3 | DONE | accepted by user after 4 fix-up rounds (FIX-3-1..3-11); FIX-3-12 deferred as non-blocking |
-| WP-20 | 4 | TODO | |
-| WP-21 | 4 | TODO | |
-| WP-22 | 4 | TODO | |
-| WP-23 | 4 | TODO | |
-| WP-24 | 4 | TODO | lite (Haiku) |
-| WP-I4 | 4 | TODO | |
-| WP-G4 | 4 | TODO | |
+| WP-20 | 4 | DONE | sample golden A+B; 5/5; flags: question cap order, interaction-cases correction/skip, seed offer, 2 packets over budget |
+| WP-21 | 4 | DONE | AI layer + fake client; 1035 pass; live skipped; answer_parse needs stage awaiting_answers (WP-22) |
+| WP-22 | 4 | DONE | gtjob CLI, 7 commands; 1107 pass; ApiRunner not run live; README gtjob note to remove |
+| WP-23 | 4 | DONE | evals harness; 35 non-live pass, 13 live skipped; I4 to confirm config factory name + run_stage return |
+| WP-24 | 4 | DONE | lite; README + docs; gtjob examples marked "not yet available" until WP-22 |
+| WP-I4 | 4 | DONE | 1197 pass; questions.py cap now per round (confirm at gate); GTJOB_FAKE_LLM hook; 5 guide items deferred |
+| WP-G4 | 4 | DONE | APPROVE after 1 fix-up round (FIX-4-1..4-6; contract change applied) |
 | WP-25 | 5 | TODO | |
 | WP-26 | 5 | TODO | |
 | WP-I5 | 5 | TODO | |
@@ -102,3 +102,20 @@ Status values: TODO, RUNNING, DONE, PARTIAL, ESCALATED, FIX-UP. Waves: TODO, IN 
 - 2026-10-26: FIX-3-11 DONE (scale suffixes; 1070 pass). Dispatching delta re-gate 4.
 - 2026-10-26: Re-gate 4 FIX-UPS: one blocker (FIX-3-12 lite: plural scale words "2 crores"/"2 billions", glued "2bln", stacked scales). Round 4 used; stopped, awaiting user decision. Gate recommends further scale-word gaps be non-blocking. No contract change.
 - 2026-10-26: user accepted wave 3 with known limit (plural 'crores'/'billions', glued '2bln', stacked scales; FIX-3-12 deferred). 1070 pass. Committing wave 3.
+- 2026-10-26: wave 3 committed (51727b5), APPROVED. Dispatching wave 4: WP-20 first, then WP-21, 22, 23, 24 (lite).
+- 2026-10-26: WP-24 DONE (README + docs/privacy + docs/troubleshooting; gtjob CLI still stub pending WP-22; gate should drop "not yet available" note once WP-22 lands). Waiting on WP-20..23.
+- 2026-10-26: WP-21 DONE (AI layer, fake client, cache, stage runners; 1035 pass; live test skipped, no API key). Note for WP-22/gate: answer_parse needs questions run first (awaiting_answers). Waiting on WP-20, WP-22, WP-23.
+- 2026-10-26: WP-20 DONE (Parts A+B; 5/5 acceptance, 1035 pass; golden CV 2 pages, 9 gates pass + 1 warn). Flags for gate: 8-question cap vs follow-up order, interaction-cases.yaml correction/skip cases unmeetable, seed offer unconfirmed (score 0.1023 vs 0.6), profile and answer_parse packets over budget. Waiting on WP-22, WP-23.
+- 2026-10-26: WP-22 DONE (gtjob CLI: tailor/continue/status/render/edit/profile/package-skill; 72 CLI tests, 1107 pass; not run live). Flags: ApiRunner untested live; questions/change_request use unchecked run_stage; default_rest needs followups: default. README "not yet available" note for gtjob should now be removed (gate). Waiting on WP-23.
+- 2026-10-26: WP-23 DONE (evals harness; 35 non-live pass, 13 live skipped; no API key). Flags for I4: confirm stage_env factory name in gtjob.config and run_stage return value; --answers targets q-1. Wave 4 build complete. Dispatching WP-I4.
+- 2026-10-26: WP-I4 DONE (1197 pass, 1 skipped; lint ok). I4 changed wave-3 questions.py: 8-question limit now per round (gate to confirm). GTJOB_FAKE_LLM hook added. 5 guide-feedback items (2,6,7,8,11) deferred to fix-up. ApiRunner never run live. Dispatching WP-G4.
+- 2026-10-26: WP-G4 FIX-UPS (round 1). 5 blockers (FIX-4-1 live tests off by default, 4-2 untrusted wrapping, 4-3 judge gate status, 4-4 question cap initial batch, 4-5 output token caps). Optional contract-change proposal plan/reports/WP-G4-contract-change.md awaiting user. FIX-4-2 and 4-5 both edit test_briefs.py: run sequentially.
+- 2026-10-26: user approved WP-G4 contract change; applied to plan/contracts/interfaces.md (14.4 output caps; section 7 cap wording). Dispatching FIX-4-1, 4-3, 4-4 (lite/inherit), FIX-4-2 (cv-builder) in parallel, then FIX-4-5 after 4-2.
+- 2026-10-26: FIX-4-3 DONE (judge reads gate name/status; evals unit 36 pass). Waiting on FIX-4-1, 4-2, 4-4; FIX-4-5 after 4-2.
+- 2026-10-26: FIX-4-1 DONE (addopts -m "not live"; 1197 pass, 1 deselected with fake key). Waiting on FIX-4-2, 4-4; FIX-4-5 after 4-2.
+- 2026-10-26: FIX-4-4 ESCALATED (cap fix done, 3 new tests pass; tests/integration/test_wave4.py::test_pending_question_limit_is_per_round contradicts new rule, file owned by WP-I4). Orchestrator extended FIX-4-4 ownership to that one test (rewrite to new rule); re-dispatching same worker.
+- 2026-10-26: FIX-4-4 DONE (old test rewritten; 1212 pass). Waiting on FIX-4-2; then FIX-4-5.
+- 2026-10-26: FIX-4-2 DONE (untrusted_document wrapping for all CV/JD packet sections + CLI digest; 1212 pass). Dispatching FIX-4-5.
+- 2026-10-26: FIX-4-5 PARTIAL->owned work DONE (caps raised; 141+36 pass) but 2 suite failures from user's uncommitted render.py edit (Experience -> Recent Experience). User confirmed intentional. Wrote WP-FIX-4-6 (tests/validator/docs follow the new title); dispatching lite/inherit.
+- 2026-10-26: FIX-4-6 DONE (tests follow Recent Experience; 1214 pass). FIX-4-5 DONE. Round 1 fix-ups complete (4-1..4-6). Dispatching delta re-gate 1.
+- 2026-10-26: WP-G4 APPROVE (re-gate 1). Non-blocking: 8-question cap dodgeable via fake parent_id; live evals and ApiRunner never run (no API key). Committing wave 4.

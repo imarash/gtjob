@@ -159,12 +159,28 @@ def _rules(questions: dict, attestations: list[dict], jd: dict | None, profile: 
     ids = [q["id"] for q in qs]
     for qid in sorted({i for i in ids if ids.count(i) > 1}):
         violations.append(_violation(CODE_SCHEMA, qid, f"duplicate question id {qid}"))
-    open_cp1 = [q for q in qs if q["status"] == STATUS_PENDING and q["checkpoint"] == CHECKPOINT_1]
-    if len(open_cp1) > MAX_CP1_QUESTIONS:
+    # Two groups are capped separately. The initial batch (empty parent_id, any round) is capped as a whole, so an AI
+    # cannot hide questions by labelling them as later rounds. Follow-ups (parent_id set) are capped per round, because
+    # a follow-up batch is added while round 1 is still uncommitted and must not count against the initial batch.
+    initial_open = 0
+    follow_ups_by_round: dict[int, int] = {}
+    for q in qs:
+        if q["status"] == STATUS_PENDING and q["checkpoint"] == CHECKPOINT_1:
+            if q["parent_id"]:
+                follow_ups_by_round[q["round"]] = follow_ups_by_round.get(q["round"], 0) + 1
+            else:
+                initial_open += 1
+    if initial_open > MAX_CP1_QUESTIONS:
         violations.append(_violation(
             CODE_SCHEMA, "questions",
-            f"{len(open_cp1)} pending checkpoint-1 questions; the limit is {MAX_CP1_QUESTIONS}",
+            f"{initial_open} pending checkpoint-1 questions in the initial batch; the limit is {MAX_CP1_QUESTIONS}",
         ))
+    for round_no, count in sorted(follow_ups_by_round.items()):
+        if count > MAX_CP1_QUESTIONS:
+            violations.append(_violation(
+                CODE_SCHEMA, "questions",
+                f"{count} pending checkpoint-1 questions in round {round_no} follow-ups; the limit is {MAX_CP1_QUESTIONS}",
+            ))
     req_ids = {r["id"] for r in jd["requirements"]} if jd else None
     item_ids = {iid for iid, _kind, _obj in profmod.iter_items(profile)} if profile else None
     issue_ids = {i["id"] for i in profile["source_issues"]} if profile else None

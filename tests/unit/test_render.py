@@ -188,7 +188,7 @@ def test_invalid_density_is_usage_error() -> None:
 def test_markdown_has_sections_and_bullets() -> None:
     md = render.render_markdown(_build(_tailored()))
     assert md.startswith("# Jamie Rivera")
-    assert "## Experience" in md and "### Brightfield Logistics — Junior DevOps Engineer" in md
+    assert "## Recent Experience" in md and "### Brightfield Logistics — Junior DevOps Engineer" in md
     assert "*Columbus, OH · Feb 2024 – Present*" in md and "- Built GitHub Actions pipelines" in md
 
 

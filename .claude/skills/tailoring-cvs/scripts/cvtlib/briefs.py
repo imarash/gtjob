@@ -35,6 +35,9 @@ CORE_HEADING, DETAILS_HEADING, EXAMPLES_HEADING = "## Core", "## Details", "## E
 TRUNCATION_MARK = "…"
 UNTRUSTED_OPEN = '<untrusted_document name="{name}">'
 UNTRUSTED_CLOSE = "</untrusted_document>"
+UNTRUSTED_TAG_PATTERN = re.compile(r"<(/?untrusted_document)", re.IGNORECASE)
+UNTRUSTED_TAG_INERT = r"&lt;\1"
+PROFILE_DIGEST_NAME = "profile digest"
 MAX_FIT_ROUNDS = 8
 MAX_EVIDENCE_REFS = 4
 MAX_GAP_TEXT_CHARS = 100
@@ -619,7 +622,12 @@ class _Ctx:
 
 
 def _wrap(name: str, text: str) -> str:
-    return f"{UNTRUSTED_OPEN.format(name=name)}\n{text}\n{UNTRUSTED_CLOSE}"
+    """Wrap CV/JD-derived text as data; any wrapper tag inside it is made inert so it cannot close the wrapper."""
+    safe = UNTRUSTED_TAG_PATTERN.sub(UNTRUSTED_TAG_INERT, text)
+    return f"{UNTRUSTED_OPEN.format(name=name)}\n{safe}\n{UNTRUSTED_CLOSE}"
+
+
+wrap_untrusted = _wrap
 
 
 def _role_labels(profile: dict) -> str:
@@ -995,7 +1003,7 @@ def _fix_inputs(ctx: _Ctx) -> tuple[str, str, StageSpec, str, int, bool]:
     lines = [f"failed: {command} (attempt {attempt} of {cfg['max_fix_attempts']})",
              f"violations ({len(shown)} of {len(violations)}):"]
     lines += [f"- {v['item_id']}: {v['message']}" for v in shown]
-    lines.append("offending items:")
+    offending: list[str] = []
     artifact_obj = {"assemble": ctx.optional_json(PLAN_FILE), "jd-check": ctx.optional_json(JD_FILE),
                     "match-check": ctx.optional_json(MATCH_FILE),
                     "profile-build": ctx.optional_json("profile-map.json"),
@@ -1016,8 +1024,9 @@ def _fix_inputs(ctx: _Ctx) -> tuple[str, str, StageSpec, str, int, bool]:
         else:
             obj = None
         if obj is not None:
-            lines.append(f"{iid}: " + _clip(json.dumps(obj, ensure_ascii=False, separators=(",", ":")),
+            offending.append(f"{iid}: " + _clip(json.dumps(obj, ensure_ascii=False, separators=(",", ":")),
                                             int(cfg["fix_item_chars"])))
+    lines.append(_wrap("offending items", "\n".join(["offending items:", *offending])))
     if command == "jd-check":
         lines += _jd_header_lines(ctx.st)
     spec = StageSpec((STAGE_SPECS[stage].guides[0],) if stage else (), out_file,
@@ -1082,39 +1091,43 @@ def _inputs_for(stage: str, ctx: _Ctx, *, reply: str, digest_budget: int | None,
         digest = profile_digest(ctx.profile, ctx.atts, ctx.jd, budget, stage=stage, excerpt_chars=excerpt)
         pm = _prematch_text(prematch(ctx.profile, ctx.atts, ctx.jd))
         ctx._cache["digest"] = digest
-        return "\n\n".join([_run_id_line(ctx), jd_digest(ctx.jd), digest, pm]), estimate_tokens(digest)
+        return "\n\n".join([_run_id_line(ctx), _wrap("jd digest", jd_digest(ctx.jd)),
+                             _wrap(PROFILE_DIGEST_NAME, digest), _wrap("prematch", pm)]), estimate_tokens(digest)
     if stage == "questions":
-        parts = [_run_id_line(ctx), _gaps(ctx), _source_issues(ctx.profile), _headers_only(ctx, stage), _role_labels(ctx.profile)]
+        parts = [_run_id_line(ctx), _wrap("gaps", _gaps(ctx)), _wrap("source issues", _source_issues(ctx.profile)),
+                 _wrap("item headers", _headers_only(ctx, stage)), _wrap("role labels", _role_labels(ctx.profile))]
         return "\n\n".join(parts), 0
     if stage == "answer_parse":
-        parts = [_pending_questions(ctx), "# reply\n<user_reply>\n" + reply + "\n</user_reply>",
-                 _headers_only(ctx, stage), _role_labels(ctx.profile)]
+        parts = [_wrap("pending questions", _pending_questions(ctx)), "# reply\n<user_reply>\n" + reply + "\n</user_reply>",
+                 _wrap("item headers", _headers_only(ctx, stage)), _wrap("role labels", _role_labels(ctx.profile))]
         return "\n\n".join(parts), 0
     if stage == "tailor":
         strengths, full_ids = _match_strengths(ctx)
         digest = profile_digest(ctx.profile, ctx.atts, ctx.jd, budget, stage=stage, full_ids=full_ids,
                                 excerpt_chars=excerpt)
         ctx._cache["digest"] = digest
-        parts = [jd_digest(ctx.jd), digest, strengths, _answers_summary(ctx)]
+        parts = [_wrap("jd digest", jd_digest(ctx.jd)), _wrap(PROFILE_DIGEST_NAME, digest),
+                 _wrap("match strengths", strengths), _answers_summary(ctx)]
         if seed:
             run, plan = _seed(ctx)
             if run:
                 parts.append(f"# Seed (run {run})\nStart from the seed; change only what this JD needs; "
-                             f"set seed_run to \"{run}\".\n{plan}")
+                             f"set seed_run to \"{run}\".\n{_wrap('seed plan', plan)}")
         return "\n\n".join(parts), estimate_tokens(digest)
     if stage == "change_request":
         t = ctx.json(TAILORED_FILE)
         named = [_item_packet(ctx, i) for i in _named_ids(ctx, reply)]
-        parts = [_run_id_line(ctx), "# outline\n" + tailored_outline(t, int(budgets()["outline_excerpt_chars"])),
+        parts = [_run_id_line(ctx),
+                 _wrap("tailored outline", "# outline\n" + tailored_outline(t, int(budgets()["outline_excerpt_chars"]))),
                  "# reply\n<user_reply>\n" + reply + "\n</user_reply>"]
         if named:
-            parts.append("# items named in the reply\n" + "\n".join(named))
+            parts.append(_wrap("named items", "# items named in the reply\n" + "\n".join(named)))
         return "\n\n".join(parts), 0
     if stage == "critic":
         t = ctx.json(TAILORED_FILE)
-        parts = [_run_id_line(ctx), "# outline\n" + tailored_outline(t, int(budgets()["outline_excerpt_chars"])),
-                 jd_digest(ctx.jd),
-                 _validation_summary(ctx)]
+        parts = [_run_id_line(ctx),
+                 _wrap("tailored outline", "# outline\n" + tailored_outline(t, int(budgets()["outline_excerpt_chars"]))),
+                 _wrap("jd digest", jd_digest(ctx.jd)), _wrap("validation", _validation_summary(ctx))]
         pages = sorted(p.relative_to(ctx.run_dir).as_posix() for p in ctx.run_dir.glob(PAGE_PNG_GLOB))
         if visual:
             parts.append("# pages (attach at 80 ppi)\n" + ("\n".join(pages) if pages else

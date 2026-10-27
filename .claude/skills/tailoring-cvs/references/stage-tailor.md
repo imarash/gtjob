@@ -34,6 +34,9 @@ truthfulness.md).
    the answer to that strategy question.
 8. Use `[[CONFIRM: <what is missing>]]` where a number would help but none was given. Never invent the number.
 9. No unsupported term, number, tool, employer, client, date or metric. No JD noise: salary, visa, recruiter contact.
+   `talking_points` are term-checked against their refs like bullets: a point that names an employer, a certification
+   or a term such as SOC 2 needs a ref to the item that contains it (for example `exp-2.e4`). A certificate does not
+   support a skill. Attestations appear in the profile digest section of the packet.
 10. Seniority framing comes from `match.seniority_fit`. Do not claim a level the evidence does not show.
 11. With a **Seed** in the packet: start from it, change only what this JD needs, and set `seed_run` to its run slug.
     Without one, `seed_run` is `""`.

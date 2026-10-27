@@ -12,14 +12,14 @@
   "recency_boost": 1.5,
   "attestation_boost": 2,
   "stages": {
-    "profile": {"input": 1500, "output": 4000},
-    "jd": {"input": 3000, "output": 2000},
-    "match": {"input": 7000, "output": 3000},
-    "questions": {"input": 4000, "output": 1500},
-    "answer_parse": {"input": 2500, "output": 1000},
-    "tailor": {"input": 8000, "output": 4000},
-    "change_request": {"input": 3000, "output": 1000},
+    "profile": {"input": 1500, "output": 8000},
+    "jd": {"input": 3000, "output": 5000},
+    "match": {"input": 7000, "output": 6000},
+    "questions": {"input": 4000, "output": 3000},
+    "answer_parse": {"input": 2500, "output": 2000},
+    "tailor": {"input": 8000, "output": 8000},
+    "change_request": {"input": 3000, "output": 2000},
     "fix": {"input": 2500, "output": 1500},
-    "critic": {"input": 4000, "output": 1500}
+    "critic": {"input": 4000, "output": 3000}
   }
 }

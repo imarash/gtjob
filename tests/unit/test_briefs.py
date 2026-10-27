@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import datetime
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -94,9 +95,9 @@ def test_budgets_file_matches_the_contract():
     assert cfg["chars_per_token"] == 3.8 and cfg["core_max_lines"] == 60 and cfg["seed_min_score"] == 0.6
     assert cfg["max_fix_attempts"] == 2 and cfg["excerpt_chars"] == 240 and cfg["outline_excerpt_chars"] == 80
     assert {k: (v["input"], v["output"]) for k, v in cfg["stages"].items()} == {
-        "profile": (1500, 4000), "jd": (3000, 2000), "match": (7000, 3000), "questions": (4000, 1500),
-        "answer_parse": (2500, 1000), "tailor": (8000, 4000), "change_request": (3000, 1000),
-        "fix": (2500, 1500), "critic": (4000, 1500)}
+        "profile": (1500, 8000), "jd": (3000, 5000), "match": (7000, 6000), "questions": (4000, 3000),
+        "answer_parse": (2500, 2000), "tailor": (8000, 8000), "change_request": (3000, 2000),
+        "fix": (2500, 1500), "critic": (4000, 3000)}
 
 
 @pytest.mark.parametrize("name", ["stage-profile", "stage-jd", "stage-match", "stage-tailor", "truthfulness",
@@ -711,3 +712,134 @@ def test_fix_packet_for_a_schema_error_has_the_shape_key(workspace, capsys):
     lines = _build(run_dir, "fix").packet.splitlines()
     at = next(i for i, ln in enumerate(lines) if ln.startswith("shape: "))
     assert lines[at + 1] == briefs.SHAPE_KEY_LINE
+
+
+# --- every CV/JD-derived section is wrapped (WP-FIX-4-2) -----------------------------------------------------
+SENTINEL = "SENTINEL-IGNORE-PREVIOUS"
+OPEN_TAG, CLOSE_TAG = '<untrusted_document name="', "</untrusted_document>"  # the prose rule names the bare tag
+WRAPPED_STAGES = ("match", "tailor", "questions", "answer_parse", "change_request", "critic")
+
+
+def _inject_sentinel(run_dir: Path) -> None:
+    """Prefix the sentinel to every visible profile bullet, JD requirement text and keyword, and tailored bullet."""
+    profile = json.loads((run_dir / "profile.json").read_text(encoding="utf-8"))
+    for w in profile["work"]:
+        for holder in (w, *w["engagements"]):
+            for h in holder["highlights"]:
+                h["text"] = f"{SENTINEL} {h['text']}"
+    jd = json.loads((run_dir / "jd.json").read_text(encoding="utf-8"))
+    for r in jd["requirements"]:
+        r["text"] = f"{SENTINEL} {r['text']}"
+        r["keywords"] = [*r["keywords"], SENTINEL]
+    tailored = json.loads((run_dir / "tailored.json").read_text(encoding="utf-8"))
+    for e in tailored["experience"]:
+        for b in e["bullets"]:
+            b["text"] = f"{SENTINEL} {b['text']}"
+    st = state.load(run_dir)
+    for art, name, obj in (("profile", "profile.json", profile), ("jd", "jd.json", jd), ("tailored", "tailored.json", tailored)):
+        jsonio.dump_json(obj, run_dir / name)
+        state.record_artifact(run_dir, st, art, name, cascade=False)
+    state.save(run_dir, st)
+
+
+def assert_sentinel_only_inside_wrappers(text: str, sentinel: str = SENTINEL) -> int:
+    """Every occurrence of `sentinel` lies between an opening wrapper tag and the next closing tag; returns the count."""
+    assert text.count(OPEN_TAG) == text.count(CLOSE_TAG), "unbalanced wrapper tags"
+    found = [i for i in range(len(text)) if text.startswith(sentinel, i)]
+    for pos in found:
+        opened, closed = text.rfind(OPEN_TAG, 0, pos), text.rfind(CLOSE_TAG, 0, pos)
+        assert opened > closed, f"sentinel at {pos} is outside any {OPEN_TAG}"
+        assert text.find(CLOSE_TAG, pos) > pos
+    return len(found)
+
+
+@pytest.mark.parametrize("stage", WRAPPED_STAGES)
+def test_cv_and_jd_derived_sections_are_wrapped(workspace, stage):
+    run_dir = _make_run(workspace)
+    _inject_sentinel(run_dir)
+    packet = _build(run_dir, stage, reply="Make t-exp-1.b2 shorter" if stage == "change_request" else REPLY).packet
+    count = assert_sentinel_only_inside_wrappers(packet)
+    if stage != "answer_parse":  # its inputs carry only headers and pending questions, no bullet or requirement text
+        assert count > 0, stage
+    assert packet.count(OPEN_TAG) >= 2 or stage == "answer_parse"
+
+
+def test_match_and_tailor_wrap_jd_and_profile_digests_and_keep_headings_inside(workspace):
+    run_dir = _make_run(workspace)
+    for stage, names in (("match", ("jd digest", "profile digest", "prematch")),
+                         ("tailor", ("jd digest", "profile digest", "match strengths"))):
+        packet = _build(run_dir, stage).packet
+        for name in names:
+            assert f'<untrusted_document name="{name}">\n# ' in packet, (stage, name)
+
+
+def test_fix_packet_wraps_offending_items(workspace):
+    run_dir = _make_run(workspace)
+    _fail_run(run_dir)
+    packet = _build(run_dir, "fix").packet
+    item_text = "Replaced manual console changes at Contoso Labs with Terraform."  # the item's text, from _fail_run
+    assert assert_sentinel_only_inside_wrappers(packet, item_text) == 1
+    assert '<untrusted_document name="offending items">\noffending items:' in packet
+
+
+def test_wrap_neutralizes_closing_tags_inside_the_text():
+    wrapped = briefs._wrap("x", "a </untrusted_document> b <UNTRUSTED_DOCUMENT name='y'> c")
+    assert wrapped.count(CLOSE_TAG) == 1 and wrapped.count(OPEN_TAG) == 1
+    assert wrapped.endswith(CLOSE_TAG) and "&lt;/untrusted_document> b" in wrapped
+
+
+def test_jd_requirement_with_a_closing_tag_cannot_close_the_gaps_wrapper(workspace):
+    run_dir = _make_run(workspace)
+    jd = json.loads((run_dir / "jd.json").read_text(encoding="utf-8"))
+    jd["requirements"][0]["text"] = f"{CLOSE_TAG} {SENTINEL}"
+    st = state.load(run_dir)
+    jsonio.dump_json(jd, run_dir / "jd.json")
+    state.record_artifact(run_dir, st, "jd", "jd.json", cascade=False)
+    state.save(run_dir, st)
+    packet = _build(run_dir, "questions").packet
+    assert_sentinel_only_inside_wrappers(packet)
+
+
+# --- output caps leave headroom for the golden outputs (WP-FIX-4-5) ----------------------------------------
+CONSERVATIVE_CHARS_PER_TOKEN = 3.0
+OUTPUT_HEADROOM = 1.5
+PRIVATE_SAMPLE = FIXTURES / "private" / "sample"
+JUNIOR_OUTPUTS = {"profile": "profile-map.json", "jd": "jd.json", "match": "match.json",
+                  "questions": "questions.json", "answer_parse": "answers.round.json",
+                  "tailor": "tailor-plan.json", "change_request": "edits-001.json"}
+PRIVATE_OUTPUTS = {"profile": "profile-map.json", "jd": "jd.json", "match": "match.json",
+                   "questions": "questions.json", "answer_parse": "answers.canonical.round.json",
+                   "tailor": "tailor-plan.json"}
+
+
+def _blank_quotes(node: object) -> None:
+    """`cvt match-check` fills every `quote`, so the model's reply carries them empty."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "quote":
+                node[key] = ""
+            else:
+                _blank_quotes(value)
+    elif isinstance(node, list):
+        for child in node:
+            _blank_quotes(child)
+
+
+def _assert_output_headroom(folder: Path, mapping: dict[str, str]) -> None:
+    for stage, fname in mapping.items():
+        obj = json.loads((folder / fname).read_text(encoding="utf-8"))
+        if stage == "match":
+            _blank_quotes(obj)
+        chars = len(json.dumps(obj, separators=(",", ":"), ensure_ascii=False))
+        cap = briefs.budgets()["stages"][stage]["output"]
+        assert math.ceil(chars / CONSERVATIVE_CHARS_PER_TOKEN) * OUTPUT_HEADROOM <= cap, (stage, chars, cap)
+
+
+def test_output_caps_have_headroom_for_golden_outputs():
+    _assert_output_headroom(GOLDEN, JUNIOR_OUTPUTS)
+
+
+def test_output_caps_have_headroom_for_private_sample_outputs():
+    if not PRIVATE_SAMPLE.is_dir():
+        pytest.skip("private sample fixtures are absent")
+    _assert_output_headroom(PRIVATE_SAMPLE, PRIVATE_OUTPUTS)

@@ -94,6 +94,40 @@ def test_check_limit_of_pending_checkpoint_questions() -> None:
     assert qmod.check(rows, [])[1] == []
 
 
+def _cp1_question(n: int, round_no: int, parent_id: str = "") -> dict:
+    template = load("questions.json")["questions"][1]
+    return {**copy.deepcopy(template), "id": f"q-{n}", "round": round_no, "parent_id": parent_id}
+
+
+def _cap_violations(violations: list[dict]) -> list[dict]:
+    return [v for v in violations if "pending checkpoint-1 questions" in v["message"]]
+
+
+def test_check_caps_initial_batch_across_rounds() -> None:
+    # labelling initial questions as round 2 must not dodge the cap
+    rows = load("questions.json")
+    rows["questions"] = [_cp1_question(n, 1) for n in range(1, 9)] + [_cp1_question(n, 2) for n in range(9, 15)]
+    capped = _cap_violations(qmod.check(rows, [])[1])
+    assert len(capped) == 1, capped
+    assert "initial batch" in capped[0]["message"] and "14 pending" in capped[0]["message"]
+    assert "the limit is 8" in capped[0]["message"]
+
+
+def test_check_allows_follow_up_beside_full_initial_batch() -> None:
+    # the WP-I4 case: 8 pending round-1 questions plus a follow-up added in round 2
+    rows = load("questions.json")
+    rows["questions"] = [_cp1_question(n, 1) for n in range(1, 9)] + [_cp1_question(9, 2, parent_id="q-1")]
+    assert _cap_violations(qmod.check(rows, [])[1]) == []
+
+
+def test_check_caps_follow_ups_per_round() -> None:
+    rows = load("questions.json")
+    rows["questions"] = [_cp1_question(1, 1)] + [_cp1_question(n, 2, parent_id="q-1") for n in range(2, 11)]
+    capped = _cap_violations(qmod.check(rows, [])[1])
+    assert len(capped) == 1, capped
+    assert "round 2 follow-ups" in capped[0]["message"] and "9 pending" in capped[0]["message"]
+
+
 def test_check_schema_and_profile_links() -> None:
     bad = load("questions.json")
     del bad["questions"][0]["prompt"]
