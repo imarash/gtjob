@@ -102,6 +102,11 @@
           "id": "classic",
           "label": "Classic",
           "value": "classic"
+        },
+        {
+          "id": "sidebar",
+          "label": "Sidebar (two columns, less ATS-safe)",
+          "value": "sidebar"
         }
       ],
       "allow_free_text": true,

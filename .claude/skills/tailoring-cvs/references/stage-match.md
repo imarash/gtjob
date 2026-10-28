@@ -47,7 +47,8 @@ Whole-match fields
 - `seniority_fit`: `assessment` is `under`, `match`, `over`, or `unknown`. `framing` says how to present
   seniority. Example, over-qualified: "Staff-level hands-on IC depth; do not emphasize total years; keep real dates".
 - `strategy`:
-  - `template`: `modern` by default.
+  - `template`: `modern` by default. `classic` and `sidebar` are allowed. Recommend `sidebar` only when the user
+    asks for a two-column layout; it is less ATS-safe.
   - `emphasis`: the JD's domain or lead theme.
   - `include_earlier_experience`: `true` when roles are older than about 12 years, otherwise `false`.
   - `rationale`: one sentence.

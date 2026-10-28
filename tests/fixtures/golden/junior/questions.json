@@ -77,13 +77,18 @@
       "choices": [
         {
           "id": "modern",
-          "label": "Modern (one-column with a skills sidebar)",
+          "label": "Modern (one column, recommended)",
           "value": "modern"
         },
         {
           "id": "classic",
           "label": "Classic (single column, plain)",
           "value": "classic"
+        },
+        {
+          "id": "sidebar",
+          "label": "Sidebar (two columns, less ATS-safe)",
+          "value": "sidebar"
         }
       ],
       "allow_free_text": true,

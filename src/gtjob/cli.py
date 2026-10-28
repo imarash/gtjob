@@ -1,7 +1,7 @@
 """`gtjob`: the terminal front end of the tailoring-cvs skill (interfaces.md section 12).
 
-`tailor`, `continue` and `edit` drive `gtjob.flow`; `status`, `render`, `profile` and `package-skill` delegate to the
-deterministic `cvtlib` commands. `main()` marks the host as `cli` so state history shows who wrote what.
+`tailor`, `continue` and `edit` drive `gtjob.flow`; `status`, `render`, `profile`, `polish` and `package-skill`
+delegate to the deterministic commands. `main()` marks the host as `cli` so state history shows who wrote what.
 """
 
 from __future__ import annotations
@@ -119,6 +119,16 @@ def build_parser() -> argparse.ArgumentParser:
     _add_json(r)
     r.set_defaults(handler=_cmd_render)
 
+    pol = sub.add_parser("polish", help="generic CV with no job description (extract text, or render every template)")
+    pol_sub = pol.add_subparsers(dest="polish_command", metavar="<extract|render>", required=True)
+    ex = pol_sub.add_parser("extract", help="print CV text (same reader as cvt ingest)")
+    ex.add_argument("cv", type=Path, help="CV file (PDF, Markdown, or text)")
+    ex.set_defaults(handler=_cmd_polish_extract)
+    rn = pol_sub.add_parser("render", help="render a render.json with every template")
+    rn.add_argument("model", type=Path, help="render-model JSON")
+    rn.add_argument("out", type=Path, help="output directory, usually out/<slug>-generic")
+    rn.set_defaults(handler=_cmd_polish_render)
+
     e = sub.add_parser("edit", help="apply a free-text change to a tailored run, then re-approve and re-render")
     e.add_argument("run", metavar="RUN")
     e.add_argument("--text", required=True, metavar="TEXT", help="the change, in your own words")
@@ -233,6 +243,22 @@ def _cmd_edit(args: argparse.Namespace, svc: _Services) -> int:
 
 def _cmd_status(args: argparse.Namespace, svc: _Services) -> int:
     return _delegate(["status", *([args.run] if args.run else []), *_json_flag(args)])
+
+
+def _cmd_polish_extract(args: argparse.Namespace, svc: _Services) -> int:
+    """Print CV text. Same reader and cleaner as `cvt ingest`. No API key."""
+    import polish_render  # noqa: PLC0415
+
+    text = polish_render.extract_text(args.cv)
+    sys.stdout.write(text if text.endswith("\n") or not text else text + "\n")
+    return int(ExitCode.OK)
+
+
+def _cmd_polish_render(args: argparse.Namespace, svc: _Services) -> int:
+    """Render every template from a render-model JSON. No API key."""
+    import polish_render  # noqa: PLC0415
+
+    return polish_render.render_all(args.model, args.out)
 
 
 def _cmd_render(args: argparse.Namespace, svc: _Services) -> int:

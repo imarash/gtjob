@@ -25,7 +25,7 @@
       "additionalProperties": false,
       "required": ["template", "paper", "density", "accent"],
       "properties": {
-        "template": { "type": "string", "enum": ["modern", "classic"] },
+        "template": { "type": "string", "enum": ["modern", "classic", "sidebar"] },
         "paper": { "type": "string", "enum": ["us-letter", "a4"] },
         "density": {
           "type": "string",

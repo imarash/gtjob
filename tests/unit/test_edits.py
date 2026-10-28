@@ -183,6 +183,7 @@ def test_set_field_each_field(tailored, profile):
     assert out["header"]["headline"] == "Platform Engineering" and "exp-1" in out["header"]["source_refs"]
     assert out["summary"]["text"] == "Short summary." and out["summary"]["source_refs"] == ["sum-1"]
     assert out["target"]["template"] == "classic" and out["target"]["emphasis"] == "Terraform"
+    assert apply_one(out, profile, op("set_field", field="template", value="sidebar"))["target"]["template"] == "sidebar"
     assert out["target"]["page_target"] == 2
     for bad in (("template", "fancy"), ("page_target", "3"), ("paper", "legal"),
                 ("include_earlier_experience", "maybe"), ("colour", "red")):

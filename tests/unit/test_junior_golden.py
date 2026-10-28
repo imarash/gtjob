@@ -343,7 +343,7 @@ def test_questions_follow_checkpoint_one_rules(ptexts: dict[str, str]) -> None:
     topics = {q["topic"]: q for q in qs}
     assert set(topics) == {"gap", "metric", "strategy"}
     assert any(c["id"] == "helm" for c in topics["gap"]["choices"])
-    assert {c["id"] for c in topics["strategy"]["choices"]} == {"modern", "classic"}
+    assert {c["id"] for c in topics["strategy"]["choices"]} == {"modern", "classic", "sidebar"}
 
 
 def test_answers_round_yields_helm_attestation(ptexts: dict[str, str]) -> None:

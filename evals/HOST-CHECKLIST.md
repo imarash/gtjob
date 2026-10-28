@@ -20,7 +20,9 @@ add service mesh, istio, typescript. and add slo and error budget to the sre rel
 Host: Cursor ______ (Agent mode, project opened at the repo root)
 
 - [ ] **Skill and commands listed.** Type `/` in the Agent input.
-  Expected: `tailor-cv`, `cv-continue`, `cv-status`, `cv-render`, `cv-profile` are listed. Cursor Settings > Rules shows the core skill `tailoring-cvs` as loaded (it is model-invoked, so it may or may not be listed under `/`).
+  Expected: `tailor-cv`, `cv-continue`, `cv-status`, `cv-render`, `cv-profile`, `cv-polish` are listed. Cursor Settings > Rules shows the core skill `tailoring-cvs` as loaded (it is model-invoked, so it may or may not be listed under `/`).
+- [ ] **`/cv-polish` with no job description.** Type `/cv-polish` and a CV path. Do not give a JD.
+  Expected: no `cvt init`. Three PDFs land in `out/<slug>-generic/` (`modern`, `classic`, `sidebar`), none over 3 pages. Section titles match a tailored CV (Summary, Skills, Recent Experience, then certifications and education). The reply keeps every fact.
 - [ ] **Natural-language trigger.** Type: `tailor my CV to JDs/staff-platform-sre.md`.
   Expected: the agent reads `tailoring-cvs/SKILL.md`, then runs `cvt init`, `ingest` and the AI stages itself, with no slash command.
 - [ ] **Structured question tool at checkpoint 1.** Let the run reach checkpoint 1.
@@ -48,7 +50,9 @@ Host: Cursor ______ (Agent mode, project opened at the repo root)
 Host: Claude Code ______ (run `claude` in the repo root)
 
 - [ ] **Skill and commands listed.** Type `/` (or run `/skills`).
-  Expected: `/tailor-cv`, `/cv-continue`, `/cv-status`, `/cv-render`, `/cv-profile` appear; `tailoring-cvs` is available to the model. `/agents` lists `cv-critic`.
+  Expected: `/tailor-cv`, `/cv-continue`, `/cv-status`, `/cv-render`, `/cv-profile`, `/cv-polish` appear; `tailoring-cvs` is available to the model. `/agents` lists `cv-critic`.
+- [ ] **`/cv-polish` with no job description.** Type `/cv-polish` and a CV path. Do not give a JD.
+  Expected: no `cvt init`. Three PDFs land in `out/<slug>-generic/` (`modern`, `classic`, `sidebar`), none over 3 pages. Section titles match a tailored CV (Summary, Skills, Recent Experience, then certifications and education). The reply keeps every fact.
 - [ ] **Natural-language trigger.** Type: `tailor my CV to JDs/staff-platform-sre.md`.
   Expected: a `Skill` tool call for `tailoring-cvs`, followed by `cvt init`. No slash command is needed.
 - [ ] **Structured question tool at checkpoint 1.** Expected: the agent calls `AskUserQuestion` with at most 4 questions per call and at most 4 options per question (gap lists are split into "Gaps (1/2)", "Gaps (2/2)"), headers of 12 characters or fewer, and free text via "Other". Timing out the dialog counts as "skip" (the default is used).

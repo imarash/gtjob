@@ -19,6 +19,7 @@ from . import jsonio
 from . import lexicon
 from . import profile as profmod
 from . import questions as qmod
+from . import render as render_mod
 from . import schemas, state
 from . import scope as scopemod
 from .errors import CvtError, ExitCode
@@ -260,6 +261,24 @@ def select_round(questions: dict, selections: dict[str, list[str]], *, default_r
         "channel": CHANNEL_HOST_TOOL, "raw_text": RAW_ITEM_SEP.join(said), "items": items,
         "unmentioned_question_ids": unmentioned,
     }
+
+
+def _apply_strategy_choices(st: dict, questions: dict, items: list[dict]) -> None:
+    """Persist template (and similar) strategy answers into run options for assemble/render."""
+    by_id = {q["id"]: q for q in questions["questions"]}
+    for item in items:
+        if item["action"] != ACTION_CHOOSE:
+            continue
+        q = by_id.get(item["question_id"])
+        if q is None or q.get("topic") != "strategy":
+            continue
+        choice_ids = item.get("choice_ids") or []
+        if not choice_ids:
+            continue
+        values = {c["id"]: c["value"] for c in qmod._options(q)}
+        value = values.get(choice_ids[0], choice_ids[0])
+        if "template" in q["prompt"].casefold() and value in render_mod.TEMPLATES:
+            st["options"]["template"] = value
 
 
 def auto_round(run_dir: Path) -> dict:
@@ -644,6 +663,7 @@ def commit_round(run_dir: Path, round_obj: dict) -> dict:
     else:
         state.set_stage(st, STAGE_APPLIED)
         st["checkpoints"]["cp1"] = CP1_DONE
+    _apply_strategy_choices(st, questions, stored["items"])
     state.record_artifact(ctx.run_dir, st, ANSWERS_ARTIFACT, ANSWERS_FILE, cascade=True)
     state.record_artifact(ctx.run_dir, st, QUESTIONS_ARTIFACT, QUESTIONS_FILE, cascade=False)
     state.add_history(st, "answers-apply", f"round={stored['round']} created={len(created)} pending={len(pending)}")

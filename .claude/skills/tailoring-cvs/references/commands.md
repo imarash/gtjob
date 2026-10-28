@@ -18,6 +18,7 @@ resolved), a run directory, or `latest` (the default where shown as `[RUN]`). Ev
 - [Checkpoint 1](#checkpoint-1): `questions`, `answers-apply`, `attest`
 - [Tailoring and checkpoint 2](#tailoring-and-checkpoint-2): `assemble`, `check-tailored`, `diff`, `apply-edits`, `approve`
 - [Render and deliver](#render-and-deliver): `render`, `fit`, `validate`, `critique-save`, `report`
+- [Generic CV](#generic-cv): `polish_render.py`, `/cv-polish`, `gtjob polish`
 - [Skill maintenance](#skill-maintenance): `lint-skill`, `package-skill`
 
 ## Exit codes
@@ -38,7 +39,7 @@ Errors print `cvt: error[E_ID]: message` and `  hint: ...` on stderr (in `--json
 ## Run setup and state
 
 - `init --cv PATH` plus one of `--jd PATH`, `--jd-text TEXT`, `--jd-stdin`, `--jd-url URL`. Options:
-  `--template modern|classic` (modern), `--auto`, `--draft`, `--page-target 1|2` (2), `--paper us-letter|a4`
+  `--template modern|classic|sidebar` (modern), `--auto`, `--draft`, `--page-target 1|2` (2), `--paper us-letter|a4`
   (us-letter), `--slug S`, `--host cursor|claude_code|cli|api|unknown`. Creates `out/<run>/`, `inputs/`,
   `state.json`. Stage → `initialized`. Exit 0, 2, 5.
   Example: `$CVT init --cv CVs/me.pdf --jd JDs/sre.md --template modern`
@@ -110,9 +111,22 @@ Errors print `cvt: error[E_ID]: message` and `  hint: ...` on stderr (in `--json
 - `critique-save RUN FILE`: stores the critic's JSON as `critique.json`. Exit 0, 1, 4.
 - `report RUN`: writes `report.md`. Stage → `reported`. Exit 0, 4.
 
+## Generic CV
+
+No job description and no run folder. Keep every fact and aim for 2–3 pages. Rules: `references/generic-cv.md`.
+Slash command: `/cv-polish`. These commands do not call `init` or `fit`.
+
+- `scripts/polish_render.py extract CV` and `gtjob polish extract CV`: print the CV text. Same reader and
+  cleaner as `ingest`. Exit 0, 2, 5.
+- `scripts/polish_render.py render MODEL OUT` and `gtjob polish render MODEL OUT`: render every installed
+  template into `OUT`. Tries density `standard`, then `compact` when a template is over 3 pages. Does not
+  drop lines. Writes `Name-CV-<template>.pdf`, `Name-CV.md`, and a `sidebar-layout` excerpt of sidebar page 1.
+  Exit 0. Exit 1 with `still over 3 pages` means tighten wording. Exit 1 with `E_SCHEMA` means fix `MODEL`.
+  Exit 3 when Typst is missing. Exit 5 is not used here.
+
 ## Skill maintenance
 
 - `lint-skill [SKILL_DIR] [--wrapper] [--all]`: checks the authoring rules (default: the core skill; `--all`: core
-  plus the five wrappers). Exit 0, or 1 with the violations listed.
+  plus the wrappers). Exit 0, or 1 with the violations listed.
 - `package-skill [--out DIR]`: lints, then writes `DIR/tailoring-cvs.zip` (default `dist/`) for claude.ai or the
   Skills API, and re-reads it to verify the frontmatter. Exit 0, 1.

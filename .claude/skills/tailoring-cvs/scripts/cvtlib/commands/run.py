@@ -8,7 +8,7 @@ import os
 import sys
 from pathlib import Path
 
-from .. import jsonio, output, paths, state, usage
+from .. import jsonio, output, paths, render, state, usage
 from ..errors import CvtError, ExitCode
 
 QUESTIONS_FILE = "questions.json"
@@ -18,7 +18,7 @@ ERROR_MAX_CHARS = 100
 PENDING_PROMPTS_SHOWN = 3
 ERRORS_SHOWN = 3
 ELLIPSIS = "…"
-TEMPLATES = ("modern", "classic")
+TEMPLATES = render.TEMPLATES
 PAPERS = ("us-letter", "a4")
 PAGE_TARGETS = (1, 2)
 DOCX_FORMAT = "docx"

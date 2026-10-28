@@ -40,7 +40,7 @@ Everything personal is git-ignored, so it cannot be committed by accident:
 | Path | Contents | Git-ignored |
 | --- | --- | --- |
 | `CVs/`, `JDs/` | Your input CVs and job descriptions | yes |
-| `out/` | Every run: the parsed CV text, the JD, the profile map, the match, the questions, the tailored data, the report, and the final PDF | yes |
+| `out/` | Every tailoring run, and a generic CV from `/cv-polish` (`out/<slug>-generic/`): parsed text, questions, the report, and the PDFs | yes |
 | `profiles/<person-slug>/` | Your verified profile, one file per CV version, plus `attestations.json` (the claims you confirmed) | yes |
 | `.cache/` | LLM response cache (`.cache/gtjob/llm/`), uv cache, logs | yes |
 | `tests/fixtures/private/` | Any private golden fixtures you add for testing | yes |

@@ -97,6 +97,10 @@ priority-1 content is too long for the page target.
 
 Then run `uv run .claude/skills/tailoring-cvs/scripts/cvt.py fit RUN`.
 
+A generic CV from `/cv-polish` does not use this fit. If the script says a template is still over 3 pages at
+`compact`, shorten wording and render again. Do not drop a fact. An `E_SCHEMA` error on that command is a
+`render.json` shape problem, not a page-count problem.
+
 ## The Claude Code question dialog timed out
 
 **You see:** the `AskUserQuestion` dialog closed without an answer, and the run continued with defaults.

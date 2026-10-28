@@ -80,22 +80,24 @@ seconds precision. Hashes are lowercase hex SHA-256; `sha12` is the first 12 cha
 │   │   │   ├── SKILL.md
 │   │   │   ├── LICENSE.txt
 │   │   │   ├── references/                 # stage guides (also the CLI's system prompts)
-│   │   │   │   ├── commands.md  host-notes.md  style-guide.md  truthfulness.md
+│   │   │   │   ├── commands.md  host-notes.md  generic-cv.md  style-guide.md  truthfulness.md
 │   │   │   │   ├── stage-profile.md  stage-jd.md  stage-match.md  stage-tailor.md
 │   │   │   │   └── checkpoint-questions.md  answer-parsing.md  change-requests.md  critic-rubric.md
 │   │   │   ├── scripts/
 │   │   │   │   ├── cvt.py                  # PEP 723 entry point: uv run .../scripts/cvt.py <cmd>
+│   │   │   │   ├── polish_render.py        # generic CV: extract, then render every template
 │   │   │   │   └── cvtlib/                 # library + commands/ (one module per command group)
 │   │   │   └── assets/
 │   │   │       ├── schemas/*.schema.json   # byte-identical copies of plan/contracts/*.schema.json
-│   │   │       ├── templates/{common,modern,classic}.typ  presets.json
+│   │   │       ├── templates/{common,modern,classic,sidebar}.typ  presets.json
 │   │   │       ├── fonts/{source-sans-3,libertinus}/*.otf + OFL.txt   FONTS.md
 │   │   │       └── lexicon/{tech-terms.txt,synonyms.json,common-words.txt,logistics-patterns.json}
 │   │   ├── tailor-cv/SKILL.md              # thin wrappers (host-specific frontmatter allowed)
 │   │   ├── cv-continue/SKILL.md
 │   │   ├── cv-status/SKILL.md
 │   │   ├── cv-render/SKILL.md
-│   │   └── cv-profile/SKILL.md
+│   │   ├── cv-profile/SKILL.md
+│   │   └── cv-polish/SKILL.md              # generic CV, no job description
 │   └── agents/{cv-builder,cv-reviewer,cv-critic}.md      # Claude Code subagents
 ├── .cursor/agents/{cv-builder,cv-reviewer,cv-critic}.md  # Cursor subagents (take precedence in Cursor)
 ├── pyproject.toml                          # gtjob CLI package + dev deps (pytest)
@@ -166,7 +168,7 @@ omitted where marked `[RUN]`).
 
 | Command | Arguments | Reads | Writes | Stage effect | Exit codes | Owner |
 | --- | --- | --- | --- | --- | --- | --- |
-| `init` | `--cv PATH` and one of `--jd PATH` / `--jd-text TEXT` / `--jd-stdin` / `--jd-url URL`; `--template modern\|classic` (modern); `--auto`; `--draft`; `--page-target 1\|2` (2); `--paper us-letter\|a4` (us-letter); `--slug S`; `--host cursor\|claude_code\|cli\|api\|unknown` | inputs | run dir, `inputs/`, `state.json` | → `initialized` | 0, 2, 5 | WP-08 |
+| `init` | `--cv PATH` and one of `--jd PATH` / `--jd-text TEXT` / `--jd-stdin` / `--jd-url URL`; `--template modern\|classic\|sidebar` (modern); `--auto`; `--draft`; `--page-target 1\|2` (2); `--paper us-letter\|a4` (us-letter); `--slug S`; `--host cursor\|claude_code\|cli\|api\|unknown` | inputs | run dir, `inputs/`, `state.json` | → `initialized` | 0, 2, 5 | WP-08 |
 | `status` | `[RUN]`; `--all` | `state.json`, `questions.json` | — | none | 0, 4 | WP-08 |
 | `ingest` | `RUN` | `inputs/` | `cv.txt`, `jd.txt`, `state.ingest` | → `ingested` | 0, 3, 5 | WP-09 |
 | `profile-cache` | `RUN` and `--lookup` or `--store` | store / `profile.json` | `profile.json` (lookup hit) / store file | lookup hit → `profiled` | 0 (hit or miss; `data.hit`), 1, 4 | WP-10 |
@@ -652,7 +654,9 @@ engagements with no remaining bullets fold into `collapsed_line` ("Also: Trillia
 (Solutions Architect)"). Dates format as `Mon YYYY – Mon YYYY` / `Present`, year-only when the profile has only years.
 
 **Templates** (`assets/templates/`): `common.typ` (helpers: section rule, entry block, contact line, placeholder
-highlight), `modern.typ`, `classic.typ`. Each template starts with
+highlight), `modern.typ`, `classic.typ`, `sidebar.typ`. `sidebar` is two-column: summary and experience in the main
+column, and skills, certifications, and education in a right rail. It is less ATS-safe than `modern` and `classic`.
+Each template starts with
 `#let data = json(sys.inputs.at("data", default: "render.json"))` and
 `#let presets = json(sys.inputs.at("presets", default: "presets.json"))`; it never calls `eval`. Data strings are
 inserted as text, never as markup. PDF metadata comes from `meta` via `set document(title:, author:, keywords:)`.
@@ -718,8 +722,9 @@ the body says "the text the user typed after the command (Claude Code appends it
 | `/tailor-cv` | `[cv-path] [jd-path-or-text]` | Start a run. Missing args: list `CVs/*` and `JDs/*` as choices with the structured question tool. Then follow the core skill from `init`. |
 | `/cv-continue` | `[free-text answer or instruction]` | Load the latest run (`cvt status --json`); treat the text as the reply to pending questions (stage `awaiting_answers`) or as a change request (stage ≥ `tailored`); resume from `next_action`. |
 | `/cv-status` | `[run-slug]` | Show stage, pending questions (chat format), artifact paths, next action. No changes. |
-| `/cv-render` | `[template] [run-slug]` | `cvt render` + `cvt fit` + `cvt validate` with the given template; no AI content changes. |
+| `/cv-render` | `[template] [run-slug]` | `cvt render` + `cvt fit` + `cvt validate` with the given template (`modern`, `classic`, or `sidebar`); no AI content changes. |
 | `/cv-profile` | `[list\|revoke att-NNN\|show]` | Show the profile summary and attestations (`cvt profile-show --merged`, `cvt attest list`); revoke on request after confirming. |
+| `/cv-polish` | `[cv-path]` | Generic CV, no job description. Keep every fact, aim for 2–3 pages, render modern, classic, and sidebar. Does not call `cvt init` or `cvt fit`. |
 
 ---
 
@@ -733,7 +738,8 @@ Package `gtjob` in `src/gtjob/` (root `pyproject.toml`, entry point `gtjob = "gt
 | `gtjob tailor` | `--cv PATH` and `--jd PATH` / `--jd-text TEXT` / `--jd-url URL`; `--template`; `--auto`; `--answers FILE.yaml`; `--draft`; `--critic`; `--critic-visual` (implies `--critic`; same as `cvt brief critic --visual`, section 14.6); `--slug`; `--page-target`; `--paper`; `--model STAGE=MODEL` (repeatable); `--no-cache` | Full pipeline with terminal prompts at both checkpoints (unless `--auto`/`--answers`). |
 | `gtjob continue` | `[RUN]`; `--answers FILE.yaml`; `--text TEXT` | Resume any run (including ones started in Cursor/Claude Code) from `state.json`. |
 | `gtjob status` | `[RUN]` | Same output as `cvt status`. |
-| `gtjob render` | `RUN`; `--template T`; `--draft` | fit + validate, no AI. |
+| `gtjob render` | `RUN`; `--template T` (`modern`, `classic`, or `sidebar`); `--draft` | fit + validate, no AI. |
+| `gtjob polish` | `extract CV` or `render MODEL OUT` | Generic CV, no job description. `extract` prints CV text with the same reader as `ingest`. `render` writes every template into `OUT`. The host model writes `MODEL` from `references/generic-cv.md`. No `init`, no `fit`, no API key. |
 | `gtjob edit` | `RUN --text TEXT` | change-request stage → `apply-edits` → diff → approve prompt → fit → validate → report. |
 | `gtjob profile` | `list\|show\|revoke ID`; `--person P` | Same as `/cv-profile`. |
 | `gtjob package-skill` | `--out DIR` | Same as `cvt package-skill`. |

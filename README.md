@@ -34,6 +34,12 @@ run. The tailoring workflow is a skill (`tailoring-cvs`) that works in Cursor an
 
 Cover letters and LinkedIn profiles are out of scope.
 
+When the job text is a recruiter email, LinkedIn message, or Teams chat, `/cv-reply` runs the same tailoring and also drafts the reply to send with the PDF. Visa, salary, and location questions stay in that reply, not in the CV.
+
+A CV with no job description is a different command. `/cv-polish` keeps every fact and renders a generic resume of
+about 2–3 pages in the modern, classic, and sidebar templates. It does not start a tailoring run. The same two
+steps from the terminal are `gtjob polish extract` and `gtjob polish render`.
+
 ## Quick start in Cursor
 
 1. Put your CV in `CVs/` and the job description in `JDs/`. Both folders are git-ignored.
@@ -60,7 +66,7 @@ Use `/cv-status` to see where a run is and what it needs next.
 ## Quick start in the CLI
 
 The CLI uses the Anthropic API for the AI stages, so set `ANTHROPIC_API_KEY` first. Commands that do not call the
-model (`status`, `render`, `profile`) need no key.
+model (`status`, `render`, `profile`, `polish`) need no key.
 
 `gtjob` commands:
 
@@ -76,6 +82,11 @@ uv run gtjob tailor --cv CVs/your-cv.pdf --jd JDs/role.md --answers answers.yaml
 
 # Paste a job description or give a URL instead of a file
 uv run gtjob tailor --cv CVs/your-cv.pdf --jd-url https://example.com/job
+
+# Generic CV, no job description and no API key. The assistant writes render.json; these two commands
+# extract the text and render every template.
+uv run gtjob polish extract CVs/your-cv.pdf
+uv run gtjob polish render out/your-name-generic/render.json out/your-name-generic
 ```
 
 A minimal `answers.yaml`:
@@ -91,7 +102,7 @@ checkpoint2: approve_all
 When stdin is not a terminal and the run needs your input, `gtjob` prints the pending questions or the diff, saves the
 run, and exits with code 6. Nothing is lost. Reply later with `uv run gtjob continue RUN --text "..."`.
 
-Until `gtjob` ships, the same flow works with `cvt`, run from the repo root:
+Cursor and Claude Code run the same steps through `cvt`, from the repo root:
 
 ```bash
 uv run .claude/skills/tailoring-cvs/scripts/cvt.py init --cv CVs/your-cv.pdf --jd JDs/role.md
@@ -126,12 +137,13 @@ change requests after the diff is shown.
 
 | Template | Use it when |
 | --- | --- |
-| `modern` (default) | You want the standard layout for most roles. |
-| `classic` | You want a more traditional, conservative look. |
+| `modern` (default) | You want the standard one-column layout for most roles. |
+| `classic` | You want a more traditional, conservative one-column look. |
+| `sidebar` | You want skills, certifications, and education in a narrow right rail. This layout is less ATS-safe. |
 
-Both templates take the same content and follow the same two-page fit rules. They differ only in typography and
-styling. Pick one with `--template modern` or `--template classic` at `init`, or re-render an existing run with a
-different template:
+A tailored run uses one template and follows the two-page fit rules. The templates differ in typography and layout.
+Pick one with `--template modern`, `--template classic`, or `--template sidebar` at `init`, or re-render an existing
+run with a different template:
 
 ```bash
 uv run .claude/skills/tailoring-cvs/scripts/cvt.py render latest --template classic
@@ -168,8 +180,9 @@ uv run .claude/skills/tailoring-cvs/scripts/cvt.py render latest --png
 | Path | What it holds | Git-ignored |
 | --- | --- | --- |
 | `CVs/`, `JDs/` | Your input files | yes |
-| `out/<run-slug>/` | One folder per run: state, intermediate files, the report | yes |
+| `out/<run-slug>/` | One folder per tailoring run: state, intermediate files, the report | yes |
 | `out/<run-slug>/final/` | The approved PDF, named `<Name>-<Title>.pdf` | yes |
+| `out/<slug>-generic/` | A generic CV from `/cv-polish`: `render.json` and one PDF per template | yes |
 | `out/<run-slug>/report.md` | The match report and the list of changes | yes |
 | `profiles/<person-slug>/` | Your verified profile and confirmed answers (`attestations.json`), reused across runs | yes |
 | `.cache/` | Stage caches and logs | yes |

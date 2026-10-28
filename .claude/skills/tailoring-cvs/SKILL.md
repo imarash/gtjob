@@ -1,6 +1,6 @@
 ---
 name: tailoring-cvs
-description: Tailors a CV or resume to a job description and renders a truthful, ATS-friendly PDF of at most two pages plus a match report. Accepts CVs as PDF, Markdown, or text, and job descriptions as files, pasted text, recruiter emails, or URLs. Asks focused questions about gaps, remembers confirmed experience across runs, and shows changes for approval. Use when the user asks to tailor, target, or ATS-optimize a CV or resume for a job, role, or JD, or when they answer questions or give change instructions during an active CV run, for example 'yes, add SLOs to the SRE roles'. Also checks, resumes, or re-renders runs in out/. Not for cover letters or LinkedIn profiles.
+description: Tailors a CV or resume to a job description and renders a truthful, ATS-friendly PDF of at most two pages plus a match report. Accepts PDF, Markdown, or text CVs and job descriptions as files, pasted text, emails, or URLs. Asks about gaps, remembers confirmed experience, and shows changes for approval. Use when the user tailors, targets, or ATS-optimizes a CV for a job or JD, answers questions, or gives change instructions such as 'yes, add SLOs to the SRE roles'. Also checks, resumes, or re-renders runs in out/. With no job description, polishes a generic CV, keeps every fact, and aims for about 2-3 pages. Not for cover letters or LinkedIn profiles.
 license: MIT (see LICENSE.txt). Bundled fonts are under the SIL Open Font License 1.1.
 compatibility: Requires Python 3.11+ with uv (recommended) or pip-installed jsonschema, pypdf and typst. Poppler pdftotext improves PDF extraction. Writes runs to out/ and profiles/ in the working directory. Network is only needed to install packages or fetch a JD URL. Without the typst package or CLI, emits Typst source and Markdown instead of PDF.
 metadata:
@@ -13,6 +13,11 @@ metadata:
 Tailor one CV to one job description in a run folder `out/<run>/`. The scripts (`cvt`) do the deterministic work;
 you do the AI stages (profile map, JD analysis, match, questions, tailor plan) from short stage packets.
 Deliverables: `out/<run>/final/<Name>-<Title>.pdf` (at most 2 pages) and `out/<run>/report.md`.
+
+## Generic CV, no job description
+
+If the user wants a polished CV and gives no job description — keep every fact, about 2–3 pages, every template —
+stop. Do not run the workflow below. Follow [generic-cv](references/generic-cv.md). The slash command is `/cv-polish`.
 
 ## Golden rules
 
@@ -60,6 +65,8 @@ Each AI stage: `$CVT brief <stage> RUN` prints the packet (rules, inputs, output
 - [ ] `brief tailor` → `tailor-plan.json` → `$CVT assemble RUN`.
 - [ ] `$CVT diff RUN`, checkpoint 2 below → `$CVT approve RUN`.
 - [ ] `$CVT fit RUN` → `$CVT validate RUN` → `$CVT report RUN`; give the PDF path and a summary of at most 5 lines.
+
+If the job text was a recruiter message (email, LinkedIn, InMail, or Teams) or the user asked for a reply, also follow [cv-reply](../cv-reply/SKILL.md) and deliver `out/<run>/reply.md` with the PDF. A bare posting gets the CV only.
 
 On exit 1: `$CVT brief fix RUN`, patch only the listed items, rerun the check; at most 2 attempts, then show the user
 the violations.
@@ -122,8 +129,9 @@ lists every default applied. Offer it only when the user asks for a hands-off ru
 
 ## Reference index
 
-Packets already carry each guide's rules. Read a file directly only for debugging or after two failed checks (`brief <stage> RUN --full`).
+Packets already carry each guide's rules for a tailored run. Read a file directly only for debugging or after two failed checks (`brief <stage> RUN --full`). A generic CV with no job description follows generic-cv instead.
 
+- [generic-cv](references/generic-cv.md): polished CV with no job description; read that file and follow it, and do not run the tailoring workflow.
 - [commands](references/commands.md): every `cvt` command, arguments, outputs; read when a command's flags are unclear.
 - [host-notes](references/host-notes.md): Cursor, Claude Code, API container, claude.ai specifics; read when a host behaves differently.
 - [stage-profile](references/stage-profile.md): CV → profile map; read when `profile-build` keeps failing.

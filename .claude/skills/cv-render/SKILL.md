@@ -1,7 +1,7 @@
 ---
 name: cv-render
 description: Re-renders, page-fits, and validates an approved CV run, optionally with another template, density, or draft watermark, and refreshes the report.
-argument-hint: "[run-slug] [--template modern|classic] [--draft]"
+argument-hint: "[run-slug] [--template modern|classic|sidebar] [--draft]"
 disable-model-invocation: true
 allowed-tools: Bash(uv run *)
 ---

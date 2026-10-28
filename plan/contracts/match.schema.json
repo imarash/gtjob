@@ -54,7 +54,7 @@
       "additionalProperties": false,
       "required": ["template", "emphasis", "include_earlier_experience", "rationale"],
       "properties": {
-        "template": { "type": "string", "enum": ["modern", "classic"] },
+        "template": { "type": "string", "enum": ["modern", "classic", "sidebar"] },
         "emphasis": { "type": "string", "description": "Recommended lead theme, e.g. 'banking/fintech reliability and platform security'." },
         "include_earlier_experience": { "type": "boolean" },
         "rationale": { "type": "string" }

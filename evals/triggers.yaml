@@ -14,6 +14,8 @@ should_trigger:
   - "shorten my tailored CV to one page"
   - "drop the Earlier experience line from the CV you made"
   - "update my resume for this Staff Platform Engineer role"
+  - "polish my CV into a generic resume, no job description"
+  - "keep every fact and make a 2-3 page CV, I have no JD"
 
 should_not_trigger:
   - "write a cover letter"

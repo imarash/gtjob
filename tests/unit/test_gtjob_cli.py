@@ -13,7 +13,7 @@ from test_gtjob_flow import (
 )
 
 EXIT_MISSING_DEPENDENCY = 3
-COMMANDS = ("tailor", "continue", "status", "render", "edit", "profile", "package-skill")
+COMMANDS = ("tailor", "continue", "status", "render", "polish", "edit", "profile", "package-skill")
 TAILOR = ["tailor", "--cv", str(CV_FIXTURE), "--jd", str(JD_FIXTURE)]
 ANSWERS_YAML = (
     'checkpoint1:\n  q-1: "I used Helm at Brightfield to package two internal services"\n'
@@ -192,6 +192,13 @@ def test_main_marks_the_host_as_cli(workspace: Path, monkeypatch: pytest.MonkeyP
     monkeypatch.delenv("GTJOB_HOST", raising=False)
     assert run_main(TAILOR)[0] == EXIT_AWAITING
     assert {h["host"] for h in state.load(only_run(workspace))["history"]} == {"cli"}
+
+
+def test_polish_extract_prints_cv_text_and_rejects_a_missing_file(capsys: pytest.CaptureFixture[str]) -> None:
+    code, _io = run_main(["polish", "extract", str(CV_FIXTURE)])
+    assert code == EXIT_OK and "Jamie" in capsys.readouterr().out
+    code, io = run_main(["polish", "extract", "missing.pdf"])
+    assert code == EXIT_USAGE and "E_USAGE" in "\n".join(io.errors)
 
 
 def test_no_serve_command_without_the_web_module() -> None:

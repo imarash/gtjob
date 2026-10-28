@@ -21,7 +21,7 @@
         "title": { "type": "string", "description": "jd.title." },
         "company": { "type": "string", "description": "jd.company or ''." },
         "page_target": { "type": "integer", "enum": [1, 2] },
-        "template": { "type": "string", "enum": ["modern", "classic"] },
+        "template": { "type": "string", "enum": ["modern", "classic", "sidebar"] },
         "emphasis": { "type": "string" }
       }
     },

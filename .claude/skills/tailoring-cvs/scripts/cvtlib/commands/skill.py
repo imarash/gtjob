@@ -81,7 +81,7 @@ def register(subparsers) -> None:
     lint = subparsers.add_parser("lint-skill", help="lint a skill folder against the authoring rules")
     lint.add_argument("skill_dir", nargs="?", default="", metavar="SKILL_DIR", help="skill folder (default: the core skill)")
     lint.add_argument("--wrapper", action="store_true", help="lint as a slash-command wrapper (host keys allowed)")
-    lint.add_argument("--all", action="store_true", help="lint the core skill and the five wrappers")
+    lint.add_argument("--all", action="store_true", help="lint the core skill and the wrappers")
     lint.set_defaults(func=_lint)
     package = subparsers.add_parser("package-skill", help="lint, then zip the core skill for claude.ai / Skills API")
     package.add_argument("--out", default=DEFAULT_OUT_DIR, metavar="DIR", help=f"output folder ({DEFAULT_OUT_DIR}/)")

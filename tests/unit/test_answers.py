@@ -627,6 +627,21 @@ def test_correction_in_the_users_words_passes(workspace: Path, raw: str, item_id
     assert plan["attestations"][0]["correction"]["new_value"] == new
 
 
+def test_strategy_template_choice_is_stored_on_the_run() -> None:
+    state = {"options": {"template": "modern"}}
+    questions = {"questions": [{
+        "id": "q-1", "topic": "strategy", "prompt": "Which template?", "type": "single_select",
+        "choices": [
+            {"id": "modern", "label": "Modern", "value": "modern"},
+            {"id": "sidebar", "label": "Sidebar", "value": "sidebar"},
+        ],
+    }]}
+    answers._apply_strategy_choices(state, questions, [{"action": "choose", "question_id": "q-1", "choice_ids": ["sidebar"]}])
+    assert state["options"]["template"] == "sidebar"
+    answers._apply_strategy_choices(state, questions, [{"action": "choose", "question_id": "q-1", "choice_ids": ["nope"]}])
+    assert state["options"]["template"] == "sidebar"
+
+
 def test_dry_run_shows_the_profile_value_not_the_given_one(workspace: Path) -> None:
     round_obj = correction_round("my title at Quillmark was Principal Architect", "exp-1", "position",
                                  "platform  engineer", "Principal Architect")

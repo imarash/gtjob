@@ -1,7 +1,7 @@
 ---
 name: tailor-cv
 description: Starts a new CV tailoring run from a CV file and a job description given as a file path, pasted text, or URL, using the tailoring-cvs workflow with both review checkpoints.
-argument-hint: "[cv-path] [jd-path | jd-url | pasted JD] [--template modern|classic] [--auto]"
+argument-hint: "[cv-path] [jd-path | jd-url | pasted JD] [--template modern|classic|sidebar] [--auto]"
 disable-model-invocation: true
 allowed-tools: Bash(uv run *)
 ---

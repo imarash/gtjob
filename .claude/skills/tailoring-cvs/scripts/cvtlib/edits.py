@@ -12,7 +12,7 @@ import re
 from typing import Any, Callable
 
 from . import profile as profile_lib
-from . import provenance
+from . import provenance, render
 from .errors import CvtError, ExitCode
 
 ERR_TARGET = "E_EDIT_TARGET"
@@ -28,7 +28,7 @@ SETTLED_REVIEWS = (REVIEW_APPROVED, REVIEW_AUTO)
 ORIGIN_KEPT, ORIGIN_REWRITTEN, ORIGIN_MERGED, ORIGIN_ATTESTED = "kept", "rewritten", "merged", "attested"
 RESTORED_PRIORITY = 3
 PRIORITY_VALUES = (1, 2, 3, 4, 5)
-TEMPLATES = ("modern", "classic")
+TEMPLATES = render.TEMPLATES
 PAGE_TARGETS = (1, 2)
 PAPERS = ("us-letter", "a4")
 BOOL_TRUE, BOOL_FALSE = "true", "false"

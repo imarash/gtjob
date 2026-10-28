@@ -14,7 +14,7 @@ the repo root as `uv run .claude/skills/tailoring-cvs/scripts/cvt.py <command>`.
 ## Cursor
 
 - Skills load from `.claude/skills/` (compatibility path); the folder name must equal `name`. The core skill is
-  model-invocable; the five wrappers (`/tailor-cv`, `/cv-continue`, `/cv-status`, `/cv-render`, `/cv-profile`)
+  model-invocable; the wrappers (`/tailor-cv`, `/cv-continue`, `/cv-status`, `/cv-render`, `/cv-profile`, `/cv-polish`)
   appear only under `/`.
 - A skill invoked with `/name` is attached to that one message. For a whole session use Custom Mode (Option+Enter
   on the skill). Otherwise a later reply still re-triggers the core skill by its description; start with `cvt status`.
