@@ -1,5 +1,6 @@
 /out/
 /profiles/
+/.studio/
 .cache/
 /dist/
 /CVs/
