@@ -43,7 +43,7 @@ export function Checkbox({ className, children, size = "md", ref, ...props }: Ch
       {...props}
       className={(state) =>
         cx(
-          "group inline-flex items-center select-none",
+          "group relative inline-flex items-center select-none",
           s.gap,
           state.isDisabled ? "cursor-not-allowed" : "cursor-pointer",
           typeof className === "function" ? className(state) : className,

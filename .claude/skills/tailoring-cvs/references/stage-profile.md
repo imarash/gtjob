@@ -40,7 +40,7 @@ Values
 
 Source issues
 - Record problems in `source_issues`. Do not fix them in the data.
-- Kinds: `date_overlap` (also ranges that touch), `date_conflict`, `missing_contact`, `stale_metadata`, `ambiguous`, `inconsistency` (for example a skills list that lacks a language the summary names), `extraction`.
+- Kinds: `date_overlap` (not a shared boundary month), `date_conflict`, `missing_contact`, `stale_metadata`, `ambiguous`, `inconsistency` (for example a skills list that lacks a language the summary names), `extraction`.
 - `item_ids` use the IDs the build assigns by array order: `work[i]` = `exp-(i+1)`, its engagements `.e1`, `.e2`, ..., summaries `sum-1`, skills `skl-1`. Use `[]` when no item applies.
 - Severity: `warn` for overlaps, conflicts, and ambiguity; `info` otherwise.
 
@@ -81,9 +81,7 @@ an employer line usually ends with its date span on the same line.
 - Certificates: `name` as written, `issuer` only when stated, `date` normalized.
 - Skills lines: `profile-build` strips the leading label and splits keywords on `,`, `;`, `|`, and bullet
   separators. Do not split skill lines yourself.
-- Cross-checks worth recording (as `source_issues`): two roles whose dates overlap or meet in the same month;
-  a degree year inside a work date range; a missing phone, location, or LinkedIn; a stale "Updated" line;
-  a summary that names a language or tool the skills list lacks.
+- Cross-checks worth recording (as `source_issues`): two roles whose dates overlap by a month or more; a degree year inside a work date range; a missing phone, location, or LinkedIn; a stale "Updated" line; a summary that names a language or tool the skills list lacks. A role that ends in the same month and year another starts is a handoff, not an overlap, and is not recorded.
 - Do not silently drop content. If a line fits nowhere, put it in `other_sections` rather than `ignored_lines`.
 
 ### Output

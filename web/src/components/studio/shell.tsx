@@ -2,20 +2,23 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { RiFileList3Line, RiHomeLine, RiKanbanView2 } from "@remixicon/react";
+import { RiBriefcaseLine, RiFileList3Line, RiHomeLine, RiKanbanView2, RiSparkling2Line } from "@remixicon/react";
 import { DashboardSidebar } from "@/components/application/dashboard/dashboard-sidebar";
 import { DirectionProvider } from "@/components/foundations/direction/direction";
 import { ScrollFade, useScrollFade } from "@/components/foundations/scroll-fade/scroll-fade";
 
 const NAV = [
   { key: "today", label: "Today", icon: RiHomeLine, href: "/" },
+  { key: "toolbox", label: "Toolbox", icon: RiBriefcaseLine, href: "/toolbox" },
   { key: "applications", label: "Applications", icon: RiKanbanView2, href: "/applications" },
   { key: "runs", label: "Runs", icon: RiFileList3Line, href: "/runs" },
+  { key: "skills", label: "Skills", icon: RiSparkling2Line, href: "/skills" },
 ];
 
 function selectedKey(pathname: string) {
-  if (pathname.startsWith("/applications")) return "applications";
+  if (pathname.startsWith("/toolbox")) return "toolbox";
   if (pathname.startsWith("/runs")) return "runs";
+  if (pathname.startsWith("/skills") || pathname.startsWith("/agents")) return "skills";
   if (pathname.startsWith("/settings")) return "settings";
   return "today";
 }

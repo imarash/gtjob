@@ -381,12 +381,12 @@ def _check_work_overlaps(profile: dict, today: datetime.date) -> list[dict]:
             overlap = min(a_end, b_end) - max(a_start, b_start)
             if overlap < 0:
                 continue
-            names = f"{_label(a['name'], a['date_text'])} and {_label(b['name'], b['date_text'])}"
+            # One role ending in the month another starts is a handoff, not an overlap.
             if overlap == 0:
-                msg, sev = f"{names} touch in the same boundary month.", SEVERITY_INFO
-            else:
-                sev = SEVERITY_WARN if overlap >= WARN_OVERLAP_MONTHS else SEVERITY_INFO
-                msg = f"{names} overlap by {overlap} month{'s' if overlap != 1 else ''}."
+                continue
+            names = f"{_label(a['name'], a['date_text'])} and {_label(b['name'], b['date_text'])}"
+            sev = SEVERITY_WARN if overlap >= WARN_OVERLAP_MONTHS else SEVERITY_INFO
+            msg = f"{names} overlap by {overlap} month{'s' if overlap != 1 else ''}."
             issues.append(_issue("date_overlap", sev, msg, [a["id"], b["id"]]))
     return issues
 

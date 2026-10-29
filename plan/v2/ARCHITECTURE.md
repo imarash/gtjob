@@ -1,12 +1,12 @@
 # gtjob Studio — architecture
 
-Studio is a local Next.js app in `web/`. One person opens it on loopback and runs the search loop: see what needs attention, judge a role, open the tailored CV gtjob already produced, and track the application. Studio does not tailor, score, or submit. Those stay in the tools that already do them.
+Studio is a local Next.js app in `web/`. One person opens it on loopback and runs the search loop: see what needs attention, judge a role, open the tailored CV gtjob already produced, run the `.claude` skills through `cvt`, and track the application. Studio does not call a model and does not submit.
 
 ## The loop
 
 1. **See.** Today lists what needs a person: follow-ups the career-ops cadence script marks due, tracker rows in `Evaluated`, and gtjob runs whose `state.json` is waiting on a checkpoint. Counts come from files. Zero is shown as zero.
 2. **Judge.** An application page shows the score and legitimacy line stored on the career-ops report, and liveness only after `check-liveness.mjs --no-record`. Until that run, the line is "not checked".
-3. **Tailor.** A run under `out/<slug>/` is produced by `uv run gtjob` or `cvt`. Studio lists it and serves the PDF and the match report. It does not rewrite bullets.
+3. **Tailor.** A run under `out/<slug>/` is produced by `cvt`. Studio lists the skills in `.claude/`. Choice questions, approval, render, fit, validate, and report go through `cvt`. The model stages (profile map, job analysis, match, tailor plan, and a recruiter reply) are a local Cursor agent started from the Toolbox, using `@cursor/sdk` with `local.cwd` set to this checkout. A cloud agent is the wrong runtime: the CV and `out/` are gitignored. The agent follows `tailoring-cvs` or `cv-reply` and stops at the question and approval checkpoints. Studio does not rewrite a bullet itself.
 4. **Track.** Applications are the career-ops tracker. The board and the table are two views of those rows. Status text on disk stays the career-ops token.
 5. **Act.** The page links the tailored PDF, the gtjob report, and the career-ops report path. Status changes go through `set-status.mjs`. Nothing in Studio clicks Submit, Send, or Apply.
 
@@ -16,7 +16,7 @@ Defaults from the session brief. One row is adjusted.
 
 | Capability | Choice | What Studio does |
 | --- | --- | --- |
-| Fact-checked CV, gap questions, attestations, PDF, match report | Integrate | Reads `out/<slug>/`. Does not call the model and does not reimplement the fact gate. |
+| Fact-checked CV, gap questions, attestations, PDF, match report | Integrate | Reads `.claude/` and `out/<slug>/`. Choice answers and approval run through `cvt`. The Toolbox starts a local `@cursor/sdk` agent for the model JSON. The agent does not invent facts; `cvt` still checks them. |
 | Fit score, legitimacy, archived JD path, follow-up dates, canonical status | Integrate | Reads the tracker, report headers, `data/follow-ups.md`, and `data/status-log.tsv`. Due follow-ups come from `followup-cadence.mjs --json` when that script runs. Writes go through `set-status.mjs` only. |
 | career-ops `web/` | Leave it | Not imported. Not edited. |
 | Today, applications table, application detail, runs, settings, empty states | Implement | `web/` |
@@ -61,8 +61,8 @@ Personal trees stay gitignored: `CVs/`, `JDs/`, `out/`, `profiles/`, `.cache/`, 
 
 ## Later slices, in order
 
-1. **Evaluate a pasted URL through career-ops.** Hand the inbox item to the career-ops pipeline and show the report when it exists. Still no model call inside Studio.
-2. **Checkpoint questions in the browser.** Read `cvt` questions and post answers through `cvt`, still with the fact gate in Python.
+1. **Evaluate a pasted URL through career-ops.** Hand the inbox item to the career-ops pipeline and show the report when it exists.
+2. **Checkpoint questions in the browser.** Choice answers are on the run page. Free-text answers still go through Claude's `answer_parse` brief, then `cvt`.
 3. **Follow-up cadence UI.** Log a follow-up through the career-ops writer, and draft the message without sending it.
 4. **Cover letter.** A document next to the tailored CV, facts still from the profile.
 5. **Find jobs.** A scan surface over career-ops portals. Dossier's find-jobs screen is the UX reference.

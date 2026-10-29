@@ -1,6 +1,6 @@
 # gtjob Studio
 
-A local web app for one person. It shows gtjob runs under `out/` and, when `CAREER_OPS_ROOT` is set, the career-ops tracker. It does not tailor a CV, score a job, or submit an application.
+A local web app for one person. It shows gtjob runs under `out/` and, when `CAREER_OPS_ROOT` is set, the career-ops tracker. The Toolbox tailors a CV to a job, or polishes a CV with no job. It does not score a job or submit an application.
 
 ## Install and start
 
@@ -22,7 +22,8 @@ npm run typecheck
 
 | Path | What it is |
 | --- | --- |
-| `../out/<slug>/` | A gtjob run. Studio reads `report.md` and PDFs. It does not rewrite them. |
+| `../out/<slug>/` | A gtjob run. Studio reads `report.md` and PDFs, and calls `cvt` when you use a skill button. |
+| `../.claude/` | Skills and agents. Studio lists them and runs the allowlisted `cvt` commands. |
 | `../.studio/inbox.json` | Roles pasted on Today. Gitignored. Not scored. |
 | `$CAREER_OPS_ROOT` | career-ops checkout. Unset means tracking is off. |
 | `$CAREER_OPS_ROOT/data/applications.md` or `applications.md` | The tracker. Status changes go through `set-status.mjs`. |
@@ -39,7 +40,8 @@ Point that variable at a scratch checkout if you change a status. Studio writes 
 
 ## Invariants
 
-- A CV fact comes from a gtjob run. Studio displays the run. It does not edit bullets.
+- A CV fact comes from a gtjob run or from `cvt`. Studio does not edit a bullet in the browser. Choice answers, approval, render, fit, validate, and report go through `cvt`.
+- The Toolbox runs the model stages with a local Cursor agent (`@cursor/sdk`). Connect Cursor once, or set `CURSOR_API_KEY`. The IDE login is not reused. Tailor follows the tailoring skill and stops for questions and approval. Polish follows the cv-polish skill, keeps every fact, and renders modern, classic, and sidebar.
 - Application status is the career-ops token. The board columns are labels on top of it.
 - `set-status.mjs` is the only tracker write. A linked run is the note `gtjob-run:<slug>`.
 - No route clicks Submit, Send, or Apply.

@@ -20,9 +20,11 @@ Slice: local web shell. Today, applications (table and board), application detai
 
 Verified in the browser at `http://127.0.0.1:3847` against this machine's career-ops checkout. The tracker file is absent (`applications.md` does not exist), so Today shows 0 applications and names that path, Applications shows the empty state, and a run detail says there is no tracker to attach to. Settings lists found and missing paths. Add a role saved a URL into gitignored `.studio/inbox.json` and told the user Studio did not score it. Dark mode toggles. No live `set-status.mjs` write: there is no tracker row to update, and the argv builder is covered by unit tests only.
 
+The `.claude` skills are on the Skills page. The Toolbox starts a local Cursor agent for the model stages of `/tailoring-cvs` and `/cv-reply`. `cvt` still checks the JSON and renders the PDF.
+
 ## Next slice
 
-Evaluate a pasted URL through career-ops pipeline. Do not add a model client to Studio. See the ordered list in `ARCHITECTURE.md`.
+Evaluate a pasted URL through career-ops pipeline. See the ordered list in `ARCHITECTURE.md`.
 
 ## Blockers
 

@@ -194,6 +194,180 @@ export function resolveRunFile(outDir, slug, relativePath) {
   if (!staysInside(root, runDir)) return null;
   const target = path.resolve(runDir, relativePath);
   if (!staysInside(runDir, target)) return null;
-  if (!target.endsWith(".pdf")) return null;
+  if (!downloadAllowed(relativePath)) return null;
   return target;
+}
+
+/**
+ * Files a person can download from a finished run. Not the source CV or the profile JSON.
+ * @param {string} relativePath
+ */
+export function downloadAllowed(relativePath) {
+  const normalized = String(relativePath).replace(/\\/g, "/");
+  if (normalized === "cv.md" || normalized === "reply.md" || normalized === "build/cv.typ") return true;
+  if (!normalized.endsWith(".pdf")) return false;
+  const parts = normalized.split("/");
+  if (parts.length === 1) return true;
+  return parts.length === 2 && parts[0] === "final";
+}
+
+/**
+ * @param {string} dir
+ * @returns {{ file: string, label: string }[]}
+ */
+export function listDownloads(dir) {
+  /** @type {{ file: string, label: string }[]} */
+  const found = [];
+  const add = (file, label) => {
+    try {
+      if (statSync(path.join(dir, file)).isFile()) found.push({ file, label });
+    } catch {
+      /* absent */
+    }
+  };
+  try {
+    for (const name of readdirSync(path.join(dir, "final"))) {
+      if (name.endsWith(".pdf")) add(`final/${name}`, `PDF · ${name}`);
+    }
+  } catch {
+    /* no final/ */
+  }
+  add("cv.pdf", "PDF · working copy");
+  add("preview-modern.pdf", "Modern");
+  add("preview-classic.pdf", "Classic");
+  add("preview-sidebar.pdf", "Sidebar");
+  try {
+    for (const name of readdirSync(dir)) {
+      const match = name.match(/-(modern|classic|sidebar)\.pdf$/i);
+      if (!match) continue;
+      const label = match[1].toLowerCase();
+      add(name, label.charAt(0).toUpperCase() + label.slice(1));
+    }
+  } catch {
+    /* unreadable */
+  }
+  add("cv.md", "Markdown");
+  add("build/cv.typ", "Typst source");
+  add("reply.md", "Email reply");
+  return found;
+}
+
+/**
+ * The PDF to show in the preview. Prefer a named final file over a generic CV.pdf.
+ * @param {{ file: string }[]} downloads
+ */
+export function previewFile(downloads) {
+  const finals = downloads.filter((item) => item.file.startsWith("final/") && item.file.endsWith(".pdf"));
+  const named = finals.find((item) => !/\/[^/]*-CV\.pdf$/i.test(item.file));
+  if (named) return named.file;
+  if (finals[0]) return finals[0].file;
+  const modern = downloads.find((item) => /-(modern)\.pdf$/i.test(item.file) && !item.file.startsWith("preview-"));
+  if (modern) return modern.file;
+  const any = downloads.find((item) => item.file.endsWith(".pdf") && !item.file.startsWith("preview-"));
+  return any ? any.file : "";
+}
+
+/**
+ * Every cvt run, including one that has no PDF yet. Symlinks are skipped.
+ * @param {string} outDir
+ * @returns {{ slug: string, stage: string, nextAction: string, template: string, hasReport: boolean, downloads: { file: string, label: string }[] }[]}
+ */
+export function listStateRuns(outDir) {
+  /** @type {{ slug: string, stage: string, nextAction: string, template: string, hasReport: boolean, downloads: { file: string, label: string }[], mtimeMs: number }[]} */
+  const found = [];
+  let entries;
+  try {
+    entries = readdirSync(outDir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.isSymbolicLink() || !SLUG_RE.test(entry.name)) continue;
+    const dir = path.join(outDir, entry.name);
+    const statePath = path.join(dir, "state.json");
+    let stage = "";
+    let nextAction = "";
+    let template = "modern";
+    let mtimeMs = 0;
+    try {
+      const raw = JSON.parse(readFileSync(statePath, "utf8"));
+      stage = String(raw.stage || "");
+      nextAction = String(raw.next_action || "");
+      const options = raw.options && typeof raw.options === "object" ? raw.options : {};
+      const named = String(options.template || "");
+      if (named === "classic" || named === "sidebar" || named === "modern") template = named;
+      mtimeMs = statSync(statePath).mtimeMs;
+    } catch {
+      continue;
+    }
+    let hasReport = false;
+    try {
+      hasReport = statSync(path.join(dir, "report.md")).isFile();
+    } catch {
+      hasReport = false;
+    }
+    found.push({ slug: entry.name, stage, nextAction, template, hasReport, downloads: listDownloads(dir), mtimeMs });
+  }
+  return found
+    .sort((a, b) => b.mtimeMs - a.mtimeMs)
+    .map(({ mtimeMs: _mtime, ...row }) => row);
+}
+
+/**
+ * A polish run has polish.json, or a render model and a PDF, and no cvt state.json.
+ * @param {string} outDir
+ * @returns {{ slug: string, title: string, stage: string, nextAction: string, template: string, hasReport: boolean, downloads: { file: string, label: string }[] }[]}
+ */
+export function listPolishRuns(outDir) {
+  /** @type {{ slug: string, title: string, stage: string, nextAction: string, template: string, hasReport: boolean, downloads: { file: string, label: string }[], mtimeMs: number }[]} */
+  const found = [];
+  let entries;
+  try {
+    entries = readdirSync(outDir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.isSymbolicLink() || !SLUG_RE.test(entry.name)) continue;
+    const dir = path.join(outDir, entry.name);
+    try {
+      if (statSync(path.join(dir, "state.json")).isFile()) continue;
+    } catch {
+      /* polish runs have no cvt state */
+    }
+    let marker = false;
+    let title = "";
+    let mtimeMs = 0;
+    try {
+      const raw = JSON.parse(readFileSync(path.join(dir, "polish.json"), "utf8"));
+      marker = true;
+      title = typeof raw.cv === "string" ? raw.cv : "";
+      mtimeMs = statSync(path.join(dir, "polish.json")).mtimeMs;
+    } catch {
+      marker = false;
+    }
+    const downloads = listDownloads(dir);
+    const preview = previewFile(downloads);
+    if (!marker) {
+      try {
+        if (!statSync(path.join(dir, "render.json")).isFile() || !preview) continue;
+        mtimeMs = statSync(path.join(dir, "render.json")).mtimeMs;
+      } catch {
+        continue;
+      }
+    }
+    found.push({
+      slug: entry.name,
+      title,
+      stage: "",
+      nextAction: "",
+      template: "modern",
+      hasReport: false,
+      downloads,
+      mtimeMs,
+    });
+  }
+  return found
+    .sort((a, b) => b.mtimeMs - a.mtimeMs)
+    .map(({ mtimeMs: _mtime, ...row }) => row);
 }

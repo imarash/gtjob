@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumb, BreadcrumbItem } from "@/components/base/breadcrumb/breadcrumb";
 import { AttachForm } from "@/components/studio/attach-form";
+import { RunActions } from "@/components/studio/skill-actions";
 import { renderMarkdown } from "@/lib/markdown.mjs";
 import { readFileSync, existsSync } from "node:fs";
 import { hintMatches, loadStudio } from "@/lib/studio-data";
@@ -39,6 +40,14 @@ export default async function RunPage({ params }: { params: Promise<{ slug: stri
           </p>
         ) : null}
       </header>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-headline-medium text-text-primary">Tailoring skill</h2>
+        <p className="text-body-regular text-text-secondary">
+          These buttons call cvt in .claude. They do not call a model. Load questions only when this run is waiting on
+          checkpoint 1.
+        </p>
+        <RunActions slug={run.slug} />
+      </section>
       <section className="flex flex-col gap-2">
         <h2 className="text-headline-medium text-text-primary">PDF</h2>
         {run.pdfs.length === 0 ? (

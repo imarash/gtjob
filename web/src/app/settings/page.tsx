@@ -1,4 +1,6 @@
 import { existsSync } from "node:fs";
+import path from "node:path";
+import { cursorConnected } from "@/lib/infer-status.mjs";
 import { loadStudio, toolExists } from "@/lib/studio-data";
 
 export const instant = false;
@@ -10,6 +12,8 @@ export default async function SettingsPage() {
     ["gtjob", paths.gtjobRoot, existsSync(paths.gtjobRoot)],
     ["out/", paths.outDir, existsSync(paths.outDir)],
     ["uv", "uv on PATH", uv],
+    ["cvt", path.join(paths.gtjobRoot, ".claude", "skills", "tailoring-cvs", "scripts", "cvt.py"), existsSync(path.join(paths.gtjobRoot, ".claude", "skills", "tailoring-cvs", "scripts", "cvt.py"))],
+    ["Cursor", "local agent key", cursorConnected()],
     [
       "career-ops",
       paths.careerOpsRoot ?? "CAREER_OPS_ROOT is not set",
