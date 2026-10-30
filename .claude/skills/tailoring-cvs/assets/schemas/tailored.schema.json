@@ -123,7 +123,8 @@
           "id": { "type": "string", "pattern": "^t-cert-[0-9]+$" },
           "profile_id": { "type": "string", "pattern": "^cert-[0-9]+$" },
           "name": { "type": "string", "description": "May shorten the profile name (e.g. drop 'Google Cloud Certified'), never change it." },
-          "priority": { "$ref": "#/$defs/priority" }
+          "priority": { "$ref": "#/$defs/priority" },
+          "url": { "type": "string", "description": "Public verification URL copied from the profile, or ''." }
         }
       }
     },

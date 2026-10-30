@@ -18,8 +18,8 @@
 - Summary: 2-4 lines for the JD title and its top 3 must-haves. No "passionate" or "results-driven". Never claim a past title the candidate did not hold. Take seniority framing from `match.seniority_fit.framing`.
 - Headline: discipline-style, e.g. "Platform & Site Reliability Engineering · AWS · Kubernetes". Never a job title as if held.
 - Skills: 4-6 groups (about 4-6 rendered lines), ordered by JD relevance. Drop IDEs, design tools, and long unrelated service lists.
-- Certifications and education: one line each, ordered by JD relevance.
-- Priority: 1 = must keep, 5 = drop first. Give 1 only to the few items the JD cannot be answered without.
+- Certifications and education: one line each, ordered by JD relevance. Keep every certification in the profile, including partner badges. Give every certification priority 1 so page-fit cannot drop it.
+- Priority: 1 = must keep, 5 = drop first. Give 1 only to the few items the JD cannot be answered without, plus every certification.
 - Use JD vocabulary only when the evidence supports it. Never swap in a hypernym or sibling technology.
 - Never invent a fact, number, tool, scale, or date. If a metric would help and none exists, write `[[CONFIRM: <what to ask>]]`.
 - Every bullet, summary, headline, and skills item carries `source_refs`. Keep the wording close enough to the refs that every term is traceable.

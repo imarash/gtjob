@@ -41,9 +41,10 @@ truthfulness.md).
 11. With a **Seed** in the packet: start from it, change only what this JD needs, and set `seed_run` to its run slug.
     Without one, `seed_run` is `""`.
 12. `omitted` lists every dropped profile item (work, engagement, bullet, certificate) with a short reason.
-13. `open_items` lists placeholders, gaps, source issues, and unconfirmed suggestions. `talking_points` has 3 to 6
+13. Keep every profile certification, including partner badges. Priority 1 for all of them so page-fit cannot drop the section. Do not leave `certifications` empty when the profile has a certificate.
+14. `open_items` lists placeholders, gaps, source issues, and unconfirmed suggestions. `talking_points` has 3 to 6
     one-line points (each with refs) for the user to prepare.
-14. Priorities are 1 to 5 (1 = last to drop when fitting pages). Put the strongest JD matches at 1.
+15. Priorities are 1 to 5 (1 = last to drop when fitting pages). Put the strongest JD matches at 1.
 
 Self-check: run `cvt assemble <run>`. On exit 1 run `cvt brief fix <run>` and patch only the listed items. At most
 2 attempts, then show the violations to the user. Messages read `bullet t-exp-2.e4.b1 mentions 'X'; not found in
@@ -77,7 +78,7 @@ script assembles the real document, so facts cannot drift.
   (Istio) rather than being folded into a generic term.
 - Attestation scope is exact. `scope.kind: global` allows any item; otherwise the bullet's engagement (or work) id must
   be in `scope.item_ids`. A skills-only attestation never appears in a bullet.
-- Certifications: `short_name: ""` keeps the profile name. A shortening must be a contiguous abbreviation.
+- Certifications: `short_name: ""` keeps the profile name. A shortening must be a contiguous abbreviation. Include every profile certification, including partner badges (see Core).
 - Education: `include_details: true` only when it helps (for example a thesis relevant to the JD).
 - Headline and summary: cite what supports each claim. Do not claim the JD's title for the candidate.
 

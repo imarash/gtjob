@@ -207,10 +207,11 @@ def _sections(tailored: dict, dropped: set[str]) -> list[dict]:
             for i in earlier["items"]
         ]
         sections.append(sec)
-    certs = [c["name"] for c in tailored["certifications"] if c["id"] not in dropped]
+    certs = [c for c in tailored["certifications"] if c["id"] not in dropped]
     if certs:
         sec = _empty_section("certifications")
-        sec["lines"] = certs
+        sec["lines"] = [c["name"] for c in certs]
+        sec["link_lines"] = [{"text": c["name"], "url": (c.get("url") or "").strip()} for c in certs]
         sections.append(sec)
     if tailored["education"]:
         sec = _empty_section("education")
@@ -295,7 +296,8 @@ def render_markdown(model: dict) -> str:
                 lines += ["", f"*{e['collapsed_line']}*"]
             lines.append("")
         if sec["kind"] == "certifications":
-            lines += [f"- {x}" for x in sec["lines"]]
+            linked = {item["text"]: item.get("url") or "" for item in sec.get("link_lines") or []}
+            lines += [f"- [{x}]({linked[x]})" if linked.get(x) else f"- {x}" for x in sec["lines"]]
         else:
             lines += [f"{x}  " for x in sec["lines"]]
         if sec["lines"]:

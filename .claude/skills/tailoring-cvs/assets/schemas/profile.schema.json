@@ -137,7 +137,8 @@
         "id": { "type": "string", "pattern": "^cert-[0-9]+$" },
         "name": { "type": "string", "description": "Verbatim certification line." },
         "issuer": { "type": "string", "description": "Inferred issuer (Google, HashiCorp, AWS, Red Hat, Anthropic, OpenStack Foundation) or ''." },
-        "date": { "$ref": "#/$defs/date" }
+        "date": { "$ref": "#/$defs/date" },
+        "url": { "type": "string", "description": "Public verification URL the user supplied, or ''. Not read from the CV." }
       }
     },
     "skill_group": {

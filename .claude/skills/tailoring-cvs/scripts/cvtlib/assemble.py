@@ -245,7 +245,11 @@ def _certifications(plan: dict, ix: _Index, bad: list[dict]) -> list[dict]:
             continue
         short = pc["short_name"]
         name = short if short and prof.comparable(short) in prof.comparable(cert["name"]) else cert["name"]
-        out.append({"id": f"t-cert-{len(out) + 1}", "profile_id": cert["id"], "name": name, "priority": pc["priority"]})
+        item = {"id": f"t-cert-{len(out) + 1}", "profile_id": cert["id"], "name": name, "priority": pc["priority"]}
+        url = (cert.get("url") or "").strip()
+        if url:
+            item["url"] = url
+        out.append(item)
     return out
 
 

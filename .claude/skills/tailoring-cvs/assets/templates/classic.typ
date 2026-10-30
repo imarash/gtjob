@@ -64,7 +64,7 @@
   }
   for e in sec.entries { render-entry(e, sty) }
   if sec.kind == "certifications" and sec.lines.len() > 0 {
-    par(sec.lines.join(contact-separator))
+    par(cert-line(sec))
   } else {
     for l in sec.lines { block(below: 0.3em)[#l] }
   }

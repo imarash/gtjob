@@ -88,6 +88,20 @@
   }
 }
 
+#let link-ink = rgb("#1F4E79")
+
+// Certification names as text links. The visible words stay the certificate name.
+#let cert-line(sec) = {
+  let linked = sec.at("link_lines", default: ())
+  if linked.len() > 0 {
+    linked
+      .map(c => if c.url != "" { underline(text(fill: link-ink)[#link(c.url)[#c.text]]) } else { [#c.text] })
+      .join(contact-separator)
+  } else {
+    sec.lines.join(contact-separator)
+  }
+}
+
 // One section, dispatched on its kind. Empty sections are skipped by the caller (the data builder omits them).
 #let render-section(sec, sty) = {
   section-title(sec.title, sty)
@@ -97,7 +111,7 @@
   }
   for e in sec.entries { render-entry(e, sty) }
   if sec.kind == "certifications" and sec.lines.len() > 0 {
-    par(sec.lines.join(contact-separator))
+    par(cert-line(sec))
   } else {
     for l in sec.lines { block(below: 0.3em)[#l] }
   }

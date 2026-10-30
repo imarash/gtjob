@@ -145,6 +145,40 @@ def test_restore_bullet_in_profile_order(tailored, profile):
     assert "exp-1.b6" not in [o["profile_id"] for o in appended["omitted"]]
 
 
+def test_restore_certification(tailored, profile):
+    dropped = apply_one(tailored, profile, op("drop", "t-cert-1"))
+    assert dropped["certifications"] == []
+    assert "cert-1" in [o["profile_id"] for o in dropped["omitted"]]
+    back = apply_one(dropped, profile, op("restore", "cert-1"))
+    cert = back["certifications"][0]
+    assert cert["id"] == "t-cert-1" and cert["profile_id"] == "cert-1"
+    assert cert["name"] == "AWS Certified Cloud Practitioner" and cert["priority"] == 3
+    assert "cert-1" not in [o["profile_id"] for o in back["omitted"]]
+    with pytest.raises(CvtError) as present:
+        apply_one(back, profile, op("restore", "cert-1"))
+    assert present.value.err_id == edits.ERR_TARGET
+    with pytest.raises(CvtError) as missing:
+        apply_one(tailored, profile, op("restore", "cert-9"))
+    assert missing.value.err_id == edits.ERR_TARGET
+
+
+def test_restore_certification(tailored, profile):
+    dropped = apply_one(tailored, profile, op("drop", "t-cert-1"))
+    assert dropped["certifications"] == []
+    dropped["omitted"].append({"profile_id": "cert-1", "reason": "test"})
+    back = apply_one(dropped, profile, op("restore", "cert-1"))
+    cert = back["certifications"][0]
+    assert cert["id"] == "t-cert-1" and cert["profile_id"] == "cert-1"
+    assert cert["name"] == "AWS Certified Cloud Practitioner" and cert["priority"] == 3
+    assert "cert-1" not in [item["profile_id"] for item in back["omitted"]]
+    with pytest.raises(CvtError) as present:
+        apply_one(back, profile, op("restore", "cert-1"))
+    assert present.value.err_id == edits.ERR_TARGET
+    with pytest.raises(CvtError) as missing:
+        apply_one(tailored, profile, op("restore", "cert-9"))
+    assert missing.value.err_id == edits.ERR_TARGET
+
+
 def test_restore_role_and_errors(tailored, profile):
     dropped = apply_one(tailored, profile, op("drop", "t-exp-1"))
     back = apply_one(dropped, profile, op("restore", "exp-1"))

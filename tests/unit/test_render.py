@@ -98,6 +98,16 @@ def test_junior_model_validates_and_orders_sections() -> None:
     assert len(model["meta"]["keywords"]) <= render.MAX_KEYWORDS and model["meta"]["keywords"]
 
 
+def test_certification_links_follow_the_profile_url() -> None:
+    tailored = _tailored()
+    cert = tailored["certifications"][0]
+    cert["url"] = "https://www.credly.com/badges/example"
+    model = _build(tailored)
+    section = next(s for s in model["sections"] if s["kind"] == "certifications")
+    assert section["link_lines"][0] == {"text": cert["name"], "url": cert["url"]}
+    assert f"[{cert['name']}]({cert['url']})" in render.render_markdown(model)
+
+
 def test_contacts_order_and_labels() -> None:
     t = _tailored()
     t["header"].update({

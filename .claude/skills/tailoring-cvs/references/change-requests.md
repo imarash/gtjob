@@ -28,6 +28,7 @@ numbers in the reply ("edit 3") are the `[N]` labels of the last `cvt diff`; map
    - "drop Mindgeek": `drop` the whole entry (`t-exp-N`).
    - "lead with the banking work": `move_before` plus `set_field` with `field: emphasis`.
    - "drop the Earlier experience line": `set_field`, `field: include_earlier_experience`, `value: "false"`.
+   - "keep the certifications": `restore` each exam certificate by profile id (`cert-N`), then `set_priority` `"1"` on the ones the JD names. Restoring renumbers `t-cert-N` by profile order, so priority and move ops come after every restore.
 4. `replace_text` and `add_skill` need `source_refs`: profile ids or active/proposed attestations that support every
    term and number in the new text. No refs, no op.
 5. Refuse an instruction that would add an unsupported claim (a tool, number, employer, or skill with no source).
@@ -56,7 +57,7 @@ element's `t-*` id, status (`pending`, `approved`, `rejected`, `auto`), and orig
   `remove_skill`, `set_priority`. `field` is set only for `set_field` (`headline`, `summary`, `template`,
   `include_earlier_experience`, `emphasis`, `page_target`, `paper`).
 - `reject` restores the original profile text if one exists, else drops the item.
-- `drop` records the item in `omitted`. `restore` takes a profile id (for example `exp-5`) from `omitted`.
+- `drop` records the item in `omitted`. `restore` takes a profile id from `omitted` or from the profile: `exp-N` (role), `exp-N.eM` (engagement), `exp-N[.eM].bK` (bullet), or `cert-N` (certification). A restored certification is inserted in profile order and the `t-cert-N` ids are renumbered.
 - `add_skill` / `remove_skill`: `target_id` is the skills group (`t-skl-N`), `value` the skill name.
 - `set_priority`: `value` is `"1"` to `"5"`. Lower priority drops first when fitting pages.
 - `move_before`: `target_id` moves before the id in `value`; both must be siblings of the same kind.
