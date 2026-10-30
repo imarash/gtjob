@@ -29,6 +29,7 @@ Structure
 - An intro paragraph before the bullets goes in the entry's `summary_lines`.
 - Bullets directly under an employer (no engagement) go in `work.highlights`.
 - Skills: one entry per labeled line group (`name` = label as written). An unlabeled list has `name: ""`.
+- A Certifications, Certificates, Licenses, or Badges section is `certificates`, never `other_sections`. One entry per credential, split on `·` or a new line. Wrapped continuation lines stay inside that credential. `date` is `""` when the CV gives none.
 - Anything else (languages, awards, projects) goes in `other_sections`, titled as written.
 
 Values
@@ -78,7 +79,7 @@ an employer line usually ends with its date span on the same line.
   "Current" becomes `present`. Write `date_text` exactly as the CV does.
 - Education: `study_type` and `area` come from the line (`BSc`, `Computer Science`). `end_date` is the year or
   month shown.
-- Certificates: `name` as written, `issuer` only when stated, `date` normalized.
+- Certificates: `name` as written, `issuer` only when stated, `date` normalized. A section titled Certifications is always `certificates`, one entry per name, even when the PDF wraps them into one paragraph and gives no dates. Do not park that block in `other_sections`.
 - Skills lines: `profile-build` strips the leading label and splits keywords on `,`, `;`, `|`, and bullet
   separators. Do not split skill lines yourself.
 - Cross-checks worth recording (as `source_issues`): two roles whose dates overlap by a month or more; a degree year inside a work date range; a missing phone, location, or LinkedIn; a stale "Updated" line; a summary that names a language or tool the skills list lacks. A role that ends in the same month and year another starts is a handoff, not an overlap, and is not recorded.
