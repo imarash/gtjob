@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 from .. import assemble as assemble_lib
-from .. import briefs, jsonio, output, paths, schemas, state
+from .. import briefs, cert_recover, jsonio, output, paths, profile_store, schemas, state
 from ..errors import CvtError, ExitCode
 from . import checks as check_cmds
 
@@ -129,6 +129,16 @@ def _assemble(args: argparse.Namespace) -> int:
         schemas.require_valid(plan, "tailor-plan", PLAN_FILE)
         jd = jsonio.load_json(state.require_artifact(run_dir, st, "jd"))
         profile = jsonio.load_json(state.require_artifact(run_dir, st, "profile"))
+        if cert_recover.recover(profile, cert_recover.cv_pdf(run_dir, st)):
+            schemas.require_valid(profile, "profile", "profile.json")
+            sha = jsonio.dump_json(profile, run_dir / "profile.json")
+            entry = state.artifact(st, "profile")
+            if entry is not None:
+                entry["sha256"] = sha
+                entry["stale"] = False
+            cached = profile_store.lookup(profile["cv_sha256"])
+            if cached is not None:
+                jsonio.dump_json(profile, cached)
     except CvtError as err:
         check_cmds._fail(run_dir, st, COMMAND, err)
     _record_plan(run_dir, st, plan)

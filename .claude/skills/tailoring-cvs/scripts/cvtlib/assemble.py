@@ -35,6 +35,7 @@ OTHER_LINK_LABEL = "Link"
 DEGREE_SEPARATOR = ", "
 LOCATION_SEPARATOR = ", "
 HEADER_ITEM = "t-header"
+KEPT_CERT_PRIORITY = 1  # a certificate the plan omitted is still kept; page-fit cannot drop priority 1
 
 
 def _violation(item_id: str, message: str, code: str = PLAN_REF) -> dict:
@@ -236,7 +237,18 @@ def _earlier(plan: dict, ix: _Index, review: str, bad: list[dict]) -> dict:
     return {"include": bool(plan_e["include"]), "items": items, "review": review}
 
 
-def _certifications(plan: dict, ix: _Index, bad: list[dict]) -> list[dict]:
+def _cert_item(cert: dict, priority: int, name: str | None = None) -> dict:
+    item = {
+        "id": "", "profile_id": cert["id"], "name": name if name is not None else cert["name"],
+        "priority": priority,
+    }
+    url = (cert.get("url") or "").strip()
+    if url:
+        item["url"] = url
+    return item
+
+
+def _certifications(plan: dict, ix: _Index, certificates: list[dict], bad: list[dict]) -> list[dict]:
     out: list[dict] = []
     for pc in plan["certifications"]:
         cert = ix.certs.get(pc["profile_id"])
@@ -245,11 +257,13 @@ def _certifications(plan: dict, ix: _Index, bad: list[dict]) -> list[dict]:
             continue
         short = pc["short_name"]
         name = short if short and prof.comparable(short) in prof.comparable(cert["name"]) else cert["name"]
-        item = {"id": f"t-cert-{len(out) + 1}", "profile_id": cert["id"], "name": name, "priority": pc["priority"]}
-        url = (cert.get("url") or "").strip()
-        if url:
-            item["url"] = url
-        out.append(item)
+        out.append(_cert_item(cert, pc["priority"], name))
+    seen = {item["profile_id"] for item in out}
+    for cert in certificates:
+        if cert["id"] not in seen:
+            out.append(_cert_item(cert, KEPT_CERT_PRIORITY))
+    for index, item in enumerate(out, 1):
+        item["id"] = f"t-cert-{index}"
     return out
 
 
@@ -287,6 +301,8 @@ def assemble(plan: dict, profile: dict, attestations: list[dict], jd: dict, stat
     bad: list[dict] = []
     basics = merged["basics"]
     experience = [e for pe in plan["experience"] if (e := _entry(pe, ix, review, bad)) is not None]
+    certs = _certifications(plan, ix, merged["certificates"], bad)
+    kept_certs = {c["profile_id"] for c in certs}
     tailored = {
         "schema_version": SCHEMA_VERSION, "run_id": run_slug, "person_slug": profile["person_slug"],
         "profile_sha256": _profile_sha(state), "jd_sha256": jd["jd_sha256"], "version": INITIAL_VERSION,
@@ -302,10 +318,10 @@ def assemble(plan: dict, profile: dict, attestations: list[dict], jd: dict, stat
         "skills": _skills(plan, ix, review, bad),
         "experience": experience,
         "earlier_experience": _earlier(plan, ix, review, bad),
-        "certifications": _certifications(plan, ix, bad),
+        "certifications": certs,
         "education": _education(plan, ix, bad),
         "talking_points": [{"text": t["text"], "source_refs": list(t["source_refs"])} for t in plan["talking_points"]],
-        "omitted": [dict(o) for o in plan["omitted"]],
+        "omitted": [dict(o) for o in plan["omitted"] if o["profile_id"] not in kept_certs],
         "open_items": [{"kind": o["kind"], "text": o["text"], "item_ids": list(o["item_ids"])}
                        for o in plan["open_items"]],
     }

@@ -314,3 +314,15 @@ def test_assemble_schema_invalid_plan(workspace, capsys):
     run_dir = _make_run(workspace, plan=plan)
     code, _out, err = _cvt(capsys, "assemble", run_dir.name)
     assert code == 1 and "E_SCHEMA" in err
+
+
+def test_omitted_plan_still_keeps_every_certificate():
+    plan = _golden("tailor-plan")
+    profile = _golden("profile")
+    plan["certifications"] = []
+    plan["omitted"].append({"profile_id": "cert-1", "reason": "space"})
+    tailored, violations = assemble.assemble(plan, profile, _atts("att-001"), _golden("jd"), _unit_state())
+    assert violations == []
+    assert [c["profile_id"] for c in tailored["certifications"]] == ["cert-1"]
+    assert tailored["certifications"][0]["priority"] == assemble.KEPT_CERT_PRIORITY
+    assert all(o["profile_id"] != "cert-1" for o in tailored["omitted"])
