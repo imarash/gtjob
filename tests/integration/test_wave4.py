@@ -137,6 +137,7 @@ def test_fake_client_from_dir_orders_numbered_attempts(tmp_path: Path) -> None:
 
 def test_fake_llm_is_off_by_default(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(FAKE_LLM_ENV, raising=False)
+    monkeypatch.setenv("GTJOB_PROVIDER", "anthropic")  # a local Cursor login must not satisfy this path
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     code, io = run_gtjob(["tailor", "--cv", str(CV_FIXTURE), "--jd", str(JD_FIXTURE), "--auto"])
     assert code == 3 and "E_API_KEY" in "\n".join(io.errors)

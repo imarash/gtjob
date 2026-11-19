@@ -5,6 +5,74 @@ import path from "node:path";
 const SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$/;
 
 /**
+ * The error line plus the violation bullets printed under it.
+ * @param {string} text
+ */
+export function formatRunError(text) {
+  const raw = String(text || "");
+  const lines = raw
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line, i, all) => line.trim() || (i > 0 && all[i + 1]?.trim()));
+  let index = -1;
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    if (/error\[/.test(lines[i])) {
+      index = i;
+      break;
+    }
+  }
+  if (index < 0) return lines.at(-1)?.trim() || "";
+  /** @type {string[]} */
+  const out = [];
+  const head = lines[index].replace(/^cvt:\s*/, "").trim();
+  out.push(head);
+  for (const line of lines.slice(index + 1)) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (out.length && out.at(-1) !== "") out.push("");
+      continue;
+    }
+    if (trimmed.startsWith("hint:")) continue;
+    if (trimmed.startsWith("+") && /more \(/.test(trimmed)) continue;
+    out.push(line.trimEnd());
+    if (/^Your answers could not be saved:/.test(trimmed)) {
+      // keep the whole guided block (• q-N lines)
+      continue;
+    }
+  }
+  return out.join("\n").trim();
+}
+
+/**
+ * What the tailor panel should show after `gtjob continue` exits.
+ * A crash while questions are still open is an error. Exit 6 is the normal pause.
+ * @param {number} code
+ * @param {string} stage
+ * @param {string} [stderr]
+ * @returns {{ phase: string, message: string }}
+ */
+export function continueOutcome(code, stage, stderr) {
+  const gate = stage === "awaiting_answers" || stage === "awaiting_approval";
+  if (code === 6 || (code === 0 && gate)) {
+    if (stage === "awaiting_approval") {
+      return { phase: "awaiting_approval", message: "The draft is ready for approval." };
+    }
+    return { phase: "awaiting_answers", message: "A few questions are waiting." };
+  }
+  if (code !== 0) {
+    return {
+      phase: "error",
+      message: formatRunError(stderr) || "The run stopped before the PDF was ready.",
+    };
+  }
+  if (stage === "reported") return { phase: "finished", message: "The tailored CV is ready." };
+  return {
+    phase: "error",
+    message: stage ? `The run stopped while it was still at ${stage}.` : "The run stopped before the PDF was ready.",
+  };
+}
+
+/**
  * @param {string} root
  */
 export function inferDir(root) {

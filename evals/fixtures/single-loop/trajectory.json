@@ -1,0 +1,17 @@
+{
+  "refuse_then_ingest": [
+    {"tool": "approve", "stage": "", "detail": ""},
+    {"tool": "ingest", "stage": "", "detail": ""}
+  ],
+  "check_twice": [
+    {"tool": "write-jd", "stage": "", "detail": ""},
+    {"tool": "write-jd", "stage": "", "detail": ""}
+  ],
+  "resume_illegal": [
+    {"tool": "ingest", "stage": "", "detail": ""}
+  ],
+  "spin": [
+    {"tool": "status", "stage": "", "detail": ""},
+    {"tool": "status", "stage": "", "detail": ""}
+  ]
+}

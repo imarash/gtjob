@@ -176,6 +176,14 @@ def test_unsupported_skill():
     assert found and found[0]["item_id"] == "t-skl-1" and "Kubernetes" in found[0]["message"]
 
 
+def test_comma_separated_skill_keeps_only_backed_terms():
+    plan = _golden("tailor-plan")
+    plan["skills"][0]["items"].append({"name": "Helm, Pulumi", "source_refs": []})
+    tailored, violations = _run(plan)
+    names = [i["name"] for g in tailored["skills"] for i in g["items"]]
+    assert "Helm" in names and "Pulumi" not in names and violations == []
+
+
 def test_skill_resolves_to_attestation_when_no_group_has_it():
     tailored, violations = _run(_golden("tailor-plan"))
     helm = next(i for g in tailored["skills"] for i in g["items"] if i["name"] == "Helm")
@@ -191,18 +199,43 @@ def test_skill_falls_back_to_highlights():
     assert docker["source_refs"] == ["exp-1.b3", "exp-1.b6"] and violations == []
 
 
-def test_invented_employer_in_rewrite_bullet_is_caught_by_provenance():
+def test_invented_employer_in_rewrite_bullet_is_replaced_with_the_source():
     plan = _golden("tailor-plan")
     _bullets(plan)[1]["text"] = "Replaced manual console changes at Contoso Labs with Terraform modules."
-    _tailored, violations = _run(plan)
-    found = [v for v in violations if v["code"] == "unsupported_term"]
-    assert found and found[0]["item_id"] == "t-exp-1.b2" and "Contoso" in found[0]["message"]
+    tailored, violations = _run(plan)
+    bullet = next(b for e in tailored["experience"] for b in e["bullets"] if b["id"] == "t-exp-1.b2")
+    assert violations == [] and "Contoso" not in bullet["text"]
 
 
-def test_invented_metric_in_rewrite_bullet_is_caught():
+def test_invented_metric_in_rewrite_bullet_is_replaced_with_the_source():
     plan = _golden("tailor-plan")
     _bullets(plan)[1]["text"] = "Replaced manual console changes across 40 environments with Terraform modules."
-    assert any(v["code"] == "unsupported_number" for v in _run(plan)[1])
+    tailored, violations = _run(plan)
+    bullet = next(b for e in tailored["experience"] for b in e["bullets"] if b["id"] == "t-exp-1.b2")
+    assert violations == [] and "40" not in bullet["text"]
+
+
+def test_unsupported_headline_term_is_dropped_instead_of_pasting_the_summary():
+    plan = _golden("tailor-plan")
+    plan["headline"]["text"] += " · ContosoMesh"
+    tailored, violations = _run(plan)
+    headline = tailored["header"]["headline"]
+    summary = tailored["summary"]["text"]
+    assert "ContosoMesh" not in headline
+    assert "Terraform" in headline and "GitHub Actions" in headline
+    assert headline != summary and not summary.startswith(headline)
+    assert not any(v["item_id"] == "t-header" for v in violations)
+
+
+def test_headline_that_repeats_the_summary_is_cleared():
+    plan = _golden("tailor-plan")
+    summary = _golden("profile")["summary"][0]["text"]
+    plan["headline"] = {"text": summary, "source_refs": ["sum-1"]}
+    plan["summary"] = {"text": summary, "source_refs": ["sum-1"]}
+    tailored, violations = _run(plan)
+    assert tailored["header"]["headline"] == ""
+    assert tailored["summary"]["text"] == summary
+    assert not any(v["item_id"] == "t-header" for v in violations)
 
 
 def test_violations_are_returned_together():
@@ -297,15 +330,16 @@ def test_assemble_failure_is_terse_and_points_to_brief_fix(workspace, capsys):
 
 def test_assemble_failure_json_envelope(workspace, capsys):
     plan = _golden("tailor-plan")
-    _bullets(plan)[1]["text"] = "Replaced manual changes at Contoso Labs with Terraform modules."
+    for b in _bullets(plan):
+        b.update(op="keep", text="x")
     run_dir = _make_run(workspace, plan=plan)
     code, out, _err = _cvt(capsys, "--json", "assemble", run_dir.name)
     env = json.loads(out)
-    assert code == 1 and env["ok"] is False and env["data"]["violations"][0]["item_id"] == "t-exp-1.b2"
+    assert code == 1 and env["ok"] is False and env["data"]["violations"][0]["item_id"] == "t-exp-1.b1"
     assert env["error"]["hint"].endswith(f"brief fix {run_dir.name}")
     st = state.load(run_dir)
     assert st["history"][-1]["event"] == "assemble" and st["status"] == "failed"
-    assert (run_dir / "tailored.json").is_file()  # provenance failures keep the version for the fix loop
+    assert not (run_dir / "tailored.json").is_file()
 
 
 def test_assemble_schema_invalid_plan(workspace, capsys):

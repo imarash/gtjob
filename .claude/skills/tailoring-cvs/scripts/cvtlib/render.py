@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
-from . import jsonio, paths, schemas, state
+from . import assemble, jsonio, paths, schemas, state
 from .errors import CvtError, ExitCode
 
 PRESETS_FILE = "templates/presets.json"
@@ -250,6 +250,9 @@ def build_render_model(
             raise CvtError(ExitCode.USAGE, "E_USAGE", f"unknown {label} '{value}'", hint=f"use one of: {', '.join(allowed)}")
     header = tailored["header"]
     name, target = header["name"], tailored["target"]["title"]
+    sections = _sections(tailored, set(dropped_ids))
+    summary = next((p for sec in sections if sec["kind"] == "summary" for p in sec["paragraphs"]), "")
+    headline = "" if assemble.headline_repeats_summary(header["headline"], summary) else header["headline"]
     return {
         "schema_version": "1",
         "meta": {
@@ -257,8 +260,8 @@ def build_render_model(
             "author": name, "subject": target, "keywords": _keywords(tailored, dropped_ids), "draft": bool(draft),
         },
         "theme": {"template": template, "paper": paper, "density": density, "accent": DEFAULT_ACCENT},
-        "header": {"name": name, "headline": header["headline"], "contacts": _contacts(header)},
-        "sections": _sections(tailored, set(dropped_ids)),
+        "header": {"name": name, "headline": headline, "contacts": _contacts(header)},
+        "sections": sections,
     }
 
 

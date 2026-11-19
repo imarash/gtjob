@@ -100,12 +100,13 @@ def test_bad_yaml_exits_2_before_creating_a_run(workspace: Path, tmp_path: Path)
 
 
 def test_missing_api_key_exits_3_with_hint(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GTJOB_PROVIDER", "anthropic")  # a local Cursor login must not satisfy this path
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     io = interact.ScriptedIO(interactive=False)
     assert cli.main(TAILOR, io=io) == EXIT_MISSING_DEPENDENCY  # the real ApiRunner, no key
     errors = "\n".join(io.errors)
     assert "E_API_KEY" in errors and "ANTHROPIC_API_KEY" in errors and "hint:" in errors
-    assert state.load(only_run(workspace))["stage"] == "ingested"  # saved, resumable
+    assert state.load(only_run(workspace))["stage"] == "initialized"  # saved before the first model call, resumable
 
 
 def test_bad_model_flag_is_a_usage_error(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:

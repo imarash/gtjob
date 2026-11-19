@@ -169,13 +169,15 @@ def _assemble(cvt: Cvt, run: str, base: dict, mutate: Mutation) -> dict:
     return env
 
 
-def test_plan_with_an_invented_employer_in_a_rewrite_is_rejected(cvt: Cvt, plan_run: tuple[str, dict]) -> None:
+def test_plan_with_an_invented_employer_in_a_rewrite_is_replaced(cvt: Cvt, plan_run: tuple[str, dict]) -> None:
     run, base = plan_run
     text = "Replaced manual console changes at Initech Corp with Terraform modules for AWS networking and ECS services."
-    env = _assemble(cvt, run, base, lambda p: p["experience"][0]["bullets"][1].update(text=text))
-    pairs = _pairs(env)
-    assert ("unsupported_term", "bullet t-exp-1.b2 mentions 'Initech'; not found in refs [exp-1.b2]") in pairs
-    assert {v["item_id"] for v in _violations(env)} == {"t-exp-1.b2"}
+    plan = copy.deepcopy(base)
+    plan["experience"][0]["bullets"][1]["text"] = text
+    jsonio.dump_json(plan, cvt.out(run) / "tailor-plan.json")
+    env = cvt("assemble", run).envelope
+    tailored = jsonio.load_json(cvt.out(run) / "tailored.json")
+    assert env["ok"] is True and "Initech" not in json.dumps(tailored)
 
 
 def test_plan_keep_with_text_is_rejected(cvt: Cvt, plan_run: tuple[str, dict]) -> None:

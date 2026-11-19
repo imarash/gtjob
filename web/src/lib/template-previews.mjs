@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { workspaceOf } from "./paths.mjs";
 import { SLUG_RE } from "./runs.mjs";
 
 /**
@@ -10,7 +11,7 @@ import { SLUG_RE } from "./runs.mjs";
  */
 export function renderTemplatePreviews(root, slug) {
   if (!SLUG_RE.test(slug)) throw new Error("Name the run.");
-  const outDir = path.resolve(root, "out");
+  const outDir = path.resolve(workspaceOf(root), "out");
   const runDir = path.resolve(outDir, slug);
   if (!runDir.startsWith(`${outDir}${path.sep}`)) throw new Error("Name the run.");
   if (!existsSync(path.join(runDir, "tailored.json"))) {

@@ -131,8 +131,12 @@ def run_stage_checked(
     run_dir = Path(run_dir)
     if max_attempts < 1:
         raise CvtError(ExitCode.USAGE, "E_USAGE", "max_attempts must be at least 1", hint="use the default of 2")
-    prompt = prompts.build_prompt(stage, run_dir, config=config, extra=extra)
     path = output_path(stage, run_dir)
+    if extra is None and path.is_file():
+        current = run_check(stage, run_dir)
+        if current.code == 0:
+            return path
+    prompt = prompts.build_prompt(stage, run_dir, config=config, extra=extra)
     result = CheckResult(0, {}, [])
     for attempt in range(1, max_attempts + 1):
         if attempt == 1:
@@ -147,9 +151,19 @@ def run_stage_checked(
             return path
         if result.code != int(ExitCode.CHECK_FAILED):
             raise _check_error(stage, result)
+    message = f"{stage} still fails its check after {max_attempts} attempts ({len(result.violations)} violations)"
+    if stage == "answer_parse" and result.violations:
+        from cvtlib import answers as answers_mod
+
+        qpath = run_dir / "questions.json"
+        questions = jsonio.load_json(qpath) if qpath.is_file() else None
+        raw = ""
+        if path.is_file():
+            raw = jsonio.load_json(path).get("raw_text", "")
+        if extra := answers_mod.user_violation_lines(result.violations, questions, raw):
+            message = f"{message}\n\nYour answers could not be saved:\n" + "\n".join(extra)
     raise CvtError(
-        ExitCode.CHECK_FAILED, CHECK_FAILED_ID,
-        f"{stage} still fails its check after {max_attempts} attempts ({len(result.violations)} violations)",
+        ExitCode.CHECK_FAILED, CHECK_FAILED_ID, message,
         hint=CHECK_FAILED_HINT.format(out=briefs.STAGE_SPECS[stage].out), violations=result.violations,
     )
 

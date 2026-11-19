@@ -2,7 +2,9 @@ import { advanceRun } from "@/lib/cvt-advance.mjs";
 import { buildToolArgv } from "@/lib/cvt-args.mjs";
 import { spawnTool } from "@/lib/cvt-spawn.mjs";
 import { startPolishRun } from "@/lib/polish-run.mjs";
-import { gtjobRoot } from "@/lib/studio-data";
+import { resolvePaths } from "@/lib/paths.mjs";
+import { priorAnswers } from "@/lib/prior-answers.mjs";
+import { gtjobRoot, workspaceRoot } from "@/lib/studio-data";
 import { renderTemplatePreviews } from "@/lib/template-previews.mjs";
 
 export const maxDuration = 180;
@@ -15,6 +17,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Expected JSON." }, { status: 400 });
   }
   const root = gtjobRoot();
+  const workspace = workspaceRoot();
   if (body.command === "render-templates") {
     const run = typeof body.run === "string" ? body.run : "";
     try {
@@ -33,6 +36,12 @@ export async function POST(request: Request) {
       return Response.json({ error: message }, { status: 400 });
     }
   }
+  if (body.command === "prior-answers") {
+    const run = typeof body.run === "string" ? body.run : "";
+    if (!run) return Response.json({ error: "Name the run." }, { status: 400 });
+    const paths = resolvePaths(root);
+    return Response.json({ priors: priorAnswers(paths.outDir, run) });
+  }
   if (body.command === "advance") {
     const run = typeof body.run === "string" ? body.run : "";
     if (!run) return Response.json({ error: "Name the run." }, { status: 400 });
@@ -45,7 +54,7 @@ export async function POST(request: Request) {
   }
   let built;
   try {
-    built = buildToolArgv(body, { gtjobRoot: root });
+    built = buildToolArgv(body, { gtjobRoot: root, workspaceRoot: workspace });
   } catch (error) {
     const message = error instanceof Error ? error.message : "That command is not available.";
     return Response.json({ error: message }, { status: 400 });

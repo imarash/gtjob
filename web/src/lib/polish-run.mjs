@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { workspaceOf } from "./paths.mjs";
 import { SLUG_RE } from "./runs.mjs";
 
 const SLUG_MAX = 121;
@@ -61,7 +62,8 @@ export function startPolishRun(root, cvName) {
   if (!name || name !== cvName || name.startsWith(".") || name.includes("\0")) {
     throw new Error("Pick a file by its name in CVs/.");
   }
-  const cvPath = path.join(root, "CVs", name);
+  const workspace = workspaceOf(root);
+  const cvPath = path.join(workspace, "CVs", name);
   if (!existsSync(cvPath)) throw new Error("That CV is not in CVs/.");
   const script = path.join(root, ".claude", "skills", "tailoring-cvs", "scripts", "polish_render.py");
   const result = spawnSync("uv", ["run", script, "extract", cvPath], {
@@ -82,7 +84,7 @@ export function startPolishRun(root, cvName) {
   }
   const text = String(result.stdout || "");
   if (!text.trim()) throw new Error("The CV has no readable text.");
-  const outDir = path.join(root, "out");
+  const outDir = path.join(workspace, "out");
   mkdirSync(outDir, { recursive: true });
   /** @type {Set<string>} */
   const taken = new Set();

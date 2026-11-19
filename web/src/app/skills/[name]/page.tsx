@@ -36,8 +36,8 @@ export default async function SkillPage({ params }: { params: Promise<{ name: st
         <h2 className="text-headline-medium text-text-primary">From Studio</h2>
         <SkillTools
           id={skill.id}
-          cvs={listDirFiles(path.join(paths.gtjobRoot, "CVs"))}
-          jds={listDirFiles(path.join(paths.gtjobRoot, "JDs"))}
+          cvs={listDirFiles(path.join(paths.workspaceRoot, "CVs"))}
+          jds={listDirFiles(path.join(paths.workspaceRoot, "JDs"))}
           slugs={slugs}
           replies={replies}
         />

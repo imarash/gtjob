@@ -76,9 +76,10 @@ def _build(run_dir: Path, stage: str, **kw) -> briefs.Brief:
 
 
 def _fail_run(run_dir: Path, plan: dict | None = None) -> None:
-    """Leave the run failed after an `assemble` whose plan cites an invented employer."""
+    """Leave the run failed after an `assemble` whose plan keeps a bullet and also rewrites it."""
     plan = plan or _golden("tailor-plan")
-    plan["experience"][0]["bullets"][1]["text"] = "Replaced manual console changes at Contoso Labs with Terraform."
+    plan["experience"][0]["bullets"][1].update(
+        op="keep", text="Replaced manual console changes at Contoso Labs with Terraform.")
     jsonio.dump_json(plan, run_dir / "tailor-plan.json")
     assert cli.main(["assemble", run_dir.name]) == 1
 

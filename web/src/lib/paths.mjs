@@ -2,18 +2,31 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 /**
+ * Where CVs, JDs, and runs live. `GTJOB_HOME` is the same variable cvt uses,
+ * so Studio and `gtjob` share one workspace when a test or a second checkout sets it.
+ * @param {string} repo
+ * @param {NodeJS.ProcessEnv} [env]
+ */
+export function workspaceOf(repo, env = process.env) {
+  const home = env.GTJOB_HOME?.trim();
+  return home ? path.resolve(home) : path.resolve(repo);
+}
+
+/**
  * @param {string} gtjobRoot
  * @param {NodeJS.ProcessEnv} [env]
  */
 export function resolvePaths(gtjobRoot, env = process.env) {
   const root = path.resolve(gtjobRoot);
+  const workspace = workspaceOf(root, env);
   const careerRaw = env.CAREER_OPS_ROOT?.trim() ?? "";
   const careerOpsRoot = careerRaw ? path.resolve(careerRaw) : null;
   const tracker = careerOpsRoot ? trackerFile(careerOpsRoot) : null;
   const dossier = path.resolve(root, "..", "dossier");
   return {
     gtjobRoot: root,
-    outDir: path.join(root, "out"),
+    workspaceRoot: workspace,
+    outDir: path.join(workspace, "out"),
     careerOpsRoot,
     trackerPath: tracker,
     setStatusPath: careerOpsRoot ? path.join(careerOpsRoot, "set-status.mjs") : null,
@@ -23,7 +36,7 @@ export function resolvePaths(gtjobRoot, env = process.env) {
     followupsPath: careerOpsRoot ? path.join(careerOpsRoot, "data", "follow-ups.md") : null,
     statusLogPath: tracker ? path.join(path.dirname(tracker), "status-log.tsv") : null,
     reportsDir: careerOpsRoot ? path.join(careerOpsRoot, "reports") : null,
-    inboxPath: path.join(root, ".studio", "inbox.json"),
+    inboxPath: path.join(workspace, ".studio", "inbox.json"),
     dossierPath: existsSync(dossier) ? dossier : null,
   };
 }

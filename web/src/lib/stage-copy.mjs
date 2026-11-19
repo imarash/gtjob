@@ -11,21 +11,21 @@ export function describeStage(stage) {
         blocked: "profile",
         title: "Reading your CV",
         detail:
-          "The text is extracted. This CV is not in the saved profile yet, so there is no tailored PDF. Cursor builds that profile from this page the first time, then later jobs reuse it.",
+          "The text is extracted. This CV is not in the saved profile yet, so there is no tailored PDF. The profile is built from this page the first time, then later jobs reuse it.",
       };
     case "profiled":
       return {
         blocked: "job",
         title: "Reading the job",
         detail:
-          "Your profile is saved. This job has not been analyzed before, so there is no PDF yet. Cursor writes that analysis from this page. A job that was analyzed before is reused.",
+          "Your profile is saved. This job has not been analyzed before, so there is no PDF yet. The job analysis is written from this page. A job that was analyzed before is reused.",
       };
     case "jd_analyzed":
       return {
         blocked: "match",
         title: "Matching your CV to the job",
         detail:
-          "The job is read. Cursor writes which of your experience matches it. The PDF is built from that match.",
+          "The job is read. The next step writes which of your experience matches it. The PDF is built from that match.",
       };
     case "matched":
     case "awaiting_answers":
@@ -38,7 +38,7 @@ export function describeStage(stage) {
       return {
         blocked: "tailor",
         title: "Writing the CV",
-        detail: "Your answers are in. Cursor writes the tailor plan from this page. The PDF comes after that plan is checked.",
+        detail: "Your answers are in. The tailor plan is written from this page. The PDF comes after that plan is checked.",
       };
     case "tailored":
     case "awaiting_approval":
@@ -91,3 +91,36 @@ export function stepIndex(stage) {
 }
 
 export const STEP_LABELS = ["Extract", "Profile", "Job", "Match", "PDF"];
+
+/**
+ * The step being worked on. The saved stage is the last finished one, so a run
+ * at `profiled` is already reading the job.
+ * @param {string} stage
+ */
+export function activeStep(stage) {
+  if (stage === "profiled") return 2;
+  if (stage === "jd_analyzed") return 3;
+  return stepIndex(stage);
+}
+
+/**
+ * One sentence for the long wait on a step. Never a shell command.
+ * @param {string} stage
+ */
+export function waitDetail(stage) {
+  if (stage === "initialized" || stage === "ingested" || stage === "") {
+    return "Reading the CV. This step often takes a few minutes.";
+  }
+  if (stage === "profiled") return "Reading the job. This step often takes a few minutes.";
+  if (stage === "jd_analyzed") return "Matching your experience to the posting.";
+  if (stage === "matched" || stage === "awaiting_answers") {
+    return "Preparing the questions.";
+  }
+  if (stage === "answers_applied" || stage === "tailored" || stage === "awaiting_approval") {
+    return "Writing the draft from the match.";
+  }
+  if (stage === "approved" || stage === "rendered" || stage === "validated" || stage === "reported") {
+    return "Rendering the PDF.";
+  }
+  return "Working through this CV. This usually takes a few minutes.";
+}

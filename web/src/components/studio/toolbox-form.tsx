@@ -2,12 +2,49 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { RiFileEditLine, RiSparkling2Line } from "@remixicon/react";
 import { Button, ButtonLink } from "@/components/base/buttons/button";
+import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { Select, SelectItem } from "@/components/base/select/select";
-import { Textarea } from "@/components/base/textarea/textarea";
 import { CursorConnect, InferPanel } from "@/components/studio/infer-panel";
-import { PillTab, PillTabList } from "@/components/base/tabs/pill-tab";
+import {
+  Composer,
+  DocumentSource,
+  ToolPicker,
+  defaultSourceMode,
+  type SourceMode,
+  type ToolChoice,
+} from "@/components/studio/tool-flow";
+import { providerStatus } from "@/lib/provider-hint.mjs";
 import { describeStage } from "@/lib/stage-copy.mjs";
+
+const ACCEPT = ".pdf,.md,.txt";
+
+const CV_MODES = [
+  { id: "library" as const, label: "Your files" },
+  { id: "upload" as const, label: "Upload" },
+];
+
+const JD_MODES = [
+  { id: "paste" as const, label: "Paste text" },
+  { id: "library" as const, label: "Saved" },
+  { id: "upload" as const, label: "Upload" },
+];
+
+const TOOLS: ToolChoice[] = [
+  {
+    id: "tailor",
+    title: "Tailor to a job",
+    summary: "Match one posting. The facts stay yours.",
+    icon: RiFileEditLine,
+  },
+  {
+    id: "polish",
+    title: "Polish a CV",
+    summary: "Keep every fact. No job to match.",
+    icon: RiSparkling2Line,
+  },
+];
 
 type Download = { file: string; label: string };
 
@@ -42,7 +79,7 @@ function layoutPdf(run: ToolboxRun, name: string) {
 }
 
 function runTitle(run: ToolboxRun) {
-  if (run.kind === "polish" && run.title && run.title !== run.slug) return run.title;
+  if (run.title && run.title !== run.slug) return run.title;
   return jobLabel(run.slug);
 }
 
@@ -62,9 +99,12 @@ export function ToolboxForm({
 }) {
   const router = useRouter();
   const [tool, setTool] = useState<"tailor" | "polish">("tailor");
+  const [cvMode, setCvMode] = useState<SourceMode>(defaultSourceMode(CV_MODES, cvs.length));
+  const [jdMode, setJdMode] = useState<SourceMode>(defaultSourceMode(JD_MODES, jds.length));
   const [cv, setCv] = useState(cvs[0] ?? "");
-  const [polishCv, setPolishCv] = useState(cvs[0] ?? "");
   const [jd, setJd] = useState(jds[0] ?? "");
+  const [uploadedCv, setUploadedCv] = useState("");
+  const [uploadedJd, setUploadedJd] = useState("");
   const [jdText, setJdText] = useState("");
   const [template, setTemplate] = useState("modern");
   const [withReply, setWithReply] = useState(true);
@@ -76,21 +116,46 @@ export function ToolboxForm({
   const [layoutPages, setLayoutPages] = useState<Record<string, number>>({});
   const [activeSlug, setActiveSlug] = useState("");
   const [connected, setConnected] = useState<boolean | null>(null);
+  const [cursorReady, setCursorReady] = useState<boolean | null>(null);
+  const [anthropicReady, setAnthropicReady] = useState(false);
+  const [provider, setProvider] = useState("cursor");
   const [loginUrl, setLoginUrl] = useState("");
+  const cvFiles = uploadedCv && !cvs.includes(uploadedCv) ? [uploadedCv, ...cvs] : cvs;
+  const jdFiles = uploadedJd && !jds.includes(uploadedJd) ? [uploadedJd, ...jds] : jds;
+  const chosenCv = cvMode === "upload" ? uploadedCv : cv;
+  const chosenJd = jdMode === "library" ? jd : jdMode === "upload" ? uploadedJd : "";
 
   const scoped = runs.filter((run) => (tool === "polish" ? run.kind === "polish" : run.kind !== "polish"));
+  // A visit starts on the form. A previous run is shown only after this session starts it or opens it.
   const pinned = scoped.find((run) => run.slug === activeSlug);
-  const working = pinned && !pinned.preview ? pinned : pinned ? undefined : scoped.find((run) => !run.preview);
-  const finished = pinned?.preview ? pinned : scoped.find((run) => run.preview && run.slug !== working?.slug);
-  const earlier = scoped.filter((run) => run.preview && run.slug !== finished?.slug);
+  const working = pinned && !pinned.preview ? pinned : undefined;
+  const finished = pinned?.preview ? pinned : undefined;
+  const openRuns = scoped.filter((run) => !run.preview);
+  const finishedRuns = scoped.filter((run) => run.preview);
+  const writingChoice = providerStatus("", {
+    provider,
+    cursor: cursorReady === true,
+    anthropic: anthropicReady,
+  });
 
   useEffect(() => {
     let stop = false;
     async function tick() {
       const response = await fetch("/api/infer");
-      const payload = (await response.json()) as { connected?: boolean; login?: { url?: string } };
+      const payload = (await response.json()) as {
+        connected?: boolean;
+        cursor?: boolean;
+        anthropic?: boolean;
+        provider?: string;
+        login?: { url?: string };
+      };
       if (stop) return;
       setConnected(Boolean(payload.connected));
+      setCursorReady(Boolean(payload.cursor));
+      setAnthropicReady(Boolean(payload.anthropic));
+      if (payload.provider === "auto" || payload.provider === "cursor" || payload.provider === "anthropic") {
+        setProvider(payload.provider);
+      }
       setLoginUrl(payload.login?.url || "");
     }
     void tick();
@@ -100,6 +165,16 @@ export function ToolboxForm({
       clearInterval(timer);
     };
   }, []);
+
+  async function chooseProvider(next: string) {
+    setProvider(next);
+    const response = await fetch("/api/infer", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ command: "provider", provider: next }),
+    });
+    if (!response.ok) setError("The provider was not saved.");
+  }
 
   async function connectCursor() {
     setPending(true);
@@ -138,7 +213,7 @@ export function ToolboxForm({
       return;
     }
     if (!response.ok) {
-      setError(payload.error || "Cursor did not start.");
+      setError(payload.error || "The run did not start.");
       return;
     }
     router.refresh();
@@ -159,8 +234,11 @@ export function ToolboxForm({
     }
     if (kind === "cv") {
       setCv(payload.name);
-      setPolishCv(payload.name);
-    } else setJd(payload.name);
+      setUploadedCv(payload.name);
+    } else {
+      setJd(payload.name);
+      setUploadedJd(payload.name);
+    }
     router.refresh();
   }
 
@@ -233,22 +311,82 @@ export function ToolboxForm({
     return layoutPdf(run, selected) || run.preview;
   }
 
+  function leaveRun() {
+    setActiveSlug("");
+    setLayout("");
+    setNotice("");
+    setError("");
+  }
+
+  function openRun(slug: string) {
+    const match = runs.find((item) => item.slug === slug);
+    if (match) setTool(match.kind === "polish" ? "polish" : "tailor");
+    setActiveSlug(slug);
+    setLayout("");
+    setNotice("");
+    setError("");
+  }
+
   function selectTool(next: "tailor" | "polish") {
+    if (next !== tool) leaveRun();
     setTool(next);
     setError("");
     setNotice("");
-    setLayout("");
   }
 
-  async function startPolish(event: { preventDefault: () => void }) {
-    event.preventDefault();
+  const jdReady = jdMode === "paste" ? jdText.trim().length > 0 : Boolean(chosenJd);
+  const cvReady = Boolean(chosenCv);
+  const canSubmit = writingChoice.canContinue && cvReady && (tool === "polish" || jdReady);
+  const selectedTool = TOOLS.find((item) => item.id === tool) ?? TOOLS[0];
+
+  async function startTailor() {
+    setPending(true);
+    setError("");
+    setNotice("");
+    const pasted = jdMode === "paste" ? jdText.trim() : "";
+    const response = await fetch("/api/cvt", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        command: "init",
+        cv: chosenCv,
+        jd: pasted ? "" : chosenJd,
+        jdText: pasted,
+        template,
+      }),
+    });
+    const payload = (await response.json()) as {
+      error?: string;
+      envelope?: { ok?: boolean; run?: string; error?: { message?: string } };
+      advance?: { message?: string; stage?: string; blocked?: string };
+    };
+    setPending(false);
+    if (!response.ok) {
+      setError(payload.error || "The run did not start.");
+      return;
+    }
+    if (!payload.envelope?.ok || !payload.envelope.run) {
+      setError(payload.envelope?.error?.message || payload.error || "The run did not start.");
+      return;
+    }
+    const run = payload.envelope.run;
+    setActiveSlug(run);
+    if (payload.advance?.blocked === "ready") {
+      setNotice(payload.advance.message || "The tailored CV is ready.");
+    } else {
+      await beginTailoring(run);
+    }
+    router.refresh();
+  }
+
+  async function startPolish() {
     setPending(true);
     setError("");
     setNotice("");
     const response = await fetch("/api/cvt", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ command: "polish-start", cv: polishCv }),
+      body: JSON.stringify({ command: "polish-start", cv: chosenCv }),
     });
     const payload = (await response.json()) as { error?: string; slug?: string };
     if (!response.ok || !payload.slug) {
@@ -263,194 +401,177 @@ export function ToolboxForm({
     router.refresh();
   }
 
+  const blocker = !writingChoice.canContinue
+    ? writingChoice.text
+    : !cvReady
+      ? "Choose a CV, or upload one."
+      : tool === "tailor" && !jdReady
+        ? "Paste a job, pick a saved one, or upload a file."
+        : "";
+
   return (
     <div className="flex flex-col gap-8">
-      <PillTabList aria-label="CV tools">
-        <PillTab variant="gray" isSelected={tool === "tailor"} onSelect={() => selectTool("tailor")}>
-          Tailor to a job
-        </PillTab>
-        <PillTab variant="gray" isSelected={tool === "polish"} onSelect={() => selectTool("polish")}>
-          Polish a CV
-        </PillTab>
-      </PillTabList>
-      {tool === "tailor" ? (
-      <form
-        className="flex flex-col gap-4 rounded-2xl border border-border-button-default p-4"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          setPending(true);
-          setError("");
-          setNotice("");
-          const response = await fetch("/api/cvt", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              command: "init",
-              cv,
-              jd: jdText.trim() ? "" : jd,
-              jdText: jdText.trim(),
-              template,
-            }),
-          });
-          const payload = (await response.json()) as {
-            error?: string;
-            envelope?: { ok?: boolean; run?: string; error?: { message?: string } };
-            advance?: { message?: string; stage?: string; blocked?: string };
-          };
-          setPending(false);
-          if (!response.ok) {
-            setError(payload.error || "The run did not start.");
-            return;
-          }
-          if (!payload.envelope?.ok || !payload.envelope.run) {
-            setError(payload.envelope?.error?.message || payload.error || "The run did not start.");
-            return;
-          }
-          const run = payload.envelope.run;
-          setActiveSlug(run);
-          if (payload.advance?.blocked === "ready") {
-            setNotice(payload.advance.message || "The tailored CV is ready.");
-          } else {
-            await beginTailoring(run);
-          }
-          router.refresh();
-        }}
+      <ToolPicker tools={TOOLS} selectedId={tool} onSelect={(id) => selectTool(id === "polish" ? "polish" : "tailor")} />
+      <Composer
+        title={selectedTool.title}
+        provider={provider}
+        onProvider={(next) => void chooseProvider(next)}
+        providerDisabled={pending}
+        submitLabel={tool === "polish" ? "Polish this CV" : "Start tailoring"}
+        pending={pending}
+        canSubmit={canSubmit}
+        hint={blocker}
+        onSubmit={() => void (tool === "polish" ? startPolish() : startTailor())}
+        extras={
+          tool === "tailor" ? (
+            <>
+              <div className="w-40">
+                <Select
+                  aria-label="Template"
+                  selectedKey={template}
+                  onSelectionChange={(key) => typeof key === "string" && setTemplate(key)}
+                >
+                  {["modern", "classic", "sidebar"].map((name) => (
+                    <SelectItem key={name} id={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
+              <Checkbox isSelected={withReply} onChange={setWithReply}>
+                Write a reply
+              </Checkbox>
+            </>
+          ) : null
+        }
       >
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            {cvs.length === 0 ? (
-              <p className="text-body-regular text-text-secondary">No CV in CVs/ yet. Upload one.</p>
-            ) : (
-              <Select aria-label="CV" selectedKey={cv} onSelectionChange={(key) => typeof key === "string" && setCv(key)}>
-                {cvs.map((name) => (
-                  <SelectItem key={name} id={name}>
-                    {name}
-                  </SelectItem>
-                ))}
-              </Select>
-            )}
-            <label className="text-body-2-regular text-text-secondary">
-              Upload a CV
-              <input
-                className="mt-1 block text-body-regular text-text-primary"
-                type="file"
-                accept=".pdf,.md,.txt"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void upload("cv", file);
-                }}
-              />
-            </label>
-          </div>
-          <div className="flex flex-col gap-2">
-            {jds.length > 0 ? (
-              <Select
-                aria-label="Job description file"
-                selectedKey={jd}
-                onSelectionChange={(key) => typeof key === "string" && setJd(key)}
-              >
-                {jds.map((name) => (
-                  <SelectItem key={name} id={name}>
-                    {name}
-                  </SelectItem>
-                ))}
-              </Select>
-            ) : null}
-            <label className="text-body-2-regular text-text-secondary">
-              Upload a job description
-              <input
-                className="mt-1 block text-body-regular text-text-primary"
-                type="file"
-                accept=".pdf,.md,.txt"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void upload("jd", file);
-                }}
-              />
-            </label>
-          </div>
-        </div>
-        <Textarea aria-label="Job text" label="Or paste the job" value={jdText} onChange={setJdText} rows={4} />
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="w-40">
-            <Select
-              aria-label="Template"
-              selectedKey={template}
-              onSelectionChange={(key) => typeof key === "string" && setTemplate(key)}
-            >
-              {["modern", "classic", "sidebar"].map((name) => (
-                <SelectItem key={name} id={name}>
-                  {name}
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-          <label className="flex items-center gap-2 text-body-regular text-text-primary">
-            <input type="checkbox" checked={withReply} onChange={(event) => setWithReply(event.target.checked)} />
-            Write a reply
-          </label>
-          <Button type="submit" disabled={pending || !cv || (!jd && jdText.trim() === "")}>
-            {pending ? "Working" : "Start tailoring"}
-          </Button>
-        </div>
-        <p className="text-body-2-regular text-text-secondary">
-          The layout above is the one this draft is fitted to. After the PDF is ready you can compare modern, classic, and sidebar, then download the one you want.
-        </p>
-      </form>
-      ) : (
-      <form
-        className="flex flex-col gap-4 rounded-2xl border border-border-button-default p-4"
-        onSubmit={(event) => void startPolish(event)}
-      >
-        <p className="text-body-regular text-text-secondary">
-          Every fact stays. There is no job to match, so the CV is about two or three pages, in modern, classic, and sidebar.
-        </p>
-        {cvs.length === 0 ? (
-          <p className="text-body-regular text-text-secondary">No CV in CVs/ yet. Upload one.</p>
-        ) : (
-          <Select
-            aria-label="CV to polish"
-            selectedKey={polishCv}
-            onSelectionChange={(key) => typeof key === "string" && setPolishCv(key)}
-          >
-            {cvs.map((name) => (
-              <SelectItem key={name} id={name}>
-                {name}
-              </SelectItem>
-            ))}
-          </Select>
-        )}
-        <label className="text-body-2-regular text-text-secondary">
-          Upload a CV
-          <input
-            className="mt-1 block text-body-regular text-text-primary"
-            type="file"
-            accept=".pdf,.md,.txt"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) void upload("cv", file);
-            }}
+        <DocumentSource
+          legend="CV"
+          modes={CV_MODES}
+          mode={cvMode}
+          onMode={setCvMode}
+          library={cvFiles}
+          libraryName={cv}
+          onLibrary={setCv}
+          libraryLabel="CV"
+          emptyLibrary="No CV uploaded yet. Switch to Upload."
+          uploadLabel="Upload a CV"
+          uploadHint="Drop a CV here, or browse"
+          accept={ACCEPT}
+          uploadedName={uploadedCv}
+          onFile={(file) => void upload("cv", file)}
+          pending={pending}
+        />
+        {tool === "tailor" ? (
+          <DocumentSource
+            legend="Job description"
+            modes={JD_MODES}
+            mode={jdMode}
+            onMode={setJdMode}
+            library={jdFiles}
+            libraryName={jd}
+            onLibrary={setJd}
+            libraryLabel="Saved job description"
+            emptyLibrary="No saved job yet. Paste text, or switch to Upload."
+            paste={jdText}
+            onPaste={setJdText}
+            pasteLabel="Paste the job"
+            pastePlaceholder="Paste the posting."
+            uploadLabel="Upload a job description"
+            uploadHint="Drop a job description here, or browse"
+            accept={ACCEPT}
+            uploadedName={uploadedJd}
+            onFile={(file) => void upload("jd", file)}
+            pending={pending}
           />
-        </label>
-        <div>
-          <Button type="submit" disabled={pending || !polishCv}>
-            {pending ? "Working" : "Polish this CV"}
-          </Button>
-        </div>
-      </form>
-      )}
+        ) : (
+          <p className="text-body-regular text-text-secondary">
+            Every fact stays. The CV lands at about two or three pages, in modern, classic, and sidebar.
+          </p>
+        )}
+        {tool === "tailor" ? (
+          <p className="text-body-2-regular text-text-secondary">
+            This layout is the one the draft is fitted to. After the PDF is ready you can compare modern, classic, and sidebar.
+          </p>
+        ) : null}
+      </Composer>
       {notice ? <p className="text-body-regular text-text-primary">{notice}</p> : null}
       {error ? <p className="text-body-regular text-text-error-primary">{error}</p> : null}
+      {cursorReady === false ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-body-regular text-text-secondary">
+            A run uses an Anthropic key when one is set. Connect Cursor to use that account when the key is missing or the quota is used up.
+          </p>
+          <div>
+            <Button type="button" variant="secondary" disabled={pending} onClick={() => void connectCursor()}>
+              Connect Cursor
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {!pinned && (openRuns.length > 0 || finishedRuns.length > 0) ? (
+        <details className="rounded-2xl border border-border-button-default px-4 py-3">
+          <summary className="cursor-pointer text-body-medium text-text-primary">Previous work</summary>
+          <div className="mt-3 flex flex-col gap-4">
+            <p className="text-body-regular text-text-secondary">
+              The form above starts a new CV. Open something here when you want to continue it.
+            </p>
+            {openRuns.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-body-medium text-text-primary">Still open</p>
+                <ul className="flex flex-col gap-2">
+                  {openRuns.slice(0, 8).map((run) => (
+                    <li key={run.slug} className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="min-w-0 text-body-regular text-text-primary">{runTitle(run)}</span>
+                      <Button type="button" variant="secondary" onClick={() => openRun(run.slug)}>
+                        Continue
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {finishedRuns.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-body-medium text-text-primary">Finished CVs</p>
+                <ul className="flex flex-col gap-2">
+                  {finishedRuns.slice(0, 8).map((run) => (
+                    <li key={run.slug} className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="min-w-0 text-body-regular text-text-primary">{runTitle(run)}</span>
+                      <Button type="button" variant="secondary" onClick={() => openRun(run.slug)}>
+                        View
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+                <a className="text-body-regular text-text-primary underline" href="/runs">
+                  All runs
+                </a>
+              </div>
+            ) : null}
+          </div>
+        </details>
+      ) : null}
 
       {working ? (
         <InferPanel
           key={working.slug}
           slug={working.slug}
           title={runTitle(working)}
+          headerAction={
+            <Button type="button" variant="secondary" onClick={leaveRun}>
+              Start another
+            </Button>
+          }
           stage={working.stage}
           mode={working.kind === "polish" ? "polish" : withReply ? "reply" : "tailor"}
           connected={connected}
           loginUrl={loginUrl}
+          provider={provider}
+          cursorReady={cursorReady === true}
+          anthropicReady={anthropicReady}
+          onProvider={(next) => void chooseProvider(next)}
           detail={
             working.kind === "polish"
               ? "This CV is saved. Continue writes the polished PDF."
@@ -469,7 +590,12 @@ export function ToolboxForm({
 
       {finished ? (
         <section className="flex flex-col gap-4">
-          <h2 className="text-headline-medium text-text-primary">{runTitle(finished)}</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="min-w-0 flex-1 text-headline-medium text-text-primary">{runTitle(finished)}</h2>
+            <Button type="button" variant="secondary" onClick={leaveRun}>
+              Start another
+            </Button>
+          </div>
           <div className="flex flex-col gap-2">
             <p className="text-body-regular text-text-secondary">Choose a layout, then download that PDF.</p>
             <div className="flex flex-wrap gap-2">
@@ -556,20 +682,6 @@ export function ToolboxForm({
         </section>
       ) : null}
 
-      {earlier.length > 0 ? (
-        <details className="rounded-2xl border border-border-button-default px-4 py-3">
-          <summary className="cursor-pointer text-body-medium text-text-primary">Earlier CVs</summary>
-          <ul className="mt-3 flex flex-col gap-2">
-            {earlier.map((run) => (
-              <li key={run.slug}>
-                <a className="text-body-regular text-text-secondary underline" href={`/runs/${run.slug}`}>
-                  {run.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </details>
-      ) : null}
     </div>
   );
 }

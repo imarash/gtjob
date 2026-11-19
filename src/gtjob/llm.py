@@ -1,4 +1,10 @@
-"""LLM clients for the AI stages: the Anthropic Messages API (structured outputs) and a canned `FakeClient` for tests."""
+"""LLM clients for the AI stages: Anthropic, Cursor, and a canned `FakeClient` for tests.
+
+`$GTJOB_PROVIDER` picks the live adapter: `anthropic`, `cursor`, or `auto` (the default).
+`auto` uses Anthropic when `ANTHROPIC_API_KEY` is set, and uses Cursor when the key is
+missing or Anthropic answers 429. Cursor is one JSON reply through `@cursor/sdk` with no
+tools and an in-memory tree, so the model never sees this repo.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +12,7 @@ import copy
 import json
 import os
 import re
+import subprocess
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -19,7 +26,14 @@ from cvtlib import briefs, schemas  # noqa: E402
 from cvtlib.errors import CvtError, ExitCode  # noqa: E402
 
 API_KEY_ENV = "ANTHROPIC_API_KEY"
-API_KEY_HINT = "export ANTHROPIC_API_KEY=... or run the skill inside Cursor/Claude Code"
+API_KEY_HINT = "export ANTHROPIC_API_KEY=... or set GTJOB_PROVIDER=cursor after signing in to Cursor"
+PROVIDER_ENV = "GTJOB_PROVIDER"
+CURSOR_KEY_ENV = "CURSOR_API_KEY"
+CURSOR_MODEL_ENV = "GTJOB_CURSOR_MODEL"
+CURSOR_MODEL = "composer-2.5"
+CURSOR_AUTH = Path(".cursor") / "sdk" / "auth.json"
+CURSOR_TIMEOUT_SECONDS = 200
+PROVIDER_AUTO, PROVIDER_ANTHROPIC, PROVIDER_CURSOR = "auto", "anthropic", "cursor"
 MAX_RETRIES = 3
 BACKOFF_BASE_SECONDS = 1.0
 BACKOFF_FACTOR = 2.0
@@ -225,7 +239,7 @@ class FakeClient:
             numbered = FAKE_ATTEMPT_RE.match(path.name)
             if numbered:
                 attempts.setdefault(numbered["stage"], []).append((int(numbered["n"]), path))
-            elif path.stem in briefs.STAGE_SPECS:
+            elif path.stem in briefs.STAGE_SPECS or path.stem == "propose":
                 attempts.setdefault(path.stem, []).append((0, path))
         responses = {
             stage: [json.loads(path.read_text(encoding="utf-8")) for _, path in sorted(items)]
@@ -234,7 +248,158 @@ class FakeClient:
         return cls(responses)
 
 
+def cursor_ready() -> bool:
+    """True when a Cursor API key or a Studio/`Cursor.auth.login()` file is present. Does not read the key."""
+    if os.environ.get(CURSOR_KEY_ENV, "").strip():
+        return True
+    return Path.home().joinpath(CURSOR_AUTH).is_file()
+
+
+def _cursor_model(requested: str) -> str:
+    chosen = os.environ.get(CURSOR_MODEL_ENV, "").strip()
+    if requested and not requested.startswith("claude"):
+        return requested
+    return chosen or CURSOR_MODEL
+
+
+def _node_cursor(payload: dict) -> dict:
+    script = _skill.repo_root() / "web" / "scripts" / "cursor-complete.mjs"
+    if not script.is_file():
+        raise CvtError(ExitCode.INTERNAL, "E_CURSOR", "the Cursor provider script is missing",
+                       hint="reinstall gtjob so web/scripts/cursor-complete.mjs is present")
+    try:
+        done = subprocess.run(
+            ["node", str(script)], input=json.dumps(payload), capture_output=True, text=True,
+            timeout=CURSOR_TIMEOUT_SECONDS, cwd=script.parent.parent, check=False,
+        )
+    except FileNotFoundError:
+        raise CvtError(ExitCode.MISSING_DEPENDENCY, "E_CURSOR", "node is not installed",
+                       hint="install Node 22 or newer so gtjob can call the Cursor SDK") from None
+    except subprocess.TimeoutExpired:
+        raise CvtError(ExitCode.INTERNAL, "E_CURSOR", "Cursor timed out",
+                       hint="rerun; finished stages are cached") from None
+    line = (done.stdout or "").strip().splitlines()
+    raw = line[-1] if line else ""
+    try:
+        data = json.loads(raw) if raw else {}
+    except json.JSONDecodeError:
+        detail = (done.stderr or "Cursor returned no JSON").strip().splitlines()
+        raise CvtError(ExitCode.INTERNAL, "E_CURSOR", detail[-1] if detail else "Cursor returned no JSON",
+                       hint="rerun; if it repeats, check that Cursor is signed in") from None
+    if not isinstance(data, dict):
+        raise CvtError(ExitCode.INTERNAL, "E_CURSOR", "Cursor returned a non-object reply",
+                       hint="rerun; finished stages are cached")
+    return data
+
+
+class CursorClient:
+    """One structured JSON reply from a Cursor agent that has no tools and cannot see the repo."""
+
+    def __init__(self, *, transport: Callable[[dict], dict] | None = None, require_auth: bool = True) -> None:
+        if transport is None and require_auth and not cursor_ready():
+            raise CvtError(
+                ExitCode.MISSING_DEPENDENCY, "E_CURSOR_AUTH", "Cursor is not signed in",
+                hint=f"export {CURSOR_KEY_ENV}=... or connect Cursor from the toolbox",
+            )
+        self._transport = transport or _node_cursor
+        self.last_usage: dict = _empty_usage()
+
+    def complete_json(
+        self, system: list[dict], blocks: list[dict], schema: dict, model: str, max_tokens: int, *,
+        stage: str = "", history: list[dict] | None = None, thinking_budget: int = 0,
+    ) -> dict:
+        del thinking_budget  # Cursor's agent decides its own thinking; the call stays one JSON object
+        envelope = self._transport({
+            "system": system, "blocks": blocks, "history": history or [], "schema": schema,
+            "model": _cursor_model(model), "max_tokens": max_tokens, "stage": stage,
+        })
+        if not envelope.get("ok"):
+            err_id = str(envelope.get("id") or "E_CURSOR")
+            code = ExitCode.MISSING_DEPENDENCY if err_id == "E_CURSOR_AUTH" else ExitCode.INTERNAL
+            raise CvtError(code, err_id, str(envelope.get("message") or "Cursor did not answer"),
+                           hint=str(envelope.get("hint") or "rerun; finished stages are cached"))
+        data = envelope.get("data")
+        if not isinstance(data, dict):
+            raise CvtError(ExitCode.INTERNAL, "E_MODEL_JSON", "Cursor did not return a JSON object",
+                           hint="rerun; if it repeats, report the stage")
+        usage = envelope.get("usage") if isinstance(envelope.get("usage"), dict) else {}
+        self.last_usage = {key: int(usage.get(key, 0) or 0) for key in USAGE_KEYS}
+        return normalize_enums(data, schema)  # type: ignore[return-value]
+
+
+def _quota_exhausted(exc: CvtError) -> bool:
+    return exc.err_id == "E_API" and "API error 429" in exc.message
+
+
+class SwitchingClient:
+    """Anthropic first. After a 429, this call and later calls use Cursor."""
+
+    def __init__(self, primary: LLMClient, cursor_factory: Callable[[], LLMClient]) -> None:
+        self._primary = primary
+        self._cursor_factory = cursor_factory
+        self._cursor: LLMClient | None = None
+        self.last_usage: dict = _empty_usage()
+
+    def complete_json(
+        self, system: list[dict], blocks: list[dict], schema: dict, model: str, max_tokens: int, *,
+        stage: str = "", history: list[dict] | None = None, thinking_budget: int = 0,
+    ) -> dict:
+        active = self._cursor
+        if active is None:
+            try:
+                data = self._primary.complete_json(
+                    system, blocks, schema, model, max_tokens, stage=stage, history=history,
+                    thinking_budget=thinking_budget,
+                )
+            except CvtError as exc:
+                if not _quota_exhausted(exc):
+                    raise
+                if not cursor_ready():
+                    raise CvtError(
+                        ExitCode.MISSING_DEPENDENCY, "E_API_KEY",
+                        "Anthropic quota is exhausted and Cursor is not signed in",
+                        hint=f"wait and rerun, or export {CURSOR_KEY_ENV}=... and rerun",
+                    ) from exc
+                self._cursor = active = self._cursor_factory()
+            else:
+                self.last_usage = dict(self._primary.last_usage)
+                return data
+        data = active.complete_json(
+            system, blocks, schema, model, max_tokens, stage=stage, history=history, thinking_budget=thinking_budget,
+        )
+        self.last_usage = dict(active.last_usage)
+        return data
+
+
+def _provider() -> str:
+    name = os.environ.get(PROVIDER_ENV, PROVIDER_AUTO).strip().lower() or PROVIDER_AUTO
+    if name not in {PROVIDER_AUTO, PROVIDER_ANTHROPIC, PROVIDER_CURSOR}:
+        raise CvtError(
+            ExitCode.USAGE, "E_PROVIDER", f"unknown {PROVIDER_ENV} '{name}'",
+            hint=f"set {PROVIDER_ENV} to {PROVIDER_AUTO}, {PROVIDER_ANTHROPIC}, or {PROVIDER_CURSOR}",
+        )
+    return name
+
+
+def _neither_provider() -> CvtError:
+    return CvtError(
+        ExitCode.MISSING_DEPENDENCY, "E_API_KEY",
+        "neither ANTHROPIC_API_KEY nor a Cursor login is set",
+        hint=f"export {API_KEY_ENV}=... or export {CURSOR_KEY_ENV}=... (or connect Cursor from the toolbox)",
+    )
+
+
 def default_client() -> LLMClient:
-    """`FakeClient` over `$GTJOB_FAKE_LLM` when it is set (offline replay), otherwise the real `AnthropicClient`."""
+    """`FakeClient` when `$GTJOB_FAKE_LLM` is set. Otherwise the provider named by `$GTJOB_PROVIDER` (`auto`)."""
     fake = os.environ.get(FAKE_LLM_ENV)
-    return FakeClient.from_dir(fake) if fake else AnthropicClient()
+    if fake:
+        return FakeClient.from_dir(fake)
+    provider = _provider()
+    has_anthropic = bool(os.environ.get(API_KEY_ENV, "").strip())
+    if provider == PROVIDER_CURSOR or (provider == PROVIDER_AUTO and not has_anthropic):
+        if provider == PROVIDER_AUTO and not cursor_ready():
+            raise _neither_provider()
+        return CursorClient()
+    if provider == PROVIDER_AUTO:
+        return SwitchingClient(AnthropicClient(), CursorClient)
+    return AnthropicClient()

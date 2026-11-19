@@ -87,6 +87,23 @@ def _set_stage(run: Path, stage: str) -> None:
 # ---------------------------------------------------------------- render model
 
 
+def test_pasted_summary_is_not_repeated_as_the_headline() -> None:
+    tailored = _tailored()
+    paragraph = tailored["summary"]["text"]
+    tailored["header"]["headline"] = paragraph
+    tailored["summary"]["text"] = paragraph + " Extra detail about the same work."
+    model = _build(tailored)
+    assert model["header"]["headline"] == ""
+    assert model["sections"][0]["paragraphs"][0].startswith(paragraph)
+
+
+def test_short_headline_stays_when_the_summary_is_a_different_paragraph() -> None:
+    tailored = _tailored()
+    tailored["header"]["headline"] = "Junior DevOps Engineer · AWS · Terraform"
+    model = _build(tailored)
+    assert model["header"]["headline"] == "Junior DevOps Engineer · AWS · Terraform"
+
+
 def test_junior_model_validates_and_orders_sections() -> None:
     model = _build(_tailored())
     assert schemas.validate(model, "render-model") == []

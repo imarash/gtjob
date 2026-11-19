@@ -19,6 +19,13 @@ export function gtjobRoot() {
   return path.resolve(process.cwd(), "..");
 }
 
+/** CV, JD, and run files. Matches cvt when `GTJOB_HOME` is set. */
+export function workspaceRoot() {
+  const home = process.env.GTJOB_HOME?.trim();
+  if (home) return path.resolve(home);
+  return gtjobRoot();
+}
+
 export async function loadStudio() {
   await connection();
   const paths = resolvePaths(gtjobRoot());

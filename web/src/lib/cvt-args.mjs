@@ -44,18 +44,20 @@ function baseName(name) {
 /**
  * Argv after `uv run <script>`. Always a list. Never a shell string.
  * @param {Record<string, unknown>} request
- * @param {{ gtjobRoot: string }} paths
+ * @param {{ gtjobRoot: string, workspaceRoot?: string }} paths
  * @returns {{ script: string, args: string[], timeoutMs: number }}
  */
 export function buildToolArgv(request, paths) {
   const command = String(request.command || "");
+  const repo = paths.gtjobRoot;
+  const workspace = paths.workspaceRoot || repo;
   if (command === "polish-extract") {
-    const cv = path.join(paths.gtjobRoot, "CVs", baseName(String(request.cv || "")));
-    return { script: polishScript(paths.gtjobRoot), args: ["extract", cv], timeoutMs: 60_000 };
+    const cv = path.join(workspace, "CVs", baseName(String(request.cv || "")));
+    return { script: polishScript(repo), args: ["extract", cv], timeoutMs: 60_000 };
   }
-  const args = cvtArgs(request, paths.gtjobRoot);
+  const args = cvtArgs(request, workspace);
   const slow = command === "init" || command === "ingest" || command === "render" || command === "fit" || command === "validate";
-  return { script: cvtScript(paths.gtjobRoot), args, timeoutMs: slow ? 120_000 : 30_000 };
+  return { script: cvtScript(repo), args, timeoutMs: slow ? 120_000 : 30_000 };
 }
 
 /**

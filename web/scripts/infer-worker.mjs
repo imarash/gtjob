@@ -1,37 +1,11 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { Agent, Cursor, CursorAgentError, JsonlLocalAgentStore } from "@cursor/sdk";
-import { inferPrompt } from "../src/lib/infer-prompt.mjs";
-import { stopAtCheckpoint } from "../src/lib/infer-stop.mjs";
-import { readInferStatus, writeInferStatus, writeLoginStatus } from "../src/lib/infer-status.mjs";
-import { foldEvent, turnsFromLog } from "../src/lib/infer-transcript.mjs";
+import { spawnSync } from "node:child_process";
+import { Cursor, CursorAgentError } from "@cursor/sdk";
+import { continueOutcome, formatRunError, readInferStatus, writeInferStatus, writeLoginStatus } from "../src/lib/infer-status.mjs";
 
-const root = process.env.GTJOB_ROOT || path.resolve(import.meta.dirname, "../..");
-const model = { id: "composer-2.5" };
-
-function store() {
-  return new JsonlLocalAgentStore(path.join(root, ".studio", "cursor-agents"));
-}
-
-function local() {
-  return {
-    cwd: root,
-    settingSources: ["project"],
-    store: store(),
-  };
-}
-
-/**
- * @param {string} slug
- */
-function readStage(slug) {
-  try {
-    const raw = JSON.parse(readFileSync(path.join(root, "out", slug, "state.json"), "utf8"));
-    return String(raw.stage || "");
-  } catch {
-    return "";
-  }
-}
+const repo = process.env.GTJOB_ROOT || path.resolve(import.meta.dirname, "../..");
+const root = process.env.GTJOB_HOME?.trim() ? path.resolve(process.env.GTJOB_HOME.trim()) : repo;
 
 /**
  * @param {unknown} error
@@ -39,7 +13,7 @@ function readStage(slug) {
 function errorMessage(error) {
   if (error instanceof CursorAgentError) return error.message || "Cursor did not start.";
   if (error instanceof Error) return error.message;
-  return "Cursor did not start.";
+  return "The run did not start.";
 }
 
 async function login() {
@@ -65,121 +39,41 @@ async function login() {
 
 /**
  * @param {string} slug
- * @param {"tailor" | "reply" | "polish"} mode
- * @param {"answers" | "approved" | "message" | ""} resume
  */
-async function run(slug, mode, resume) {
-  const existing = readInferStatus(root, slug) || {};
-  let turns = Array.isArray(existing.turns) ? existing.turns : [];
-  if (turns.length === 0 && Array.isArray(existing.log)) turns = turnsFromLog(existing.log);
-  let dirty = false;
-  /** @type {ReturnType<typeof setTimeout> | null} */
-  let timer = null;
-  const flush = () => {
-    if (timer) clearTimeout(timer);
-    timer = null;
-    if (!dirty) return;
-    dirty = false;
-    const last = [...turns].reverse().find((turn) => turn.role === "assistant" && turn.text);
-    const message = last ? String(last.text).replace(/\s+/g, " ").trim().slice(0, 160) : "Cursor is working.";
-    writeInferStatus(root, slug, { phase: "running", message, turns, pid: process.pid });
-  };
-  const schedule = () => {
-    dirty = true;
-    if (timer) return;
-    timer = setTimeout(flush, 250);
-  };
-
-  writeInferStatus(root, slug, {
-    phase: "starting",
-    mode,
-    message: "Starting Cursor.",
-    turns,
-    pid: process.pid,
-  });
-
-  const auth = await Cursor.auth.status().catch(() => ({ status: "logged-out" }));
-  if (!process.env.CURSOR_API_KEY && auth.status !== "logged-in") {
-    writeInferStatus(root, slug, {
-      phase: "error",
-      message: "Cursor is not connected. Connect it on this page, or set CURSOR_API_KEY and restart Studio.",
-      pid: 0,
-    });
-    return;
-  }
-
-  /** @type {import("@cursor/sdk").SDKAgent | undefined} */
-  let agent;
+function readStage(slug) {
   try {
-    const previous = resume ? readPreviousAgent(slug) : "";
-    agent = previous
-      ? await Agent.resume(previous, { model, local: local() })
-      : await Agent.create({
-          model,
-          local: local(),
-          name: `gtjob ${slug}`,
-        });
-    writeInferStatus(root, slug, {
-      phase: "running",
-      agentId: agent.agentId,
-      message: mode === "polish" ? "Cursor is polishing this CV." : "Cursor is tailoring this run.",
-    });
-    const runHandle = await agent.send(inferPrompt({ slug, mode, resume }), { model });
-    writeInferStatus(root, slug, { runId: runHandle.id });
-    const startStage = readStage(slug);
-    let seenOtherStage = false;
-    for await (const event of runHandle.stream()) {
-      turns = foldEvent(turns, event);
-      schedule();
-      const decision = stopAtCheckpoint(readStage(slug), startStage, resume, seenOtherStage);
-      seenOtherStage = decision.seenOtherStage;
-      if (decision.stop) {
-        if (runHandle.supports("cancel")) await runHandle.cancel();
-        break;
-      }
-    }
-    flush();
-    const result = await runHandle.wait();
-    if (mode === "polish") {
-      const ready = polishLayoutsReady(slug);
-      const phase = ready ? "finished" : "error";
-      const message = ready
-        ? "The polished CV is ready."
-        : result.status === "error"
-          ? result.error?.message || "Cursor stopped before the PDF was ready."
-          : "Cursor stopped before modern, classic, and sidebar were ready.";
-      writeInferStatus(root, slug, { phase, stage: "", message, pid: 0 });
-      return;
-    }
-    const stage = readStage(slug);
-    const reported = existsSync(path.join(root, "out", slug, "report.md"));
-    let phase = "finished";
-    let message = reported ? "The tailored CV is ready." : "Cursor stopped.";
-    if (stage === "awaiting_answers") {
-      phase = "awaiting_answers";
-      message = "A few questions are waiting.";
-    } else if (stage === "awaiting_approval") {
-      phase = "awaiting_approval";
-      message = "The draft is ready for approval.";
-    } else if (result.status === "error") {
-      phase = "error";
-      message = result.error?.message || "Cursor stopped before the PDF was ready.";
-    } else if (!reported && stage) {
-      phase = "error";
-      message = `Cursor stopped while this run was still at ${stage}.`;
-    }
-    writeInferStatus(root, slug, { phase, stage, message, pid: 0 });
-  } catch (error) {
-    writeInferStatus(root, slug, { phase: "error", message: errorMessage(error), pid: 0 });
-  } finally {
-    if (timer) clearTimeout(timer);
-    if (agent) await agent[Symbol.asyncDispose]();
+    const raw = JSON.parse(readFileSync(path.join(root, "out", slug, "state.json"), "utf8"));
+    return String(raw.stage || "");
+  } catch {
+    return "";
   }
+}
+
+/**
+ * @param {string[]} args
+ */
+function gtjob(args) {
+  const result = spawnSync("uv", ["run", "gtjob", ...args], {
+    cwd: repo,
+    encoding: "utf8",
+    maxBuffer: 8_000_000,
+    env: { ...process.env, GTJOB_ROOT: repo, GTJOB_HOST: process.env.GTJOB_HOST || "cursor" },
+  });
+  const stderr = `${result.stderr || ""}\n${result.error ? result.error.message : ""}`.trim();
+  return { code: result.status ?? 1, stderr };
 }
 
 /**
  * @param {string} slug
  */
+function noteText(slug) {
+  try {
+    return readFileSync(path.join(root, ".studio", "infer", `${slug}.reply.txt`), "utf8").trim();
+  } catch {
+    return "";
+  }
+}
+
 /**
  * @param {string} slug
  */
@@ -196,14 +90,63 @@ function polishLayoutsReady(slug) {
 
 /**
  * @param {string} slug
+ * @param {"tailor" | "reply" | "polish"} mode
+ * @param {"answers" | "approved" | "message" | ""} resume
  */
-function readPreviousAgent(slug) {
-  try {
-    const raw = JSON.parse(readFileSync(path.join(root, ".studio", "infer", `${slug}.json`), "utf8"));
-    return typeof raw.agentId === "string" ? raw.agentId : "";
-  } catch {
-    return "";
+function run(slug, mode, resume) {
+  const existing = readInferStatus(root, slug) || {};
+  const turns = Array.isArray(existing.turns) ? existing.turns : [];
+  writeInferStatus(root, slug, {
+    phase: "running",
+    mode,
+    agentId: "",
+    message:
+      mode === "polish"
+        ? "Polishing this CV. Stay on this page — this takes a few minutes."
+        : "Tailoring this CV. Stay on this page — this takes a few minutes.",
+    turns,
+    pid: process.pid,
+  });
+
+  /** @type {string[]} */
+  let args;
+  if (mode === "polish") {
+    args = ["polish", "fill", slug];
+    if (resume === "message") {
+      const note = noteText(slug);
+      if (note) args.push("--text", note);
+    }
+  } else {
+    args = ["continue", slug];
+    if (resume === "message") {
+      const note = noteText(slug);
+      if (note) args.push("--text", note);
+    }
   }
+
+  let result = gtjob(args);
+  if (mode === "reply" && result.code === 0) {
+    const reply = gtjob(["reply", slug]);
+    if (reply.code !== 0) result = reply;
+  }
+
+  if (mode === "polish") {
+    const ready = polishLayoutsReady(slug);
+    writeInferStatus(root, slug, {
+      phase: ready ? "finished" : "error",
+      stage: "",
+      agentId: "",
+      pid: 0,
+      message: ready
+        ? "The polished CV is ready."
+        : formatRunError(result.stderr) || "The polish run stopped before modern, classic, and sidebar were ready.",
+    });
+    return;
+  }
+
+  const stage = readStage(slug);
+  const outcome = continueOutcome(result.code, stage, result.stderr);
+  writeInferStatus(root, slug, { phase: outcome.phase, stage, agentId: "", message: outcome.message, pid: 0 });
 }
 
 const [command, slug, modeArg, resumeArg] = process.argv.slice(2);
@@ -212,7 +155,7 @@ if (command === "login") {
 } else if (command === "run" && slug) {
   const mode = modeArg === "reply" ? "reply" : modeArg === "polish" ? "polish" : "tailor";
   const resume = resumeArg === "answers" || resumeArg === "approved" || resumeArg === "message" ? resumeArg : "";
-  await run(slug, mode, resume);
+  run(slug, mode, resume);
 } else {
   console.error("usage: infer-worker.mjs login | run <slug> <tailor|reply|polish> [answers|approved|message]");
   process.exit(2);

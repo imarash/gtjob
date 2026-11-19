@@ -91,6 +91,57 @@ _CHECK_FAILED_ACTION = (
     "Run {cvt} brief fix {run}, patch the listed items, then rerun: {cvt} {command} {run}"
 )
 
+# One command the model may propose at this stage. `write-*` asks the model for that stage's JSON.
+# A proposal that is not in the stage's tuple is refused and does not change the run.
+# `status` is read-only and legal everywhere so a model can look before it writes.
+LEGAL_TOOLS: dict[str, tuple[str, ...]] = {
+    "initialized": ("ingest", "status"),
+    "ingested": ("profile-cache", "brief", "write-profile", "profile-build", "status"),
+    "profiled": ("brief", "write-jd", "jd-check", "status"),
+    "jd_analyzed": ("brief", "write-match", "match-check", "status"),
+    "matched": ("brief", "write-questions", "questions", "status"),
+    "awaiting_answers": ("questions", "brief", "write-answer", "answers-apply", "status"),
+    "answers_applied": ("brief", "write-tailor", "assemble", "status"),
+    "tailored": ("diff", "status"),
+    "awaiting_approval": ("diff", "brief", "write-change", "apply-edits", "approve", "status"),
+    "approved": ("fit", "status"),
+    "rendered": ("validate", "status"),
+    "validated": ("report", "status"),
+    "reported": ("status",),
+}
+# Studio commands that are not a tailor-stage advance. Still part of the table.
+LEGAL_EXTRA: tuple[str, ...] = ("init", "profile-show", "attest", "render", "polish-extract")
+WRITE_TOOLS: dict[str, str] = {
+    "write-profile": "profile",
+    "write-jd": "jd",
+    "write-match": "match",
+    "write-questions": "questions",
+    "write-answer": "answer_parse",
+    "write-tailor": "tailor",
+    "write-change": "change_request",
+}
+BRIEF_STAGE: dict[str, str] = {
+    "ingested": "profile",
+    "profiled": "jd",
+    "jd_analyzed": "match",
+    "matched": "questions",
+    "awaiting_answers": "answer_parse",
+    "answers_applied": "tailor",
+    "awaiting_approval": "change_request",
+}
+
+
+def legal_command_names() -> frozenset[str]:
+    """Every command the table names, including Studio-only commands."""
+    names = {tool for tools in LEGAL_TOOLS.values() for tool in tools}
+    names.update(LEGAL_EXTRA)
+    return frozenset(names)
+
+
+def tool_allowed(stage: str, tool: str) -> bool:
+    """True when `tool` may run while the run is at `stage`."""
+    return tool in LEGAL_TOOLS.get(stage, ())
+
 
 def stage_index(stage: str) -> int:
     try:

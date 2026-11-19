@@ -1,5 +1,5 @@
 /**
- * A fresh run stops at the first checkpoint so the person can answer.
+ * The Python runner exits 6 at these same stages. This helper is the gate list.
  * A resumed run starts already at that checkpoint and has to be allowed to work through it.
  * @param {string} stage
  * @param {string} startStage

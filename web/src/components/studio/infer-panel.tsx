@@ -1,14 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { StatusDot } from "@/components/base/badges/status-dot";
 import { Button } from "@/components/base/buttons/button";
 import { Textarea } from "@/components/base/textarea/textarea";
 import { MarkdownBlock } from "@/components/studio/markdown-block";
-import { QuestionFields, type StudioQuestion } from "@/components/studio/question-fields";
+import { QuestionFields, type PriorAnswer, type StudioQuestion } from "@/components/studio/question-fields";
 import { ScrollFade, useScrollFade } from "@/components/foundations/scroll-fade/scroll-fade";
 import { applyFailure, initialPicked, pendingReply } from "@/lib/answer-select.mjs";
 import { turnsFromLog } from "@/lib/infer-transcript.mjs";
+import { providerStatus } from "@/lib/provider-hint.mjs";
+import { STEP_LABELS } from "@/lib/stage-copy.mjs";
+import { ProviderSelect } from "@/components/studio/provider-select";
+import { cx } from "@/utils/cx";
 
 type Turn = {
   id: string;
@@ -26,7 +31,106 @@ type InferStatus = {
   turns?: Turn[];
   stage?: string;
   mode?: string;
+  updatedAt?: string;
 };
+
+type RunProgress = {
+  stage?: string;
+  title?: string;
+  detail?: string;
+  step?: number;
+  steps?: string[];
+  label?: string;
+};
+
+const FILL = ["w-1/5", "w-2/5", "w-3/5", "w-4/5", "w-full"];
+
+function elapsedLabel(ms: number) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  if (minutes === 0) return `${seconds}s so far`;
+  return `${minutes}m ${String(seconds).padStart(2, "0")}s so far`;
+}
+
+function WaitCard({
+  title,
+  detail,
+  steps,
+  step,
+  elapsed,
+}: {
+  title: string;
+  detail: string;
+  steps: string[];
+  step: number;
+  elapsed: string;
+}) {
+  const counted = Math.max(steps.length, 1);
+  const current = Math.min(Math.max(step, 0), counted - 1);
+  return (
+    <div
+      className="flex flex-col gap-3 rounded-xl bg-background-secondary-default p-4"
+      role="progressbar"
+      aria-label="Tailoring progress"
+      aria-valuemin={1}
+      aria-valuemax={counted}
+      aria-valuenow={current + 1}
+      aria-valuetext={title}
+    >
+      <div>
+        <p className="text-body-medium text-text-primary" role="status">
+          {title}
+        </p>
+        <p className="mt-1 text-body-regular text-text-secondary">
+          {detail} Stay on this page. Previous work keeps this run if you come back later.
+        </p>
+      </div>
+      <div className="h-1 overflow-hidden rounded-full bg-background-tertiary-default" aria-hidden>
+        <div
+          className={cx(
+            "h-full rounded-full bg-accent-600 motion-safe:animate-pulse",
+            steps.length > 0 ? FILL[Math.min(current, FILL.length - 1)] : "w-2/5",
+          )}
+        />
+      </div>
+      {steps.length > 0 ? (
+        <ol className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Steps">
+          {steps.map((label, index) => {
+            const state = index < current ? "done" : index === current ? "current" : "upcoming";
+            return (
+              <li
+                key={label}
+                className="flex items-center gap-1.5"
+                aria-current={state === "current" ? "step" : undefined}
+              >
+                {state === "upcoming" ? (
+                  <span aria-hidden className="size-3 rounded-full border border-border-button-default" />
+                ) : (
+                  <StatusDot color={state === "done" ? "green" : "indigo"} className={state === "current" ? "motion-safe:animate-pulse" : ""} />
+                )}
+                <span
+                  className={
+                    state === "current"
+                      ? "text-body-2-medium text-text-primary"
+                      : state === "done"
+                        ? "text-body-2-regular text-text-secondary"
+                        : "text-body-2-regular text-text-tertiary"
+                  }
+                >
+                  {label}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      ) : null}
+      <p className="text-body-2-regular text-text-tertiary" aria-hidden>
+        {elapsed}
+      </p>
+    </div>
+  );
+}
 
 type ReviewItem = {
   id: string;
@@ -111,11 +215,16 @@ export function InferPanel({
   stage,
   connected,
   loginUrl,
+  provider,
+  cursorReady,
+  anthropicReady,
+  onProvider,
   detail,
   pendingContinue,
   onContinue,
   onConnect,
   onFinished,
+  headerAction,
 }: {
   slug: string;
   mode: "tailor" | "reply" | "polish";
@@ -123,22 +232,31 @@ export function InferPanel({
   stage: string;
   connected: boolean | null;
   loginUrl: string;
+  provider: string;
+  cursorReady: boolean;
+  anthropicReady: boolean;
+  onProvider: (next: string) => void;
   detail: string;
   pendingContinue: boolean;
   onContinue: () => void;
   onConnect: () => void;
   onFinished: (slug: string) => void;
+  headerAction?: ReactNode;
 }) {
   const router = useRouter();
   const [job, setJob] = useState<InferStatus | null>(null);
   const [questions, setQuestions] = useState<StudioQuestion[]>([]);
   const [picked, setPicked] = useState<Record<string, string[]>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [priors, setPriors] = useState<Record<string, PriorAnswer>>({});
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [review, setReview] = useState<DraftReview | null>(null);
   const [questionsLoaded, setQuestionsLoaded] = useState(false);
+  const [progress, setProgress] = useState<RunProgress | null>(null);
+  const [liveLabel, setLiveLabel] = useState("");
+  const [now, setNow] = useState(() => Date.now());
   const onFinishedRef = useRef(onFinished);
   onFinishedRef.current = onFinished;
   const seenPhase = useRef("");
@@ -152,8 +270,13 @@ export function InferPanel({
     seenPhase.current = "";
     async function tick() {
       const response = await fetch(`/api/infer?run=${encodeURIComponent(slug)}`);
-      const payload = (await response.json()) as { status?: InferStatus | null };
-      if (stop || !payload.status) return;
+      const payload = (await response.json()) as { status?: InferStatus | null; progress?: RunProgress | null };
+      if (stop) return;
+      if (payload.progress) {
+        setProgress(payload.progress);
+        if (payload.progress.label) setLiveLabel(payload.progress.label);
+      }
+      if (!payload.status) return;
       setJob(payload.status);
       const phase = payload.status.phase || "";
       const token = `${slug}:${phase}`;
@@ -169,6 +292,30 @@ export function InferPanel({
       clearInterval(timer);
     };
   }, [slug, router]);
+
+  useEffect(() => {
+    setLiveLabel("");
+    setProgress(null);
+  }, [slug]);
+
+  const phaseNow = job?.phase || "";
+  const waitingOnRun = phaseNow === "starting" || phaseNow === "running";
+
+  useEffect(() => {
+    if (!waitingOnRun) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [waitingOnRun]);
+
+  useEffect(() => {
+    if (!waitingOnRun) return;
+    const onLeave = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onLeave);
+    return () => window.removeEventListener("beforeunload", onLeave);
+  }, [waitingOnRun]);
 
   function keepAnswers(list: StudioQuestion[]) {
     setQuestions(list);
@@ -202,6 +349,27 @@ export function InferPanel({
     return list.filter((question) => !question.status || question.status === "pending");
   }
 
+  async function loadPriors() {
+    const response = await fetch("/api/cvt", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ command: "prior-answers", run: slug }),
+    });
+    const payload = (await response.json()) as { priors?: Record<string, PriorAnswer> };
+    const next = payload.priors && typeof payload.priors === "object" ? payload.priors : {};
+    setPriors(next);
+  }
+
+  function usePrior(id: string) {
+    const prior = priors[id];
+    if (!prior) return;
+    if (prior.kind === "text") {
+      setNotes((current) => ({ ...current, [id]: prior.text }));
+      return;
+    }
+    setPicked((current) => ({ ...current, [id]: prior.choiceIds }));
+  }
+
   useEffect(() => {
     const waiting =
       job?.phase === "awaiting_answers" || stage === "matched" || stage === "awaiting_answers";
@@ -215,6 +383,8 @@ export function InferPanel({
       const list = await loadPending();
       if (stop) return;
       keepAnswers(list);
+      await loadPriors();
+      if (stop) return;
       setQuestionsLoaded(true);
     })();
     return () => {
@@ -259,6 +429,12 @@ export function InferPanel({
 
   if (!slug) return null;
   const phase = job?.phase || "";
+  const writing = providerStatus(phase === "error" ? job?.message || "" : "", {
+    provider,
+    cursor: cursorReady,
+    anthropic: anthropicReady,
+  });
+  const visibleMessage = writing.showMessage ? job?.message || "" : "";
   const running = phase === "starting" || phase === "running";
   const asking = questions.length > 0 && !running;
   const approving = !running && (phase === "awaiting_approval" || stage === "awaiting_approval");
@@ -266,6 +442,13 @@ export function InferPanel({
   const questionStage = stage === "matched" || stage === "awaiting_answers" || phase === "awaiting_answers";
   const showContinue =
     connected === true && !running && !asking && !approving && phase !== "finished" && (!questionStage || questionsLoaded);
+  const startedAt = job?.updatedAt ? Date.parse(job.updatedAt) : now;
+  const elapsed = elapsedLabel(now - (Number.isFinite(startedAt) ? startedAt : now));
+  const waitSteps = mode === "polish" ? [] : progress?.steps && progress.steps.length > 0 ? progress.steps : [...STEP_LABELS];
+  const waitTitle = mode === "polish" ? "Polishing this CV" : progress?.title || "Tailoring this CV";
+  const waitDetailText =
+    mode === "polish" ? "Fitting the pages. This usually takes a few minutes." : progress?.detail || "This usually takes a few minutes.";
+  const heading = liveLabel || title;
 
   async function resume(kind: "answers" | "approved" | "message", text = "") {
     setPending(true);
@@ -285,7 +468,7 @@ export function InferPanel({
     const payload = (await response.json()) as { error?: string; status?: InferStatus };
     setPending(false);
     if (!response.ok) {
-      setError(payload.error || "Cursor did not continue.");
+      setError(payload.error || "The run did not continue.");
       return;
     }
     if (payload.status) setJob(payload.status);
@@ -319,7 +502,14 @@ export function InferPanel({
         error?: string;
         envelope?: { ok?: boolean; exit_code?: number; error?: { message?: string; hint?: string } };
       };
-      const failure = !response.ok || payload.envelope?.ok === false ? applyFailure(payload.envelope, payload.error) : "";
+      const failure =
+        !response.ok || payload.envelope?.ok === false
+          ? applyFailure(payload.envelope, payload.error, {
+              questions: fresh,
+              notes,
+              rawText: pendingReply(fresh, picked, notes).prose,
+            })
+          : "";
       if (failure) {
         setPending(false);
         setError(failure);
@@ -332,7 +522,21 @@ export function InferPanel({
 
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-border-button-default bg-background-primary-default p-4">
-      {title ? <h2 className="text-headline-medium text-text-primary">{title}</h2> : null}
+      {heading || headerAction ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {heading ? <h2 className="min-w-0 flex-1 text-headline-medium text-text-primary">{heading}</h2> : null}
+          {headerAction}
+        </div>
+      ) : null}
+      {running ? (
+        <WaitCard
+          title={waitTitle}
+          detail={waitDetailText}
+          steps={waitSteps}
+          step={typeof progress?.step === "number" ? progress.step : 0}
+          elapsed={elapsed}
+        />
+      ) : null}
       {connected === false ? (
         <div className="flex flex-col gap-2">
           <p className="text-body-regular text-text-primary">
@@ -353,19 +557,21 @@ export function InferPanel({
       {showContinue ? (
         <div className="flex flex-col gap-3">
           {detail ? <p className="text-body-regular text-text-secondary">{detail}</p> : null}
-          <div>
-            <Button variant="secondary" disabled={pending || pendingContinue} onClick={onContinue}>
+          <div className="flex flex-wrap items-center gap-3">
+            <ProviderSelect value={provider} onChange={onProvider} disabled={pending || pendingContinue} />
+            <Button variant="secondary" disabled={pending || pendingContinue || !writing.canContinue} onClick={onContinue}>
               Continue
             </Button>
           </div>
+          {writing.text ? <p className="text-body-regular text-text-secondary">{writing.text}</p> : null}
         </div>
       ) : null}
-      {asking ? null : spoken.length > 0 || running || (job?.message && !approving) ? (
+      {asking ? null : spoken.length > 0 || (!running && visibleMessage && !approving) ? (
       <div className="relative min-h-0">
         <div
           ref={scroller}
           role="log"
-          aria-label="Conversation with Cursor"
+          aria-label="Conversation"
           aria-live="polite"
           className="flex max-h-96 flex-col gap-3 overflow-y-auto pe-1"
           onScroll={(event) => {
@@ -374,8 +580,16 @@ export function InferPanel({
             stick.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48;
           }}
         >
-          {!assistantSaid && job?.message ? (
-            <p className="text-body-regular text-text-primary">{job.message}</p>
+          {!running && !assistantSaid && visibleMessage ? (
+            <p
+              className={
+                phase === "error"
+                  ? "whitespace-pre-wrap text-body-regular text-text-error-primary"
+                  : "text-body-regular text-text-primary"
+              }
+            >
+              {visibleMessage}
+            </p>
           ) : null}
           {spoken.map((turn, index) => {
             if (turn.role === "user") {
@@ -393,9 +607,8 @@ export function InferPanel({
             }
             return null;
           })}
-          {running ? <p className="text-body-2-regular text-text-secondary">Cursor is working on this run.</p> : null}
           {phase === "error" && assistantSaid ? (
-            <p className="text-body-regular text-text-error-primary">{job?.message}</p>
+            <p className="whitespace-pre-wrap text-body-regular text-text-error-primary">{job?.message}</p>
           ) : null}
         </div>
         <ScrollFade progress={fade.progress} surfaceClassName="from-background-primary-default" />
@@ -414,6 +627,8 @@ export function InferPanel({
             questions={questions}
             picked={picked}
             notes={notes}
+            priors={priors}
+            onUsePrior={usePrior}
             onToggle={(id, choiceId, on, kind) =>
               setPicked((current) => {
                 if (kind === "single") return { ...current, [id]: on ? [choiceId] : [] };
@@ -487,7 +702,12 @@ export function InferPanel({
         </div>
       ) : null}
 
-      {showContinue && spoken.length === 0 ? null : (
+      {showContinue || running ? null : (
+        <div className="flex justify-end">
+          <ProviderSelect value={provider} onChange={onProvider} disabled={pending || running} />
+        </div>
+      )}
+      {(showContinue && spoken.length === 0) || running ? null : (
       <form
         className="flex items-end gap-2 border-t border-separator-border pt-3"
         onSubmit={(event) => {
@@ -499,13 +719,13 @@ export function InferPanel({
       >
         <div className="min-w-0 flex-1">
           <Textarea
-            aria-label="Message Cursor"
+            aria-label="Message"
             placeholder={
               asking
                 ? "Or reply in your own words"
                 : approving
                   ? "Ask for a change before approving"
-                  : "Message Cursor"
+                  : "Message"
             }
             rows={1}
             autoResize
@@ -528,7 +748,9 @@ export function InferPanel({
         </Button>
       </form>
       )}
-      {error ? <p className="text-body-regular text-text-error-primary">{error}</p> : null}
+      {error ? (
+        <p className="whitespace-pre-wrap text-body-regular text-text-error-primary">{error}</p>
+      ) : null}
     </section>
   );
 }

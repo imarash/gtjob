@@ -126,6 +126,8 @@ def _assemble(args: argparse.Namespace) -> int:
     state.require_stage(st, STAGE_ANSWERS)
     try:
         plan = check_cmds._load_artifact(run_dir, PLAN_FILE, st)
+        if assemble_lib.legalize_refs(plan):
+            jsonio.dump_json(plan, run_dir / PLAN_FILE)
         schemas.require_valid(plan, "tailor-plan", PLAN_FILE)
         jd = jsonio.load_json(state.require_artifact(run_dir, st, "jd"))
         profile = jsonio.load_json(state.require_artifact(run_dir, st, "profile"))

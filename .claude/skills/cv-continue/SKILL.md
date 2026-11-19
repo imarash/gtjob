@@ -5,7 +5,9 @@ argument-hint: "[run-slug] [answers or change instructions]"
 disable-model-invocation: true
 allowed-tools: Bash(uv run *)
 ---
-Read `.claude/skills/tailoring-cvs/SKILL.md`, then run `cvt status` for the run named in the text after this
-command (or the latest run) and do exactly what its `next_action` says. If the text contains answers or change
-instructions, apply them through the skill's checkpoint procedure (dry-run first, then commit) rather than editing
-files directly.
+Run `uv run gtjob continue` for the run named in the text after this command, or the latest run.
+Pass a free-text reply with `--text`. Pass an answers file with `--answers`.
+
+Stop when the exit code is 6. Print the pending gate that the command printed.
+Do not write profile-map.json, jd.json, match.json, questions.json, or tailor-plan.json.
+A run started this way records host `cli` in `state.json` history.

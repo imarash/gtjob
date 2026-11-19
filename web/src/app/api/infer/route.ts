@@ -11,7 +11,9 @@ import {
   reopenNotedQuestions,
   writeReply,
 } from "@/lib/infer-status.mjs";
-import { gtjobRoot } from "@/lib/studio-data";
+import { anthropicReady, parseProvider, providerEnv, readProvider, writeProvider } from "@/lib/provider.mjs";
+import { readRunProgress } from "@/lib/run-label.mjs";
+import { gtjobRoot, workspaceRoot } from "@/lib/studio-data";
 
 const SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$/;
 
@@ -19,19 +21,19 @@ function workerPath(root: string) {
   return path.join(root, "web", "scripts", "infer-worker.mjs");
 }
 
-function startWorker(root: string, args: string[]) {
+function startWorker(root: string, args: string[], provider: "auto" | "cursor" | "anthropic") {
   const child = spawn(process.execPath, [workerPath(root), ...args], {
     cwd: root,
     detached: true,
     stdio: "ignore",
-    env: { ...process.env, GTJOB_ROOT: root },
+    env: { ...providerEnv(provider), GTJOB_ROOT: root },
   });
   child.unref();
   return child.pid ?? 0;
 }
 
 export async function GET(request: Request) {
-  const root = gtjobRoot();
+  const root = workspaceRoot();
   const slug = new URL(request.url).searchParams.get("run") || "";
   let status = null;
   if (slug && SLUG_RE.test(slug)) {
@@ -40,20 +42,26 @@ export async function GET(request: Request) {
       status = writeInferStatus(root, slug, {
         phase: "error",
         pid: 0,
-        message: "The Cursor run stopped before it finished.",
+        message: "The run stopped before it finished.",
       });
     }
   }
   const login = readLoginStatus(root);
+  const progress = slug && SLUG_RE.test(slug) ? readRunProgress(path.join(root, "out"), slug) : null;
   return Response.json({
-    connected: cursorConnected() || login?.phase === "logged-in",
+    connected: true,
+    cursor: cursorConnected() || login?.phase === "logged-in",
+    anthropic: anthropicReady(),
+    provider: readProvider(root),
     login,
     status,
+    progress,
   });
 }
 
 export async function POST(request: Request) {
-  const root = gtjobRoot();
+  const root = workspaceRoot();
+  const repo = gtjobRoot();
   let body: Record<string, unknown>;
   try {
     body = await request.json();
@@ -65,18 +73,27 @@ export async function POST(request: Request) {
     if (current && (current.phase === "starting" || current.phase === "waiting") && pidAlive(current.pid)) {
       return Response.json({ ok: true, login: current });
     }
-    const pid = startWorker(root, ["login"]);
+    const pid = startWorker(repo, ["login"], "auto");
     const login = writeLoginStatus(root, { phase: "starting", pid, message: "Opening Cursor to connect." });
     return Response.json({ ok: true, login });
   }
-  const slug = typeof body.run === "string" ? body.run : "";
-  if (!SLUG_RE.test(slug)) return Response.json({ error: "Name the run." }, { status: 400 });
-  if (!cursorConnected()) {
+  if (body.command === "provider") {
+    const provider = parseProvider(body.provider);
+    if (!provider) return Response.json({ error: "Choose Cursor, Anthropic, or Automatic." }, { status: 400 });
+    return Response.json({ ok: true, provider: writeProvider(root, provider) });
+  }
+  const provider = readProvider(root);
+  if (provider === "anthropic" && !anthropicReady()) {
     return Response.json(
-      { connected: false, error: "Connect Cursor to tailor this CV." },
-      { status: 409 },
+      { error: "Anthropic needs ANTHROPIC_API_KEY in the environment that starts Studio. Choose Cursor to use the connected account." },
+      { status: 400 },
     );
   }
+  if (provider === "cursor" && !process.env.GTJOB_FAKE_LLM && !cursorConnected()) {
+    return Response.json({ error: "Connect Cursor before using it.", connected: false }, { status: 409 });
+  }
+  const slug = typeof body.run === "string" ? body.run : "";
+  if (!SLUG_RE.test(slug)) return Response.json({ error: "Name the run." }, { status: 400 });
   const mode = body.mode === "reply" ? "reply" : body.mode === "polish" ? "polish" : "tailor";
   const current = readInferStatus(root, slug);
   if (current && (current.phase === "running" || current.phase === "starting") && pidAlive(current.pid)) {
@@ -96,10 +113,10 @@ export async function POST(request: Request) {
     writeInferStatus(root, slug, {
       phase: "starting",
       mode,
-      message: "Cursor is reading your reply.",
+      message: "Reading your reply.",
       turns: [...history, userTurn(text)],
     });
-    const pid = startWorker(root, ["run", slug, mode, "message"]);
+    const pid = startWorker(repo, ["run", slug, mode, "message"], provider);
     const status = writeInferStatus(root, slug, { pid });
     return Response.json({ ok: true, status });
   }
@@ -107,11 +124,11 @@ export async function POST(request: Request) {
   writeInferStatus(root, slug, {
     phase: "starting",
     mode,
-    message: "Starting Cursor.",
+    message: "Starting.",
     log: resume ? current?.log : [],
     turns: resume ? history : [],
   });
-  const pid = startWorker(root, ["run", slug, mode, resume]);
+  const pid = startWorker(repo, ["run", slug, mode, resume], provider);
   const status = writeInferStatus(root, slug, { pid });
   return Response.json({ ok: true, status });
 }

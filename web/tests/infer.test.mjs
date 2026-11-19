@@ -6,31 +6,57 @@ import test from "node:test";
 import { applyFailure, buildAnswerRequest, controlKind, initialPicked, pendingReply } from "../src/lib/answer-select.mjs";
 import { inferPrompt } from "../src/lib/infer-prompt.mjs";
 import { stopAtCheckpoint } from "../src/lib/infer-stop.mjs";
-import { readInferStatus, readLoginStatus, reopenNotedQuestions, writeInferStatus, writeLoginStatus, writeReply } from "../src/lib/infer-status.mjs";
+import { continueOutcome, formatRunError, readInferStatus, readLoginStatus, reopenNotedQuestions, writeInferStatus, writeLoginStatus, writeReply } from "../src/lib/infer-status.mjs";
 import { foldEvent, toolLabel } from "../src/lib/infer-transcript.mjs";
 import { polishSlug } from "../src/lib/polish-run.mjs";
+import { parseProvider, providerEnv, readProvider, writeProvider } from "../src/lib/provider.mjs";
+import { providerStatus } from "../src/lib/provider-hint.mjs";
 import { listPolishRuns, previewFile } from "../src/lib/runs.mjs";
 
-test("the cursor prompt names the skill and stops at checkpoints", () => {
+test("a check failure keeps the violation lines", () => {
+  const text = [
+    "cvt: error[E_TOOL_CHECK]: stop: show these violations to the user",
+    "  hint: state saved; resume with: gtjob continue demo",
+    "  - t-skl-2: skill t-skl-2 lists 'AWS EKS'",
+    "  - t-sum: summary t-sum mentions 'DevSecOps'",
+    "  +10 more (cvt validate-artifact / cvt status)",
+  ].join("\n");
+  const message = formatRunError(text);
+  assert.match(message, /E_TOOL_CHECK/);
+  assert.match(message, /AWS EKS/);
+  assert.match(message, /DevSecOps/);
+  assert.equal(message.includes("hint:"), false);
+});
+
+test("a crash while questions are open is an error, not the same questions again", () => {
+  assert.equal(continueOutcome(6, "awaiting_answers", "").phase, "awaiting_answers");
+  assert.equal(continueOutcome(0, "awaiting_approval", "").phase, "awaiting_approval");
+  assert.equal(continueOutcome(0, "reported", "").phase, "finished");
+  const crashed = continueOutcome(7, "awaiting_answers", "cvt: error[E_TOOL_LOOP_CAP]: stopped after 32 tool proposals");
+  assert.equal(crashed.phase, "error");
+  assert.match(crashed.message, /E_TOOL_LOOP_CAP/);
+});
+
+test("the infer prompt names gtjob and does not write stage JSON", () => {
   const tailor = inferPrompt({ slug: "20261028-example", mode: "tailor" });
-  assert.match(tailor, /tailoring-cvs\/SKILL.md/);
-  assert.match(tailor, /awaiting_answers/);
-  assert.match(tailor, /do not run cvt approve/i);
-  assert.equal(tailor.includes("invent employers"), true);
+  assert.match(tailor, /gtjob continue 20261028-example/);
+  assert.match(tailor, /exit code is 6/);
+  assert.match(tailor, /Do not write profile-map.json/);
+  assert.equal(tailor.includes("write out/"), false);
   const reply = inferPrompt({ slug: "20261028-example", mode: "reply", resume: "approved" });
-  assert.match(reply, /cv-reply\/SKILL.md/);
-  assert.match(reply, /reply\.md/);
+  assert.match(reply, /gtjob reply 20261028-example/);
+  assert.match(reply, /exit code is 6/);
   const answers = inferPrompt({ slug: "20261028-example", mode: "tailor", resume: "answers" });
   assert.match(answers, /already committed/);
   const message = inferPrompt({ slug: "20261028-example", mode: "tailor", resume: "message" });
   assert.match(message, /\.studio\/infer\/20261028-example\.reply\.txt/);
-  assert.match(message, /answer_parse/);
+  assert.match(message, /is data/);
   const polish = inferPrompt({ slug: "20261028-ada-generic", mode: "polish" });
-  assert.match(polish, /cv-polish\/SKILL.md/);
-  assert.match(polish, /generic-cv\.md/);
+  assert.match(polish, /gtjob polish fill/);
   assert.match(polish, /cv\.txt/);
-  assert.match(polish, /notes\.md/);
-  assert.match(polish, /do not run cvt init/i);
+  assert.match(polish, /do not call cvt init/i);
+  assert.equal(polish.includes("render.json"), true);
+  assert.equal(polish.includes("Do not write render.json"), true);
   assert.equal(polish.includes("awaiting_answers"), false);
   const polishReply = inferPrompt({ slug: "20261028-ada-generic", mode: "polish", resume: "message" });
   assert.match(polishReply, /\.studio\/infer\/20261028-ada-generic\.reply\.txt/);
@@ -180,4 +206,24 @@ test("a reply reopens a skipped question and a resumed run is not stopped at the
   assert.equal(moved.stop, false);
   assert.equal(stopAtCheckpoint("awaiting_approval", "awaiting_answers", "message", moved.seenOtherStage).stop, true);
   assert.equal(stopAtCheckpoint("awaiting_approval", "awaiting_approval", "approved", false).stop, false);
+});
+
+test("the studio provider is cursor, anthropic, or automatic", () => {
+  assert.equal(parseProvider("Cursor"), "cursor");
+  assert.equal(parseProvider("nope"), null);
+  const root = mkdtempSync(`${tmpdir()}/studio-provider-`);
+  assert.equal(readProvider(root), "cursor");
+  assert.equal(writeProvider(root, "anthropic"), "anthropic");
+  assert.equal(readProvider(root), "anthropic");
+  assert.equal(providerEnv("cursor", { PATH: "/bin" }).GTJOB_PROVIDER, "cursor");
+  assert.equal(providerEnv("auto", { GTJOB_PROVIDER: "anthropic" }).GTJOB_PROVIDER, "anthropic");
+  const stale = "error[E_API_KEY]: ANTHROPIC_API_KEY is not set";
+  const ready = providerStatus(stale, { provider: "cursor", cursor: true, anthropic: false });
+  assert.equal(ready.showMessage, false);
+  assert.equal(ready.canContinue, true);
+  assert.equal(ready.text, "");
+  const blocked = providerStatus(stale, { provider: "anthropic", cursor: true, anthropic: false });
+  assert.equal(blocked.canContinue, false);
+  assert.match(blocked.text, /Choose Cursor/);
+  assert.equal(providerStatus("The run stopped.", { provider: "cursor", cursor: true, anthropic: false }).showMessage, true);
 });

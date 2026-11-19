@@ -202,7 +202,7 @@ def test_missing_api_key_is_actionable(monkeypatch):
     with pytest.raises(CvtError) as exc:
         llm.AnthropicClient()
     assert exc.value.err_id == "E_API_KEY" and exc.value.code == ExitCode.MISSING_DEPENDENCY
-    assert "export ANTHROPIC_API_KEY=" in exc.value.hint and "Cursor/Claude Code" in exc.value.hint
+    assert "export ANTHROPIC_API_KEY=" in exc.value.hint and "GTJOB_PROVIDER=cursor" in exc.value.hint
 
 
 # --- FakeClient and cache ------------------------------------------------------------------------------------
@@ -238,6 +238,86 @@ def test_cache_roundtrip_and_read_switch(tmp_path: Path):
     assert LLMCache(tmp_path / "llm", read=False).get("k") is None
     (tmp_path / "llm" / "bad.json").write_text("{", encoding="utf-8")
     assert cache.get("bad") is None
+
+
+# --- provider selection --------------------------------------------------------------------------------------
+def _cursor_envelope(payload: dict) -> dict:
+    assert payload["model"] == llm.CURSOR_MODEL
+    assert payload["blocks"] == BLOCKS
+    return {"ok": True, "data": {"company": "Acme"}, "usage": {"input_tokens": 3, "output_tokens": 4}}
+
+
+def test_cursor_client_maps_a_claude_model_and_keeps_usage():
+    client = llm.CursorClient(transport=_cursor_envelope, require_auth=False)
+    assert client.complete_json(SYSTEM, BLOCKS, JD_SCHEMA, "claude-sonnet-5-5", 100, stage="jd") == {"company": "Acme"}
+    assert client.last_usage["input_tokens"] == 3 and client.last_usage["output_tokens"] == 4
+
+
+def test_cursor_client_surfaces_auth_and_quota(monkeypatch):
+    monkeypatch.delenv(llm.CURSOR_KEY_ENV, raising=False)
+    monkeypatch.setattr(llm, "cursor_ready", lambda: False)
+    with pytest.raises(CvtError) as exc:
+        llm.CursorClient()
+    assert exc.value.err_id == "E_CURSOR_AUTH"
+    client = llm.CursorClient(
+        transport=lambda _payload: {"ok": False, "id": "E_CURSOR_QUOTA", "message": "Cursor usage limit reached"},
+        require_auth=False,
+    )
+    with pytest.raises(CvtError) as exc:
+        client.complete_json(SYSTEM, BLOCKS, JD_SCHEMA, "composer-2.5", 100)
+    assert exc.value.err_id == "E_CURSOR_QUOTA"
+
+
+def test_auto_uses_cursor_when_anthropic_is_unset(monkeypatch):
+    monkeypatch.delenv(llm.FAKE_LLM_ENV, raising=False)
+    monkeypatch.delenv(llm.API_KEY_ENV, raising=False)
+    monkeypatch.setenv(llm.PROVIDER_ENV, "auto")
+    monkeypatch.setattr(llm, "cursor_ready", lambda: True)
+    monkeypatch.setattr(llm, "CursorClient", lambda: "cursor-client")
+    assert llm.default_client() == "cursor-client"
+
+
+def test_auto_names_both_providers_when_neither_is_available(monkeypatch):
+    monkeypatch.delenv(llm.FAKE_LLM_ENV, raising=False)
+    monkeypatch.delenv(llm.API_KEY_ENV, raising=False)
+    monkeypatch.setenv(llm.PROVIDER_ENV, "auto")
+    monkeypatch.setattr(llm, "cursor_ready", lambda: False)
+    with pytest.raises(CvtError) as exc:
+        llm.default_client()
+    assert exc.value.err_id == "E_API_KEY"
+    assert "ANTHROPIC_API_KEY" in exc.value.message and "Cursor" in exc.value.message
+
+
+def test_anthropic_quota_switches_the_rest_of_the_run_to_cursor():
+    class Primary:
+        def __init__(self):
+            self.calls = 0
+            self.last_usage = {"input_tokens": 1, "cache_read_tokens": 0, "cache_write_tokens": 0, "output_tokens": 1}
+
+        def complete_json(self, *_args, **_kwargs):
+            self.calls += 1
+            if self.calls == 1:
+                raise CvtError(ExitCode.INTERNAL, "E_API", "API error 429 after 3 retries: limited")
+            raise AssertionError("anthropic was called after the switch")
+
+    cursor = llm.CursorClient(transport=_cursor_envelope, require_auth=False)
+    client = llm.SwitchingClient(Primary(), lambda: cursor)
+    assert client.complete_json(SYSTEM, BLOCKS, JD_SCHEMA, "claude-sonnet-5-5", 100) == {"company": "Acme"}
+    assert client.complete_json(SYSTEM, BLOCKS, JD_SCHEMA, "claude-sonnet-5-5", 100) == {"company": "Acme"}
+    assert client.last_usage["input_tokens"] == 3
+
+
+def test_a_non_quota_api_error_does_not_switch():
+    class Primary:
+        last_usage: dict = {}
+
+        def complete_json(self, *_args, **_kwargs):
+            raise CvtError(ExitCode.INTERNAL, "E_API", "API error 400: bad request")
+
+    client = llm.SwitchingClient(Primary(), lambda: (_ for _ in ()).throw(AssertionError("cursor")))
+    with pytest.raises(CvtError) as exc:
+        client.complete_json(SYSTEM, BLOCKS, JD_SCHEMA, "m", 100)
+    assert "400" in exc.value.message
 
 
 # --- live smoke test -----------------------------------------------------------------------------------------

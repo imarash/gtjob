@@ -7,7 +7,7 @@ import { listCatalog, referenceFile } from "../src/lib/claude-catalog.mjs";
 import { splitFrontmatter } from "../src/lib/frontmatter.mjs";
 import { buildToolArgv } from "../src/lib/cvt-args.mjs";
 import { parseCvtStdout } from "../src/lib/cvt-spawn.mjs";
-import { describeStage } from "../src/lib/stage-copy.mjs";
+import { describeStage, waitDetail } from "../src/lib/stage-copy.mjs";
 
 test("folded skill descriptions stay one string", () => {
   const { data, body } = splitFrontmatter(`---
@@ -112,7 +112,7 @@ test("a cvt envelope is the last JSON line", () => {
 
 test("stage copy never tells the person to run a shell command", () => {
   for (const stage of ["ingested", "profiled", "jd_analyzed", "reported"]) {
-    const text = `${describeStage(stage).title} ${describeStage(stage).detail}`;
+    const text = `${describeStage(stage).title} ${describeStage(stage).detail} ${waitDetail(stage)}`;
     assert.equal(text.includes("uv run"), false);
     assert.equal(text.includes("cvt.py"), false);
   }

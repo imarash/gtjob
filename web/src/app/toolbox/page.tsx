@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ToolboxForm } from "@/components/studio/toolbox-form";
 import { listDirFiles } from "@/lib/claude-catalog.mjs";
+import { readRunProgress } from "@/lib/run-label.mjs";
 import { listPolishRuns, listStateRuns, previewFile, reportHeading } from "@/lib/runs.mjs";
 import { loadStudio } from "@/lib/studio-data";
 
@@ -22,7 +23,7 @@ export default async function ToolboxPage() {
     const report = run.hasReport ? readText(path.join(dir, "report.md")) : "";
     return {
       slug: run.slug,
-      title: reportHeading(report) || run.slug,
+      title: readRunProgress(paths.outDir, run.slug)?.label || reportHeading(report) || run.slug,
       stage: run.stage,
       template: run.template,
       downloads: run.downloads,
@@ -52,12 +53,12 @@ export default async function ToolboxPage() {
       <header className="flex flex-col gap-1">
         <h1 className="text-title-2-medium text-text-primary">Toolbox</h1>
         <p className="text-body-regular text-text-secondary">
-          Tailor a CV to one job, or polish the CV you already have. When a PDF is ready, compare the layouts and download it. Nothing is sent.
+          Pick one tool, then add the CV and the job. The PDF for that run shows after you start it.
         </p>
       </header>
       <ToolboxForm
-        cvs={listDirFiles(path.join(paths.gtjobRoot, "CVs"))}
-        jds={listDirFiles(path.join(paths.gtjobRoot, "JDs"))}
+        cvs={listDirFiles(path.join(paths.workspaceRoot, "CVs"))}
+        jds={listDirFiles(path.join(paths.workspaceRoot, "JDs"))}
         runs={runs}
       />
     </>

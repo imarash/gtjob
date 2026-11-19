@@ -7,6 +7,8 @@ profile, so the AI only picks IDs, priorities and rewrites. Plan mistakes are re
 
 from __future__ import annotations
 
+import re
+
 from . import attestations as att_store
 from . import lexicon, provenance
 from . import profile as prof
@@ -23,6 +25,16 @@ INTRO_NONE, INTRO_KEEP, INTRO_REWRITE = "none", "keep", "rewrite"
 BASICS_REF = "basics"
 ATT_PREFIX = "att-"
 MAX_SKILL_HIGHLIGHT_REFS = 3
+MAX_FALLBACK_REFS = 2
+# A headline longer than a tagline that also opens the summary is a pasted paragraph, not a second title.
+HEADLINE_PARAGRAPH_CHARS = 120
+_HEADLINE_SEGMENT = re.compile(r"\s*·\s*")
+SKILL_SPLIT = re.compile(r"\s*[,;]\s*")
+REF_RE = re.compile(
+    r"^(?:basics|exp-[0-9]+(?:\.e[0-9]+)?(?:\.b[0-9]+)?|sum-[0-9]+|skl-[0-9]+|cert-[0-9]+|edu-[0-9]+|oth-[0-9]+|att-[0-9]{3,})$"
+)
+REF_LIST_KEYS = ("source_refs", "extra_refs", "from")
+FALLBACK_LABEL = "Selected"
 SKILL_PLACEMENTS = ("skills", "skills_and_bullets")
 BULLET_PLACEMENTS = ("bullets", "skills_and_bullets")
 CORRECTION_TYPE = "correction"
@@ -95,20 +107,89 @@ def _skill_refs(name: str, ix: _Index) -> list[str]:
             if a["placement"] in SKILL_PLACEMENTS and lexicon.supports(name, " ".join(a["terms"]))]
 
 
+def legalize_refs(plan: dict) -> list[str]:
+    """Drop source ids the tailor-plan schema cannot store, such as a match field cited as a ref."""
+    dropped: list[str] = []
+
+    def scrub(refs: list) -> list:
+        kept = []
+        for ref in refs:
+            if isinstance(ref, str) and REF_RE.match(ref):
+                kept.append(ref)
+            else:
+                dropped.append(str(ref))
+        return kept
+
+    def walk(node: object) -> None:
+        if isinstance(node, dict):
+            for key in REF_LIST_KEYS:
+                if isinstance(node.get(key), list):
+                    node[key] = scrub(node[key])
+            for value in node.values():
+                if isinstance(value, (dict, list)):
+                    walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    walk(plan)
+    return dropped
+
+
+def _skill_pool(ix: _Index) -> str:
+    parts = [prof.item_text(ix.merged, iid) for iid, _kind, _obj in prof.iter_items(ix.merged)]
+    parts += [" ".join([a.get("claim", ""), a.get("detail", ""), *a.get("terms", [])]) for a in ix.usable_list]
+    return "\n".join(parts)
+
+
+def _skill_atoms(name: str, pool: str) -> list[str]:
+    """One profile-backed skill per comma-separated entry. A phrase the profile does not contain is reduced to
+    the terms inside it that the profile does contain."""
+    chunks = [c.strip(" .") for c in SKILL_SPLIT.split(name) if c.strip(" .")]
+    atoms: list[str] = []
+    seen: set[str] = set()
+    for chunk in chunks:
+        candidates = [chunk] if lexicon.supports(chunk, pool) else [
+            term for term in lexicon.find_terms(chunk)
+            if len(term) >= 3 and lexicon.supports(term, pool)
+        ]
+        for atom in candidates:
+            key = atom.casefold()
+            if key not in seen:
+                seen.add(key)
+                atoms.append(atom)
+    return atoms
+
+
+def _atom_refs(name: str, ix: _Index, texts: dict[str, str]) -> list[str]:
+    refs = _skill_refs(name, ix)
+    if refs:
+        return refs
+    return [iid for iid, text in texts.items() if text and lexicon.supports(name, text)][:MAX_SKILL_HIGHLIGHT_REFS]
+
+
 def _skills(plan: dict, ix: _Index, review: str, out_violations: list[dict]) -> list[dict]:
+    pool = _skill_pool(ix)
+    texts = {iid: prof.item_text(ix.merged, iid) for iid, _kind, _obj in prof.iter_items(ix.merged)}
     groups = []
-    for n, group in enumerate(plan["skills"], start=1):
-        gid, items = f"t-skl-{n}", []
+    for group in plan["skills"]:
+        items = []
         for item in group["items"]:
-            refs = list(item["source_refs"]) or _skill_refs(item["name"], ix)
-            if not refs:
+            atoms = _skill_atoms(item["name"], pool)
+            if not atoms:
+                gid = f"t-skl-{len(groups) + 1}"
                 out_violations.append(_violation(
                     gid, f"skill '{item['name']}' in {gid} is not supported by any profile skill, highlight or "
                          f"usable attestation; remove it or ask the user", SKILL_UNSUPPORTED))
                 continue
-            items.append({"name": item["name"], "source_refs": refs})
-        groups.append({"id": gid, "label": group["label"], "items": items, "priority": group["priority"],
-                       "review": review})
+            for atom in atoms:
+                refs = _atom_refs(atom, ix, texts)
+                if refs:
+                    items.append({"name": atom, "source_refs": refs})
+        if not items:
+            continue
+        groups.append({"id": f"t-skl-{len(groups) + 1}", "label": group["label"], "items": items,
+                       "priority": group["priority"], "review": review})
     return groups
 
 
@@ -185,7 +266,6 @@ def _intro(plan_intro: dict, work: dict, tid: str, bad: list[dict]) -> dict:
     mode = plan_intro["mode"]
     if mode == INTRO_KEEP:
         if not work["summary"]:
-            bad.append(_violation(tid, f"intro of {tid} is 'keep' but profile {work['id']} has no summary"))
             return {"text": "", "source_refs": []}
         return {"text": work["summary"], "source_refs": [work["id"]]}
     if mode == INTRO_REWRITE:
@@ -283,6 +363,125 @@ def _education(plan: dict, ix: _Index, bad: list[dict]) -> list[dict]:
     return out
 
 
+def _profile_texts(merged: dict) -> dict[str, str]:
+    return {iid: prof.item_text(merged, iid) for iid, _kind, _obj in prof.iter_items(merged)}
+
+
+def _fallback_text(refs: list[str], texts: dict[str, str]) -> tuple[str, list[str]]:
+    """Profile lines the element already cites, summaries first, capped so a fallback stays a paragraph."""
+    backed = [ref for ref in refs if texts.get(ref, "").strip()]
+    chosen = [ref for ref in backed if ref.startswith("sum-")] or backed
+    chosen = chosen[:MAX_FALLBACK_REFS]
+    return " ".join(texts[ref] for ref in chosen), chosen
+
+
+def _patch_text(node: dict, texts: dict[str, str]) -> bool:
+    text, refs = _fallback_text(list(node.get("source_refs", [])), texts)
+    if not text:
+        return False
+    node["text"] = text
+    node["source_refs"] = refs
+    return True
+
+
+def _flat(text: str) -> str:
+    return " ".join((text or "").split())
+
+
+def headline_repeats_summary(headline: str, summary: str) -> bool:
+    """True when the headline is the summary paragraph, or a long prefix of it.
+
+    A short tagline may share its opening words with the summary. A paragraph pasted into the
+    headline prints twice: once under the name and again under Summary.
+    """
+    head, body = _flat(headline), _flat(summary)
+    if not head or not body:
+        return False
+    if head == body:
+        return True
+    shorter, longer = (head, body) if len(head) <= len(body) else (body, head)
+    return len(shorter) >= HEADLINE_PARAGRAPH_CHARS and longer.startswith(shorter)
+
+
+def _cited_source(refs: list[str], texts: dict[str, str]) -> tuple[str, list[str]]:
+    kept = [ref for ref in refs if texts.get(ref, "").strip()]
+    return "\n".join(texts[ref] for ref in kept), kept
+
+
+def _headline_backed(text: str, source: str) -> bool:
+    if not text.strip():
+        return False
+    if any(not lexicon.supports(term, source) for term in lexicon.find_terms(text)):
+        return False
+    known = set(lexicon.numbers(source))
+    if any(number not in known for number in lexicon.numbers(text)):
+        return False
+    element = provenance._Element(provenance.KIND_HEADLINE, provenance.HEADER_ID, text, ())
+    return not provenance._check_seniority(element, text, source)
+
+
+def _ground_headline(header: dict, texts: dict[str, str]) -> None:
+    """Keep the backed ` · ` segments. Never replace the headline with the summary paragraphs it cites."""
+    source, refs = _cited_source(list(header.get("source_refs", [])), texts)
+    parts = [part.strip() for part in _HEADLINE_SEGMENT.split(header.get("headline", "")) if part.strip()]
+    kept = [part for part in parts if _headline_backed(part, source)]
+    headline = " · ".join(kept)
+    if headline and _headline_backed(headline, source):
+        header["headline"] = headline
+        header["source_refs"] = _dedupe([BASICS_REF, *refs])
+        return
+    header["headline"] = ""
+    header["source_refs"] = [BASICS_REF]
+
+
+def _clear_repeated_headline(header: dict, summary_text: str) -> None:
+    if headline_repeats_summary(header.get("headline", ""), summary_text):
+        header["headline"] = ""
+        header["source_refs"] = [BASICS_REF]
+
+
+def _ground_claims(tailored: dict, texts: dict[str, str], violations: list[dict]) -> None:
+    """Replace prose the profile does not support with the lines it cites, except the headline.
+
+    Skill lines are already reduced to backed terms. A summary, talking point, intro, or bullet
+    that names something its sources do not is replaced with those source lines. An invented bullet
+    therefore ships as the profile line it cites. The headline stays a short tagline: a ` · `
+    segment the cited lines do not support is dropped, and the headline is never replaced with
+    summary paragraphs (that prints the same paragraph under the name and again under Summary).
+    """
+    prose = {v["item_id"] for v in violations if v["code"] in {
+        provenance.UNSUPPORTED_TERM, provenance.UNSUPPORTED_NUMBER, provenance.PLACEMENT, provenance.UNKNOWN_REF,
+        provenance.OUT_OF_SCOPE,
+    }}
+    labels = {v["item_id"] for v in violations if v["code"] == SKILL_UNSUPPORTED and "skill group" in v["message"]}
+    header = tailored["header"]
+    summary = tailored["summary"]
+    if prose or labels:
+        if provenance.HEADER_ID in prose:
+            _ground_headline(header, texts)
+        if summary["id"] in prose:
+            _patch_text(summary, texts)
+    kept_points = []
+    for index, point in enumerate(tailored["talking_points"]):
+        if provenance.TALKING_ID.format(i=index) not in prose or _patch_text(point, texts):
+            kept_points.append(point)
+    tailored["talking_points"] = kept_points
+    for entry in tailored["experience"]:
+        if entry["id"] in prose:
+            _patch_text(entry["intro"], texts)
+        for bullet in entry["bullets"]:
+            if bullet["id"] in prose:
+                _patch_text(bullet, texts)
+        for engagement in entry["engagements"]:
+            for bullet in engagement["bullets"]:
+                if bullet["id"] in prose:
+                    _patch_text(bullet, texts)
+    for group in tailored["skills"]:
+        if group["id"] in labels:
+            group["label"] = FALLBACK_LABEL
+    _clear_repeated_headline(header, summary.get("text", ""))
+
+
 def _profile_sha(state: dict) -> str:
     for entry in state.get("artifacts", []):
         if entry.get("name") == "profile":
@@ -325,6 +524,9 @@ def assemble(plan: dict, profile: dict, attestations: list[dict], jd: dict, stat
         "open_items": [{"kind": o["kind"], "text": o["text"], "item_ids": list(o["item_ids"])}
                        for o in plan["open_items"]],
     }
+    texts = _profile_texts(merged)
+    found = provenance.check_tailored(tailored, profile, attestations, run_id=run_slug, draft=True)
+    _ground_claims(tailored, texts, found)
     violations = bad + provenance.check_tailored(tailored, profile, attestations, run_id=run_slug, draft=True)
     violations.sort(key=lambda v: (v["item_id"], v["code"], v["message"]))
     return tailored, violations

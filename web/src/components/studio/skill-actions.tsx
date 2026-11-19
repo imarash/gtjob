@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/base/buttons/button";
 import { Select, SelectItem } from "@/components/base/select/select";
 import { Textarea } from "@/components/base/textarea/textarea";
-import { QuestionFields, type StudioQuestion } from "@/components/studio/question-fields";
+import { QuestionFields, type PriorAnswer, type StudioQuestion } from "@/components/studio/question-fields";
 import { buildAnswerRequest, initialPicked } from "@/lib/answer-select.mjs";
 
 type Envelope = {
@@ -150,11 +150,12 @@ export function StartRunForm({ cvs, jds }: { cvs: string[]; jds: string[] }) {
       className="flex flex-col gap-3"
       onSubmit={async (event) => {
         event.preventDefault();
+        const pasted = jdText.trim();
         await run({
           command: "init",
           cv,
-          jd: jdText.trim() ? "" : jd,
-          jdText: jdText.trim(),
+          jd: pasted ? "" : jd,
+          jdText: pasted ? jdText : "",
           template,
         });
         router.refresh();
@@ -295,6 +296,7 @@ export function RunActions({ slug }: { slug: string }) {
   const [questions, setQuestions] = useState<StudioQuestion[]>([]);
   const [picked, setPicked] = useState<Record<string, string[]>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [priors, setPriors] = useState<Record<string, PriorAnswer>>({});
   const [approveArmed, setApproveArmed] = useState(false);
   const [template, setTemplate] = useState("modern");
 
@@ -319,6 +321,13 @@ export function RunActions({ slug }: { slug: string }) {
             setQuestions(list);
             setPicked(initialPicked(list));
             setNotes({});
+            const priorResponse = await fetch("/api/cvt", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ command: "prior-answers", run: slug }),
+            });
+            const priorPayload = (await priorResponse.json()) as { priors?: Record<string, PriorAnswer> };
+            setPriors(priorPayload.priors && typeof priorPayload.priors === "object" ? priorPayload.priors : {});
             router.refresh();
           }}
         >
@@ -381,6 +390,16 @@ export function RunActions({ slug }: { slug: string }) {
             questions={questions}
             picked={picked}
             notes={notes}
+            priors={priors}
+            onUsePrior={(id) => {
+              const prior = priors[id];
+              if (!prior) return;
+              if (prior.kind === "text") {
+                setNotes((current) => ({ ...current, [id]: prior.text }));
+                return;
+              }
+              setPicked((current) => ({ ...current, [id]: prior.choiceIds }));
+            }}
             onToggle={(id, choiceId, on, kind) =>
               setPicked((current) => {
                 if (kind === "single") return { ...current, [id]: on ? [choiceId] : [] };

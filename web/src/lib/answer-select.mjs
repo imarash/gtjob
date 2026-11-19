@@ -1,3 +1,5 @@
+import { formatEnvelopeAnswerFailure } from "./answer-error.mjs";
+
 /**
  * Map a question form onto `cvt answers-apply --select`.
  * Multi-select and scope questions keep every chosen id.
@@ -109,13 +111,22 @@ export function buildAnswerRequest(questions, picked, notes) {
  * @param {string} [httpError]
  * @returns {string}
  */
-export function applyFailure(envelope, httpError) {
+/**
+ * @param {Record<string, unknown> | null | undefined} envelope
+ * @param {string} [httpError]
+ * @param {{ questions?: { id: string, prompt?: string }[], notes?: Record<string, string>, rawText?: string } | null} [context]
+ */
+export function applyFailure(envelope, httpError, context = null) {
+  if (envelope && envelope.ok === false && envelope.exit_code === 6) return "";
+  if (context?.questions?.length) {
+    const guided = formatEnvelopeAnswerFailure(envelope, context.questions, context.notes, context.rawText);
+    if (guided) return guided;
+  }
   const message = (envelope && envelope.error && envelope.error.message) || httpError || "";
   if (message) {
     const hint = envelope && envelope.error && envelope.error.hint;
-    return hint ? `${message}. ${hint}` : message;
+    return hint && !message.includes(hint) ? `${message}. ${hint}` : message;
   }
-  if (envelope && envelope.ok === false && envelope.exit_code === 6) return "";
   return "Those answers were not applied.";
 }
 

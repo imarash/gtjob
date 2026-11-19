@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { gtjobRoot } from "@/lib/studio-data";
+import { workspaceRoot } from "@/lib/studio-data";
 
 const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}\.(pdf|md|txt)$/i;
 const MAX_BYTES = 10_000_000;
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   }
   if (file.size > MAX_BYTES) return Response.json({ error: "That file is over 10 MB." }, { status: 400 });
   const bytes = Buffer.from(await file.arrayBuffer());
-  const dir = path.join(gtjobRoot(), folder);
+  const dir = path.join(workspaceRoot(), folder);
   mkdirSync(dir, { recursive: true });
   writeFileSync(path.join(dir, name), bytes);
   return Response.json({ name, folder });
