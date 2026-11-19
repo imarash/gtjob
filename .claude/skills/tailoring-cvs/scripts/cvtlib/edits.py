@@ -41,6 +41,7 @@ ATT_REF_RE = re.compile(r"^att-\d{3,}$")
 HIGHLIGHT_RE = re.compile(r"^exp-\d+(\.e\d+)?\.b\d+$")
 ENGAGEMENT_RE = re.compile(r"^exp-\d+\.e\d+$")
 ENTRY_RE = re.compile(r"^exp-\d+$")
+CERT_RE = re.compile(r"^cert-\d+$")
 BULLET_NUMBER_RE = re.compile(r"\.b(\d+)$")
 SKILL_ID_RE = re.compile(r"^t-skl-\d+$")
 
@@ -435,6 +436,24 @@ def _restore_entry(t: dict, profile: dict, pid: str) -> None:
     t["experience"].insert(_insert_index(t["experience"], order.index(pid), pos), _work_entry(w))
 
 
+def _restore_cert(t: dict, profile: dict, cid: str) -> None:
+    """Put one profile certificate back, in profile order, and renumber `t-cert-N` by position."""
+    if any(c["profile_id"] == cid for c in t["certifications"]):
+        raise _err(ERR_TARGET, f"{cid} is already in the CV", hint="nothing to restore")
+    src = next((c for c in profile.get("certificates", []) if c["id"] == cid), None)
+    if src is None:
+        raise _err(ERR_TARGET, f"profile has no certification '{cid}'", hint="list IDs with: cvt profile-show RUN")
+    order = [c["id"] for c in profile["certificates"]]
+    new = {"id": "t-cert-0", "profile_id": cid, "name": src["name"], "priority": RESTORED_PRIORITY}
+    url = (src.get("url") or "").strip()
+    if url:
+        new["url"] = url
+    pos = lambda c: order.index(c["profile_id"]) if c["profile_id"] in order else None  # noqa: E731
+    t["certifications"].insert(_insert_index(t["certifications"], order.index(cid), pos), new)
+    for index, cert in enumerate(t["certifications"], start=1):
+        cert["id"] = f"t-cert-{index}"
+
+
 def _op_restore(t: dict, op: dict, profile: dict) -> None:
     for target in _targets(op):
         if HIGHLIGHT_RE.match(target):
@@ -443,9 +462,11 @@ def _op_restore(t: dict, op: dict, profile: dict) -> None:
             _restore_engagement(t, profile, target)
         elif ENTRY_RE.match(target):
             _restore_entry(t, profile, target)
+        elif CERT_RE.match(target):
+            _restore_cert(t, profile, target)
         else:
             raise _err(ERR_TARGET, f"cannot restore '{target}'",
-                       hint="give a profile experience ID: exp-N (role), exp-N.eM (engagement) or exp-N[.eM].bK (bullet)")
+                       hint="give a profile ID: exp-N, exp-N.eM, exp-N[.eM].bK, or cert-N")
         _forget_omitted(t, target)
 
 

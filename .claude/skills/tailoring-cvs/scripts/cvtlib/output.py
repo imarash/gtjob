@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 from typing import Any
 
+from . import answers, jsonio, paths
 from .errors import CvtError
 
 MAX_HUMAN_LINES = 15
@@ -71,13 +73,36 @@ def emit(
 
 
 def _human_error(err: CvtError, args: Any) -> str:
-    lines = [f"cvt: error[{err.err_id}]: {err.message}"]
+    head, *body = err.message.splitlines() or [err.message]
+    lines = [f"cvt: error[{err.err_id}]: {head}"]
+    lines.extend(body)
     if err.hint:
         lines.append(f"  hint: {err.hint}")
     shown, hidden = cap_list(args, err.violations)
-    lines += [f"  - {v.get('item_id', '')}: {v.get('message', '')}".rstrip() for v in shown]
+    for v in shown:
+        qid = str(v.get("question_id") or "")
+        loc = str(v.get("item_id") or "")
+        prefix = f"{qid}: " if qid else (f"{loc}: " if loc else "")
+        lines.append(f"  - {prefix}{v.get('message', '')}".rstrip())
     if hidden:
         lines.append("  " + MORE_LINE.format(n=hidden))
+    if err.err_id == answers.FAILED_ID and err.violations:
+        run_slug = str(getattr(args, "run", "") or "")
+        if run_slug:
+            try:
+                run_dir = paths.resolve_run(run_slug)
+                qfile = run_dir / "questions.json"
+                questions = jsonio.load_json(qfile) if qfile.is_file() else None
+                raw = ""
+                round_arg = str(getattr(args, "round", "") or "").strip()
+                round_file = Path(round_arg) if round_arg else run_dir / "answers.round.json"
+                if round_file.is_file():
+                    raw = jsonio.load_json(round_file).get("raw_text", "")
+                guide = answers.user_violation_lines(err.violations, questions, raw)
+                if guide:
+                    lines.extend(["", "Your answers could not be saved:", *guide])
+            except CvtError:
+                pass
     return "\n".join(lines)
 
 

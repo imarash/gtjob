@@ -642,6 +642,27 @@ def test_strategy_template_choice_is_stored_on_the_run() -> None:
     assert state["options"]["template"] == "sidebar"
 
 
+def test_user_violation_lines_name_the_question_and_answer(workspace: Path) -> None:
+    questions = {
+        "questions": [{
+            "id": "q-6", "topic": "metric", "type": "free_text",
+            "prompt": "BDC (exp-3.e3): What was the scope of PCI DSS controls?",
+            "status": "pending", "choices": [], "allow_free_text": True, "default": {}, "links": {}, "checkpoint": 1,
+            "round": 1, "parent_id": "", "suppressed_reason": "",
+        }],
+    }
+    raw = "q-6: infrastructure only"
+    violations = [{
+        "code": "unsupported_term", "item_id": "items[0].attestations[0]", "question_id": "q-6",
+        "message": "term 'PCI DSS' in items[0].attestations[0] is not something the user said or chose",
+    }]
+    lines = answers.user_violation_lines(violations, questions, raw)
+    assert any("q-6" in line for line in lines)
+    assert any("infrastructure only" in line for line in lines)
+    assert any("PCI DSS" in line for line in lines)
+    assert any("How to fix:" in line for line in lines)
+
+
 def test_dry_run_shows_the_profile_value_not_the_given_one(workspace: Path) -> None:
     round_obj = correction_round("my title at Quillmark was Principal Architect", "exp-1", "position",
                                  "platform  engineer", "Principal Architect")

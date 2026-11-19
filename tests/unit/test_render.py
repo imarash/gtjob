@@ -87,6 +87,23 @@ def _set_stage(run: Path, stage: str) -> None:
 # ---------------------------------------------------------------- render model
 
 
+def test_pasted_summary_is_not_repeated_as_the_headline() -> None:
+    tailored = _tailored()
+    paragraph = tailored["summary"]["text"]
+    tailored["header"]["headline"] = paragraph
+    tailored["summary"]["text"] = paragraph + " Extra detail about the same work."
+    model = _build(tailored)
+    assert model["header"]["headline"] == ""
+    assert model["sections"][0]["paragraphs"][0].startswith(paragraph)
+
+
+def test_short_headline_stays_when_the_summary_is_a_different_paragraph() -> None:
+    tailored = _tailored()
+    tailored["header"]["headline"] = "Junior DevOps Engineer · AWS · Terraform"
+    model = _build(tailored)
+    assert model["header"]["headline"] == "Junior DevOps Engineer · AWS · Terraform"
+
+
 def test_junior_model_validates_and_orders_sections() -> None:
     model = _build(_tailored())
     assert schemas.validate(model, "render-model") == []
@@ -96,6 +113,16 @@ def test_junior_model_validates_and_orders_sections() -> None:
     assert model["theme"]["accent"] == render.DEFAULT_ACCENT
     assert model["meta"]["keywords"] == model["meta"]["keywords"][: render.MAX_KEYWORDS]
     assert len(model["meta"]["keywords"]) <= render.MAX_KEYWORDS and model["meta"]["keywords"]
+
+
+def test_certification_links_follow_the_profile_url() -> None:
+    tailored = _tailored()
+    cert = tailored["certifications"][0]
+    cert["url"] = "https://www.credly.com/badges/example"
+    model = _build(tailored)
+    section = next(s for s in model["sections"] if s["kind"] == "certifications")
+    assert section["link_lines"][0] == {"text": cert["name"], "url": cert["url"]}
+    assert f"[{cert['name']}]({cert['url']})" in render.render_markdown(model)
 
 
 def test_contacts_order_and_labels() -> None:

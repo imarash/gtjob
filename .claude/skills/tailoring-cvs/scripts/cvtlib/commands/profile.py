@@ -6,7 +6,7 @@ import argparse
 import datetime
 from pathlib import Path
 
-from .. import jsonio, output, paths, profile as prof, profile_map, profile_store, schemas, state
+from .. import cert_recover, jsonio, output, paths, profile as prof, profile_map, profile_store, schemas, state
 from ..errors import CvtError, ExitCode
 
 PROFILE_FILE = "profile.json"
@@ -112,6 +112,7 @@ def _build(args: argparse.Namespace) -> int:
             raise _check_failed(
                 f"{PROFILE_MAP_FILE} has {len(violations)} problems", violations,
                 f"patch only the listed lines/items in {PROFILE_MAP_FILE}, then rerun: cvt profile-build {run_dir.name}")
+        cert_recover.recover(profile, cert_recover.cv_pdf(run_dir, st))
         violations = prof.verify_verbatim(profile, cv_text)
         if violations:
             raise _check_failed(f"{len(violations)} texts are not verbatim from cv.txt", violations,
@@ -138,6 +139,7 @@ def _verify(args: argparse.Namespace) -> int:
         profile = jsonio.load_json(path)
         schemas.require_valid(profile, "profile", PROFILE_FILE)
         prof.normalize_ids(profile)
+        cert_recover.recover(profile, cert_recover.cv_pdf(run_dir, st))
         violations = prof.verify_verbatim(profile, cv_text)
         prof.apply_script_issues(profile, cv_text, _today())
         schemas.require_valid(profile, "profile", PROFILE_FILE)
@@ -172,6 +174,9 @@ def _cache(args: argparse.Namespace) -> int:
             next_action=st["next_action"])
     profile = jsonio.load_json(cached)
     schemas.require_valid(profile, "profile", cached.name)
+    if cert_recover.recover(profile, cert_recover.cv_pdf(run_dir, st)):
+        schemas.require_valid(profile, "profile", cached.name)
+        jsonio.dump_json(profile, cached)
     jsonio.dump_json(profile, run_dir / PROFILE_FILE)
     state.record_artifact(run_dir, st, "profile", PROFILE_FILE)
     st["person_slug"] = profile["person_slug"]

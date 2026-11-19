@@ -396,10 +396,16 @@ def _check_certs_and_education(t: dict, merged: dict) -> list[dict]:
         if src is None:
             out.append(_violation(CERT_UNSUPPORTED, c["id"],
                                   f"certification {c['id']} cites {c['profile_id']}, which is not in the profile"))
-        elif comparable(c["name"]) not in comparable(src["name"]):
-            out.append(_violation(CERT_UNSUPPORTED, c["id"],
-                                  f"certification {c['id']} name '{c['name']}' is not part of profile name "
-                                  f"'{src['name']}'"))
+        else:
+            if comparable(c["name"]) not in comparable(src["name"]):
+                out.append(_violation(CERT_UNSUPPORTED, c["id"],
+                                      f"certification {c['id']} name '{c['name']}' is not part of profile name "
+                                      f"'{src['name']}'"))
+            url = (c.get("url") or "").strip()
+            src_url = (src.get("url") or "").strip()
+            if url and url != src_url:
+                out.append(_violation(CERT_UNSUPPORTED, c["id"],
+                                      f"certification {c['id']} url is not the profile url"))
     edus = {e["id"]: e for e in merged["education"]}
     for e in t["education"]:
         src = edus.get(e["profile_id"])

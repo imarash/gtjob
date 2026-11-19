@@ -1,0 +1,5 @@
+{
+  "checkpoints": { "cp1": "pending", "cp2": "not_started" },
+  "pending": { "kind": "none" },
+  "stage": "questions"
+}

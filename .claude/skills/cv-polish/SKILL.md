@@ -5,5 +5,7 @@ argument-hint: "[cv-path]"
 disable-model-invocation: true
 allowed-tools: Bash(uv run *)
 ---
-Read `.claude/skills/tailoring-cvs/references/generic-cv.md` and follow it for the CV path in the text after
-this command. This is not a job-description run: do not call `cvt init`, and do not drop facts to fit a page limit.
+Run `uv run gtjob polish run --cv CV --out out/<slug>-generic` for the CV path in the text after this command.
+That command extracts the text, makes one writing call, and renders modern, classic, and sidebar.
+
+This command has no checkpoint. Exit code 6 is the tailor gate, used by `gtjob tailor` and `gtjob continue`; stop and print the pending gate if you see it there. Do not call `cvt init`. Do not write render.json yourself.

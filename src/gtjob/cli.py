@@ -14,7 +14,7 @@ import os
 import sys
 from pathlib import Path
 
-from gtjob import _skill, answers_yaml, flow, interact
+from gtjob import _skill, answers_yaml, flow, interact, once
 from gtjob.llm import FAKE_LLM_ENV
 
 _skill.ensure_path()
@@ -55,7 +55,7 @@ class ApiRunner:
         if self._client is None:
             from gtjob import llm  # noqa: PLC0415
 
-            # AnthropicClient raises CvtError(MISSING_DEPENDENCY, E_API_KEY) without a key; GTJOB_FAKE_LLM replays canned files
+            # default_client picks Anthropic, Cursor, or the fake dir; a missing provider fails here, not at import
             self._client = llm.default_client()
         return self._client
 
@@ -120,7 +120,7 @@ def build_parser() -> argparse.ArgumentParser:
     r.set_defaults(handler=_cmd_render)
 
     pol = sub.add_parser("polish", help="generic CV with no job description (extract text, or render every template)")
-    pol_sub = pol.add_subparsers(dest="polish_command", metavar="<extract|render>", required=True)
+    pol_sub = pol.add_subparsers(dest="polish_command", metavar="<extract|render|run|fill>", required=True)
     ex = pol_sub.add_parser("extract", help="print CV text (same reader as cvt ingest)")
     ex.add_argument("cv", type=Path, help="CV file (PDF, Markdown, or text)")
     ex.set_defaults(handler=_cmd_polish_extract)
@@ -128,6 +128,20 @@ def build_parser() -> argparse.ArgumentParser:
     rn.add_argument("model", type=Path, help="render-model JSON")
     rn.add_argument("out", type=Path, help="output directory, usually out/<slug>-generic")
     rn.set_defaults(handler=_cmd_polish_render)
+    run_p = pol_sub.add_parser("run", help="extract, one writing call, then modern, classic, and sidebar")
+    run_p.add_argument("--cv", required=True, type=Path, help="CV file (PDF, Markdown, or text)")
+    run_p.add_argument("--out", required=True, type=Path, help="output directory under out/")
+    run_p.add_argument("--text", default="", help="a note about the CV, treated as data")
+    run_p.set_defaults(handler=_cmd_polish_run)
+    fill = pol_sub.add_parser("fill", help="one writing call from an existing cv.txt, then the three layouts")
+    fill.add_argument("run", help="polish run slug or directory under out/")
+    fill.add_argument("--text", default="", help="a note about the CV, treated as data")
+    fill.set_defaults(handler=_cmd_polish_fill)
+
+    reply = sub.add_parser("reply", help="one writing call for reply.md after report.md exists")
+    reply.add_argument("run", help="run slug, directory, or 'latest'")
+    reply.add_argument("--text", default="", help="the hiring message, treated as data")
+    reply.set_defaults(handler=_cmd_reply)
 
     e = sub.add_parser("edit", help="apply a free-text change to a tailored run, then re-approve and re-render")
     e.add_argument("run", metavar="RUN")
@@ -259,6 +273,32 @@ def _cmd_polish_render(args: argparse.Namespace, svc: _Services) -> int:
     import polish_render  # noqa: PLC0415
 
     return polish_render.render_all(args.model, args.out)
+
+
+def _writing_client(args: argparse.Namespace, svc: _Services):
+    runner = svc.runner_for(args)
+    get_client = getattr(runner, "_get_client", None)
+    if get_client is None:
+        raise _usage_error("this command needs the writing client", "run it without a stage-file runner")
+    return get_client()
+
+
+def _cmd_polish_run(args: argparse.Namespace, svc: _Services) -> int:
+    """Extract, one structured call, three layouts. Does not call cvt init."""
+    return once.polish_run(args.cv, args.out, client=_writing_client(args, svc), note=args.text or "")
+
+
+def _cmd_polish_fill(args: argparse.Namespace, svc: _Services) -> int:
+    run_dir = paths.resolve_run(args.run)
+    return once.polish_fill(run_dir, client=_writing_client(args, svc), note=args.text or "")
+
+
+def _cmd_reply(args: argparse.Namespace, svc: _Services) -> int:
+    """One structured call after the report. Does not re-enter the tool loop."""
+    run_dir = paths.resolve_run(args.run)
+    dest = once.write_reply(run_dir, client=_writing_client(args, svc), message=args.text or "")
+    svc.io.say(f"reply: {dest}")
+    return int(ExitCode.OK)
 
 
 def _cmd_render(args: argparse.Namespace, svc: _Services) -> int:

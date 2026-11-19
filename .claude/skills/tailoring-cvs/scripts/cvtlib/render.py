@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
-from . import jsonio, paths, schemas, state
+from . import assemble, jsonio, paths, schemas, state
 from .errors import CvtError, ExitCode
 
 PRESETS_FILE = "templates/presets.json"
@@ -207,10 +207,11 @@ def _sections(tailored: dict, dropped: set[str]) -> list[dict]:
             for i in earlier["items"]
         ]
         sections.append(sec)
-    certs = [c["name"] for c in tailored["certifications"] if c["id"] not in dropped]
+    certs = [c for c in tailored["certifications"] if c["id"] not in dropped]
     if certs:
         sec = _empty_section("certifications")
-        sec["lines"] = certs
+        sec["lines"] = [c["name"] for c in certs]
+        sec["link_lines"] = [{"text": c["name"], "url": (c.get("url") or "").strip()} for c in certs]
         sections.append(sec)
     if tailored["education"]:
         sec = _empty_section("education")
@@ -249,6 +250,9 @@ def build_render_model(
             raise CvtError(ExitCode.USAGE, "E_USAGE", f"unknown {label} '{value}'", hint=f"use one of: {', '.join(allowed)}")
     header = tailored["header"]
     name, target = header["name"], tailored["target"]["title"]
+    sections = _sections(tailored, set(dropped_ids))
+    summary = next((p for sec in sections if sec["kind"] == "summary" for p in sec["paragraphs"]), "")
+    headline = "" if assemble.headline_repeats_summary(header["headline"], summary) else header["headline"]
     return {
         "schema_version": "1",
         "meta": {
@@ -256,8 +260,8 @@ def build_render_model(
             "author": name, "subject": target, "keywords": _keywords(tailored, dropped_ids), "draft": bool(draft),
         },
         "theme": {"template": template, "paper": paper, "density": density, "accent": DEFAULT_ACCENT},
-        "header": {"name": name, "headline": header["headline"], "contacts": _contacts(header)},
-        "sections": _sections(tailored, set(dropped_ids)),
+        "header": {"name": name, "headline": headline, "contacts": _contacts(header)},
+        "sections": sections,
     }
 
 
@@ -295,7 +299,8 @@ def render_markdown(model: dict) -> str:
                 lines += ["", f"*{e['collapsed_line']}*"]
             lines.append("")
         if sec["kind"] == "certifications":
-            lines += [f"- {x}" for x in sec["lines"]]
+            linked = {item["text"]: item.get("url") or "" for item in sec.get("link_lines") or []}
+            lines += [f"- [{x}]({linked[x]})" if linked.get(x) else f"- {x}" for x in sec["lines"]]
         else:
             lines += [f"{x}  " for x in sec["lines"]]
         if sec["lines"]:

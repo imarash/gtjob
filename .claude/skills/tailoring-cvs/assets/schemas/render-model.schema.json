@@ -107,7 +107,20 @@
           "description": "skills only."
         },
         "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" }, "description": "experience and education." },
-        "lines": { "type": "array", "items": { "type": "string" }, "description": "earlier and certifications: one string per rendered line/item." }
+        "lines": { "type": "array", "items": { "type": "string" }, "description": "earlier and certifications: one string per rendered line/item." },
+        "link_lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text", "url"],
+            "properties": {
+              "text": { "type": "string" },
+              "url": { "type": "string", "description": "https URL, or '' when this certification has no public link." }
+            }
+          },
+          "description": "Certifications only. When present, each item is the same text as lines, plus a verification URL."
+        }
       }
     }
   }

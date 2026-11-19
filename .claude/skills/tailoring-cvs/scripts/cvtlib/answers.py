@@ -72,10 +72,102 @@ CORRECTION_FUNCTION_WORDS = frozenset({"a", "an", "the", "of", "and", "or", "for
 TERMS_LABEL = " terms="
 CHOICE_VALUE_SEP = "|"
 FAILED_ID = "E_ANSWERS_INVALID"
+QUESTION_LINE_RE = re.compile(r"^(q-\d+)\s*:\s*(.*)$", re.IGNORECASE)
+TERM_IN_MESSAGE_RE = re.compile(r"term '([^']+)'")
 
 
-def _violation(code: str, item_id: str, message: str) -> dict:
-    return {"code": code, "item_id": item_id, "message": message}
+def _violation(code: str, item_id: str, message: str, question_id: str = "") -> dict:
+    row: dict = {"code": code, "item_id": item_id, "message": message}
+    if question_id:
+        row["question_id"] = question_id
+    return row
+
+
+def _tag_violations(rows: list[dict], question_id: str) -> list[dict]:
+    """Attach question_id to every violation from one answers.round item."""
+    if not question_id:
+        return rows
+    out: list[dict] = []
+    for row in rows:
+        tagged = dict(row)
+        tagged.setdefault("question_id", question_id)
+        out.append(tagged)
+    return out
+
+
+def reply_by_question(raw_text: str) -> dict[str, str]:
+    """Map `q-N: answer` lines from a free-text reply (case-insensitive id)."""
+    out: dict[str, str] = {}
+    for line in str(raw_text or "").splitlines():
+        match = QUESTION_LINE_RE.match(line.strip())
+        if not match:
+            continue
+        qid = match.group(1).lower()
+        out[qid] = match.group(2).strip()
+    return out
+
+
+def _question_label(question: dict | None) -> str:
+    if not question:
+        return ""
+    prompt = str(question.get("prompt") or "").strip()
+    if ":" in prompt:
+        return prompt.split(":", 1)[0].strip()
+    return prompt[:100] + ("…" if len(prompt) > 100 else "")
+
+
+def fix_hint(violation: dict, question: dict | None, user_answer: str) -> str:
+    """One actionable sentence for Studio / CLI."""
+    code = str(violation.get("code") or "")
+    msg = str(violation.get("message") or "")
+    if code == CODE_TERM:
+        term_match = TERM_IN_MESSAGE_RE.search(msg)
+        term = term_match.group(1) if term_match else "that term"
+        if user_answer:
+            return (
+                f"Your text for this question did not include «{term}». "
+                f"Either add it to your answer if it is accurate, or re-submit with shorter wording "
+                f"so nothing beyond what you typed is inferred (e.g. repeat key nouns from your answer only)."
+            )
+        return f"Do not add «{term}» unless you typed it. Answer in your own words or leave blank for the default."
+    if code == CODE_NUMBER:
+        return "Remove or correct numbers that were not in your answer. State only figures you are willing to defend."
+    if code == CODE_VERBATIM:
+        return "Keep the verbatim field as an exact substring of your reply (copy/paste the clause you mean)."
+    if code == CODE_PLACEMENT and "correction" in msg.casefold():
+        return "Put only words you said into the correction; do not copy the whole existing bullet."
+    return "Edit the answer for this question and submit again, or leave it blank to use the default."
+
+
+def user_violation_lines(
+    violations: list[dict], questions: dict | None, raw_text: str = "", *, notes: dict[str, str] | None = None,
+) -> list[str]:
+    """Human-readable blocks for answer-apply / answer_parse failures."""
+    by_id = {q["id"]: q for q in (questions or {}).get("questions", [])}
+    from_reply = reply_by_question(raw_text)
+    merged_notes = {**(notes or {}), **{k: v for k, v in from_reply.items() if v}}
+    lines: list[str] = []
+    by_q: dict[str, dict] = {}
+    for v in violations:
+        qid = str(v.get("question_id") or "").strip()
+        if not qid:
+            continue
+        prev = by_q.get(qid)
+        if prev is None or (v.get("code") == CODE_TERM and prev.get("code") != CODE_TERM):
+            by_q[qid] = v
+    for qid, v in sorted(by_q.items(), key=lambda pair: qmod._number(pair[0])):
+        q = by_id.get(qid)
+        label = _question_label(q)
+        head = f"{qid}" + (f" ({label})" if label else "")
+        lines.append(f"  • {head}")
+        ans = merged_notes.get(qid, "")
+        if ans:
+            lines.append(f"    Your answer: {ans[:240]}{'…' if len(ans) > 240 else ''}")
+        lines.append(f"    Issue: {v.get('message', '').strip()}")
+        hint = fix_hint(v, q, ans)
+        if hint:
+            lines.append(f"    How to fix: {hint}")
+    return lines
 
 
 def _path(parts) -> str:
@@ -345,38 +437,41 @@ def _item_violations(ctx: _Ctx, round_obj: dict) -> list[dict]:
     item_ids = {iid for iid, _k, _o in profmod.iter_items(ctx.profile)}
     raw_norm, raw_nums = profmod.comparable(round_obj["raw_text"]), _numbers(round_obj["raw_text"])
     for i, item in enumerate(round_obj["items"]):
+        start = len(out)
         where, action, qid = f"items[{i}]", item["action"], item["question_id"]
         q = ctx.qs.get(qid) if qid else None
         if qid and q is None:
-            out.append(_violation(CODE_UNKNOWN_REF, where, f"question_id {qid} is not in questions.json"))
+            out.append(_violation(CODE_UNKNOWN_REF, where, f"question_id {qid} is not in questions.json", qid))
         elif qid and qid not in pending:
-            out.append(_violation(CODE_UNKNOWN_REF, where, f"{qid} is {q['status']}; only pending questions can be answered"))
+            out.append(_violation(CODE_UNKNOWN_REF, where, f"{qid} is {q['status']}; only pending questions can be answered", qid))
         if action in NEEDS_QUESTION_ACTIONS and not qid:
             out.append(_violation(CODE_SCHEMA, where, f"action '{action}' needs a question_id"))
         if q is not None:
             valid = _valid_choice_ids(q)
             bad = [c for c in item["choice_ids"] if c not in valid]
             if bad:
-                out.append(_violation(CODE_UNKNOWN_REF, where, f"{qid} has no choice: {', '.join(bad)}"))
+                out.append(_violation(CODE_UNKNOWN_REF, where, f"{qid} has no choice: {', '.join(bad)}", qid))
         if action == ACTION_CONFIRM and q is not None:
             linked = [a for a in q["links"]["attestation_ids"] if a != qmod.PENDING_ATTESTATION]
             if q["type"] != qmod.TYPE_SCOPE or not linked:
-                out.append(_violation(CODE_UNKNOWN_REF, where, f"{qid} is not a scope question with linked attestations yet"))
+                out.append(_violation(CODE_UNKNOWN_REF, where, f"{qid} is not a scope question with linked attestations yet", qid))
             for att_id in linked:
                 found = next((a for a in ctx.store["attestations"] if a["id"] == att_id), None)
                 if found is None or found["status"] != attmod.STATUS_PROPOSED:
-                    out.append(_violation(CODE_UNKNOWN_REF, where, f"{att_id} is not a proposed attestation"))
+                    out.append(_violation(CODE_UNKNOWN_REF, where, f"{att_id} is not a proposed attestation", qid))
         if action == ACTION_INSTRUCT and not item["instruction"].strip():
             out.append(_violation(CODE_SCHEMA, where, "action 'instruct' needs the instruction text"))
         if action in (ACTION_ATTEST, ACTION_CORRECT) and not item["attestations"]:
-            out.append(_violation(CODE_SCHEMA, where, f"action '{action}' needs at least one attestation"))
+            out.append(_violation(CODE_SCHEMA, where, f"action '{action}' needs at least one attestation", qid))
         if action in NO_ATTESTATION_ACTIONS and item["attestations"]:
-            out.append(_violation(CODE_SCHEMA, where, f"action '{action}' must not carry attestations"))
+            out.append(_violation(CODE_SCHEMA, where, f"action '{action}' must not carry attestations", qid))
         grounding = _grounding(round_obj["raw_text"], q, item["choice_ids"])
         for j, prop in enumerate(item["attestations"]):
             if action in (ACTION_ATTEST, ACTION_CORRECT):
                 out.extend(_proposal_violations(f"{where}.attestations[{j}]", action, prop, raw_norm, raw_nums, item_ids,
                                                 grounding, ctx.profile))
+        if qid:
+            out[start:] = _tag_violations(out[start:], qid)
     for qid in round_obj["unmentioned_question_ids"]:
         if qid not in pending:
             out.append(_violation(CODE_UNKNOWN_REF, "unmentioned_question_ids", f"{qid} is not a pending question"))

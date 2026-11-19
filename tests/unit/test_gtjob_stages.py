@@ -259,7 +259,7 @@ def _tailor_run(workspace: Path) -> Path:
 
 def _bad_plan() -> dict:
     plan = _golden("tailor-plan")
-    plan["experience"][0]["bullets"][1]["text"] += f" Rolled out {INVENTED_TOOL} for service-to-service traffic."
+    plan["skills"][0]["items"].append({"name": INVENTED_TOOL, "source_refs": []})
     return plan
 
 

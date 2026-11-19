@@ -162,7 +162,7 @@ def _issues(p: dict, cv: str | None = None, kind: str = "") -> list[dict]:
 
 
 @pytest.mark.parametrize(("end", "severity", "word"), [
-    ("2024-02", "info", "touch"), ("2024-03", "info", "1 month"), ("2024-04", "warn", "2 months"),
+    ("2024-03", "info", "1 month"), ("2024-04", "warn", "2 months"),
 ])
 def test_work_overlap_severity(end, severity, word):
     p = golden()
@@ -170,6 +170,12 @@ def test_work_overlap_severity(end, severity, word):
     found = [i for i in _issues(p, kind="date_overlap") if i["item_ids"] == ["exp-1", "exp-2"]]
     assert len(found) == 1
     assert found[0]["severity"] == severity and word in found[0]["message"] and found[0]["origin"] == "script"
+
+
+def test_boundary_month_is_not_an_overlap():
+    p = golden()
+    p["work"][1]["end_date"] = "2024-02"
+    assert [i for i in _issues(p, kind="date_overlap") if i["item_ids"] == ["exp-1", "exp-2"]] == []
 
 
 def test_no_overlap_when_ranges_do_not_meet():

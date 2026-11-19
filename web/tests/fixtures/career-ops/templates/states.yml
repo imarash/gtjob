@@ -1,0 +1,15 @@
+# Canonical states fixture
+
+states:
+  - id: evaluated
+    label: Evaluated
+    description: pending decision
+
+  - id: applied
+    label: Applied
+
+  - id: interview
+    label: Interview
+
+  - id: skip
+    label: SKIP
